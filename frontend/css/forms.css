@@ -1,69 +1,53 @@
 /* ==========================================================================
-   VaultWealth Form Controls & Auth Stylesheet
-   Phase 3: Frontend Foundation
+   VaultWealth — Form Controls & Auth Stylesheet (Minimal Theme)
    ========================================================================== */
 
-/* 1. Auth Page Wrapper (Login & Register) */
+/* 1. Auth Page */
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #0A140F;
-  background-image: 
-    radial-gradient(ellipse at 50% 10%, rgba(212, 175, 55, 0.12) 0%, transparent 60%),
-    linear-gradient(rgba(10, 20, 15, 0.78), rgba(10, 20, 15, 0.88)),
-    url('../assets/bg-pattern.png');
-  background-repeat: repeat;
-  background-size: 1024px auto;
-  background-attachment: fixed;
-  background-position: center top;
+  background-color: var(--bg-app);
   padding: 1.5rem;
 }
 
 .auth-container {
   width: 100%;
-  max-width: 440px;
+  max-width: 420px;
   margin: 0 auto;
 }
 
 .auth-brand {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.75rem;
 }
 
 .auth-brand .brand-icon {
-  margin: 0 auto 1rem auto;
-  width: 52px;
-  height: 52px;
-  font-size: 1.5rem;
-  background: #D4AF37;
-  color: #0A140F;
-  box-shadow: none;
+  margin: 0 auto 0.875rem auto;
+  width: 46px;
+  height: 46px;
 }
 
 .auth-brand h1 {
-  font-size: 1.625rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
 
 .auth-brand p {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
   margin-top: 0.25rem;
 }
 
 .auth-card {
-  background-color: rgba(15, 29, 23, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(197, 166, 107, 0.22);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  padding: 2.25rem;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(212, 175, 55, 0.08);
+  padding: 2rem;
   position: relative;
-  overflow: hidden;
 }
 
 .auth-card::before {
@@ -72,28 +56,30 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--color-brand), var(--color-accent));
+  height: 2px;
+  background: var(--color-brand);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
 .auth-card-title {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.3rem;
+  color: var(--text-primary);
 }
 
 .auth-card-subtitle {
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 0.8125rem;
   margin-bottom: 1.5rem;
 }
 
-/* 2. Form Inputs & Groups */
+/* 2. Form Controls */
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.125rem;
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 0.35rem;
 }
 
 .form-label {
@@ -119,10 +105,9 @@
 
 .input-icon {
   position: absolute;
-  left: 1rem;
+  left: 0.875rem;
   color: var(--text-muted);
   pointer-events: none;
-  font-size: 1rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -130,24 +115,23 @@
 
 .form-control {
   width: 100%;
-  background-color: var(--bg-surface);
+  background-color: var(--bg-input);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 0.75rem 1rem;
+  padding: 0.65rem 0.875rem;
   color: var(--text-primary);
   font-size: 0.875rem;
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   outline: none;
 }
 
 .input-wrapper .form-control {
-  padding-left: 2.75rem;
+  padding-left: 2.625rem;
 }
 
 .form-control:focus {
   border-color: var(--border-focus);
-  background-color: #243044;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.15);
 }
 
 .form-control::placeholder {
@@ -156,14 +140,14 @@
 
 select.form-control {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23545F6D'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 1rem;
-  padding-right: 2.5rem;
+  background-position: right 0.875rem center;
+  background-size: 0.9rem;
+  padding-right: 2.25rem;
 }
 
-/* 3. Type Switcher (Income vs Expense Segmented Control) */
+/* 3. Type Segmented Control */
 .type-segmented-control {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -171,78 +155,79 @@ select.form-control {
   padding: 4px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.125rem;
 }
 
 .type-option {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem;
+  gap: 0.45rem;
+  padding: 0.55rem;
   font-size: 0.875rem;
   font-weight: 600;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .type-option.active-expense {
-  background-color: var(--color-expense);
-  color: #ffffff;
-  box-shadow: none;
+  background-color: var(--color-expense-bg);
+  color: var(--color-expense);
+  border: 1px solid rgba(248, 113, 113, 0.25);
 }
 
 .type-option.active-income {
-  background-color: var(--color-income);
-  color: #ffffff;
-  box-shadow: none;
+  background-color: var(--color-income-bg);
+  color: var(--color-income);
+  border: 1px solid rgba(52, 211, 153, 0.25);
 }
 
-/* 4. Alert & Feedback Notifications */
+/* 4. Alerts */
 .alert {
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 0.875rem;
   border-radius: var(--radius-md);
   font-size: 0.8125rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.125rem;
   display: flex;
   align-items: flex-start;
-  gap: 0.625rem;
+  gap: 0.5rem;
+  border: 1px solid transparent;
 }
 
 .alert-error {
   background-color: var(--color-expense-bg);
-  border: 1px solid rgba(244, 63, 94, 0.3);
+  border-color: rgba(248, 113, 113, 0.25);
   color: #fca5a5;
 }
 
 .alert-success {
   background-color: var(--color-income-bg);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-color: rgba(52, 211, 153, 0.25);
   color: #6ee7b7;
 }
 
 .alert-info {
-  background-color: var(--color-info-bg);
-  border: 1px solid rgba(6, 182, 212, 0.3);
-  color: #67e8f9;
+  background-color: var(--color-brand-subtle);
+  border-color: rgba(91, 141, 239, 0.25);
+  color: var(--color-brand-light);
 }
 
+/* 5. Auth footer */
 .auth-footer {
   text-align: center;
-  margin-top: 1.5rem;
+  margin-top: 1.375rem;
   font-size: 0.8125rem;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .auth-footer a {
   color: var(--color-brand-light);
   font-weight: 600;
-  text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .auth-footer a:hover {
-  color: #ffffff;
+  color: var(--text-primary);
 }
