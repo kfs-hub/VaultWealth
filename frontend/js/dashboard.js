@@ -78,15 +78,9 @@ function updateMetricCards(transactions) {
   const expenseEl = document.getElementById('dashTotalExpense');
   const savingsEl = document.getElementById('dashSavingsRate');
 
-  if (window.RollingNumber) {
-    RollingNumber.animate(balanceEl, netBalance);
-    RollingNumber.animate(incomeEl, totalIncome);
-    RollingNumber.animate(expenseEl, totalExpense);
-  } else {
-    if (balanceEl) balanceEl.textContent = formatCurrency(netBalance);
-    if (incomeEl) incomeEl.textContent = formatCurrency(totalIncome);
-    if (expenseEl) expenseEl.textContent = formatCurrency(totalExpense);
-  }
+  if (balanceEl) balanceEl.textContent = formatCurrency(netBalance);
+  if (incomeEl) incomeEl.textContent = formatCurrency(totalIncome);
+  if (expenseEl) expenseEl.textContent = formatCurrency(totalExpense);
 
   if (savingsEl) {
     if (totalIncome > 0) {
@@ -108,7 +102,9 @@ function renderRecentTransactions(recentTxs) {
     tbody.innerHTML = `
       <tr>
         <td colspan="4" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
-          <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📝</div>
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem; display: flex; justify-content: center;">
+            ${typeof getSvgIcon === 'function' ? getSvgIcon('memo', '', { width: 32, height: 32 }) : ''}
+          </div>
           No transactions yet. Click <strong>"+ Add Transaction"</strong> to record your first one!
         </td>
       </tr>
@@ -173,7 +169,9 @@ function renderCategoryDoughnutChart(transactions) {
       emptyNotice.id = emptyNoticeId;
       emptyNotice.style.cssText = 'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; padding: 2rem;';
       emptyNotice.innerHTML = `
-        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🍩</div>
+        <div style="font-size: 2rem; margin-bottom: 0.5rem; display: flex; justify-content: center;">
+          ${typeof getSvgIcon === 'function' ? getSvgIcon('doughnut', '', { width: 36, height: 36 }) : ''}
+        </div>
         <p style="font-size: 0.875rem;">No expenses recorded yet.</p>
         <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Expenses by category will appear here automatically.</p>
       `;
@@ -187,10 +185,10 @@ function renderCategoryDoughnutChart(transactions) {
     if (emptyNotice) emptyNotice.style.display = 'none';
   }
 
-  // Pre-defined palette for categories matching screenshot accents
+  // Pre-defined palette for categories
   const colorMap = [
-    '#0077FE', '#38BDF8', '#FBBF24', '#F87171', '#8B5CF6',
-    '#34D399', '#F97316', '#EC4899', '#6366F1', '#94A3B8'
+    '#f97316', '#06b6d4', '#ec4899', '#eab308', '#8b5cf6',
+    '#3b82f6', '#10b981', '#14b8a6', '#6366f1', '#64748b'
   ];
 
   categoryChartInstance = new Chart(canvas.getContext('2d'), {
@@ -200,8 +198,8 @@ function renderCategoryDoughnutChart(transactions) {
       datasets: [{
         data: data,
         backgroundColor: colorMap.slice(0, labels.length),
-        borderColor: '#1D1E22',
-        borderWidth: 4,
+        borderColor: '#111827',
+        borderWidth: 3,
         hoverOffset: 6
       }]
     },
@@ -212,7 +210,7 @@ function renderCategoryDoughnutChart(transactions) {
         legend: {
           position: 'right',
           labels: {
-            color: '#9CA3AF',
+            color: '#94a3b8',
             boxWidth: 12,
             padding: 10,
             font: { family: 'Inter', size: 11 }
@@ -224,7 +222,7 @@ function renderCategoryDoughnutChart(transactions) {
           }
         }
       },
-      cutout: '68%'
+      cutout: '70%'
     }
   });
 }
@@ -266,7 +264,9 @@ function renderMonthlyTrendChart(transactions) {
       emptyNotice.id = emptyNoticeId;
       emptyNotice.style.cssText = 'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; padding: 2rem;';
       emptyNotice.innerHTML = `
-        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📈</div>
+        <div style="font-size: 2rem; margin-bottom: 0.5rem; display: flex; justify-content: center;">
+          ${typeof getSvgIcon === 'function' ? getSvgIcon('trending-up', '', { width: 36, height: 36 }) : ''}
+        </div>
         <p style="font-size: 0.875rem;">No historical expense trend yet.</p>
         <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Your spending curve will render as you log expenses.</p>
       `;
@@ -287,14 +287,12 @@ function renderMonthlyTrendChart(transactions) {
       datasets: [{
         label: 'Monthly Expenses',
         data: data,
-        borderColor: '#0077FE',
-        backgroundColor: 'rgba(0, 119, 254, 0.12)',
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
         borderWidth: 3,
         fill: true,
         tension: 0.35,
-        pointBackgroundColor: '#0077FE',
-        pointBorderColor: '#FFFFFF',
-        pointBorderWidth: 2,
+        pointBackgroundColor: '#10b981',
         pointRadius: 5
       }]
     },
@@ -303,13 +301,13 @@ function renderMonthlyTrendChart(transactions) {
       maintainAspectRatio: false,
       scales: {
         x: {
-          grid: { color: 'rgba(255, 255, 255, 0.04)' },
-          ticks: { color: '#8E92A0', font: { family: 'Inter', size: 11 } }
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#64748b', font: { family: 'Inter', size: 11 } }
         },
         y: {
-          grid: { color: 'rgba(255, 255, 255, 0.04)' },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
           ticks: {
-            color: '#8E92A0',
+            color: '#64748b',
             font: { family: 'Inter', size: 11 },
             callback: (val) => '₹' + val
           }
@@ -340,7 +338,7 @@ function renderDashboardInsights(transactions) {
   if (transactions.length === 0) {
     container.innerHTML = `
       <div class="insight-card" style="margin-top: 0; padding: 1rem; border-left-color: var(--color-accent);">
-        <div class="insight-icon">💡</div>
+        <div class="insight-icon">${typeof getSvgIcon === 'function' ? getSvgIcon('lightbulb') : ''}</div>
         <div class="insight-content">
           <h4>Smart Insights Engine</h4>
           <p>Add your income and expense transactions to see automated spending patterns and savings alerts.</p>
@@ -374,7 +372,7 @@ function renderDashboardInsights(transactions) {
     const catPercent = ((topAmount / totalExpense) * 100).toFixed(1);
     insightsHtml += `
       <div class="insight-card warning" style="margin-top: 0; padding: 1rem;">
-        <div class="insight-icon">🍔</div>
+        <div class="insight-icon">${typeof getSvgIcon === 'function' ? getSvgIcon('food') : ''}</div>
         <div class="insight-content">
           <h4>Top Spending Category</h4>
           <p><strong>${escapeHtml(topCategory)}</strong> accounts for <strong>${catPercent}%</strong> (${formatCurrency(topAmount)}) of your total expenses.</p>
@@ -394,7 +392,7 @@ function renderDashboardInsights(transactions) {
     if (netBalance >= 0) {
       insightsHtml += `
         <div class="insight-card success" style="margin-top: 0; padding: 1rem;">
-          <div class="insight-icon">🎯</div>
+          <div class="insight-icon">${typeof getSvgIcon === 'function' ? getSvgIcon('target') : ''}</div>
           <div class="insight-content">
             <h4>Positive Savings Rate</h4>
             <p>You have saved <strong>${savingsPercent}%</strong> of your income so far. Keep it up!</p>
@@ -404,7 +402,7 @@ function renderDashboardInsights(transactions) {
     } else {
       insightsHtml += `
         <div class="insight-card danger" style="margin-top: 0; padding: 1rem;">
-          <div class="insight-icon">⚠️</div>
+          <div class="insight-icon">${typeof getSvgIcon === 'function' ? getSvgIcon('warning') : ''}</div>
           <div class="insight-content">
             <h4>Deficit Warning</h4>
             <p>Your expenses currently exceed your recorded income by <strong>${formatCurrency(Math.abs(netBalance))}</strong>.</p>

@@ -9,32 +9,33 @@
 
 /* 2. CSS Design Tokens (Custom Properties) */
 :root {
-  /* Theme: Inspired by user screenshot — Crisp White Nav Pill + Obsidian Charcoal + Electric Blue & Coral/Gold Accents */
-  --bg-app: #141518;
-  --bg-sidebar: #FFFFFF;
-  --bg-card: #1D1E22;
-  --bg-card-hover: #222328;
-  --bg-card-secondary: #17181C;
-  --bg-surface: #222329;
-  --bg-surface-hover: #2A2B32;
-  --bg-surface-active: #32333B;
+  /* Theme: Dark Emerald Forest & Radiant Gold (Vault Wealth Theme) */
+  --bg-app: #0A140F;
+  --bg-sidebar: #0F1D17;
+  --bg-card: rgba(15, 29, 23, 0.85);
+  --bg-card-hover: rgba(20, 38, 30, 0.92);
+  --bg-card-secondary: #0D1913;
+  --bg-surface: #13241C;
+  --bg-surface-hover: #192F25;
+  --bg-surface-active: #203A2E;
 
   /* Header & Borders */
-  --bg-header: rgba(20, 21, 24, 0.85);
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-medium: rgba(255, 255, 255, 0.12);
-  --border-focus: #0077FE;
+  --bg-header: rgba(10, 20, 15, 0.85);
+  --border-subtle: rgba(197, 166, 107, 0.12);
+  --border-medium: rgba(197, 166, 107, 0.22);
+  --border-focus: #D4AF37;
 
   /* Typography Colors */
   --text-primary: #FFFFFF;
-  --text-secondary: #9CA3AF;
-  --text-muted: #6B7280;
-  --text-inverse: #141518;
+  --text-secondary: #9DB2A6;
+  --text-muted: #647B6F;
+  --text-inverse: #0A140F;
 
-  /* Semantic Brand & Accents from Screenshot */
-  --color-brand: #0077FE;          /* Electric Blue (Brand Squircle & Chart) */
-  --color-brand-light: #60A5FA;
-  --color-brand-glow: rgba(0, 119, 254, 0.35);
+  /* Semantic Brand & Accents from Background Image */
+  --color-brand: #D4AF37;          /* Radiant Gold (Matching currency symbols & waves) */
+  --color-brand-light: #E5C378;
+  --color-brand-dark: #A3822B;
+  --color-brand-glow: rgba(212, 175, 55, 0.35);
 
   --color-income: #34D399;         /* Soft Emerald */
   --color-income-bg: rgba(52, 211, 153, 0.14);
@@ -42,22 +43,23 @@
   --color-expense: #F87171;        /* Coral / Salmon */
   --color-expense-bg: rgba(248, 113, 113, 0.14);
 
-  --color-accent: #0077FE;         /* Electric Blue */
-  --color-warning: #FBBF24;        /* Warm Gold */
-  --color-coral: #F26A60;          /* Warm Salmon */
-  --color-gold: #F6C453;           /* Warm Sand/Amber */
-  --color-cyan: #38BDF8;           /* Sky Cyan */
-  --color-peach: #FFEFE0;          /* Warm Radiant Peach */
+  --color-accent: #C5A66B;         /* Soft Gold Accent */
+  --color-warning: #F59E0B;        /* Amber */
+  --color-coral: #F87171;
+  --color-gold: #D4AF37;
+  --color-emerald: #10B981;
+  --color-cyan: #34D399;
+  --color-peach: #FFEFE0;
 
   /* Typography System */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   /* Shadows & Elevations */
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 16px 36px -6px rgba(0, 0, 0, 0.65);
-  --shadow-glow-brand: 0 0 25px rgba(0, 119, 254, 0.35);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 16px 36px -6px rgba(0, 0, 0, 0.75);
+  --shadow-glow-brand: 0 0 25px rgba(212, 175, 55, 0.35);
 
   /* Border Radii */
   --radius-xs: 6px;
@@ -68,7 +70,6 @@
   --radius-full: 9999px;
 
   /* Layout Dimensions */
-  --sidebar-width: 76px;
   --header-height: 72px;
 
   /* Transitions */
@@ -93,7 +94,15 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: #141518;
+  background-color: #0A140F;
+  background-image: 
+    radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 60%),
+    linear-gradient(rgba(10, 20, 15, 0.78), rgba(10, 20, 15, 0.88)),
+    url('../assets/bg-pattern.png');
+  background-repeat: repeat;
+  background-size: 1024px auto;
+  background-attachment: fixed;
+  background-position: center top;
   color: var(--text-primary);
   line-height: 1.5;
   min-height: 100vh;
@@ -120,53 +129,68 @@ ul, ol {
   list-style: none;
 }
 
-/* 4. App Shell Layout (White Capsule Nav + Main View) */
+/* 4. App Shell Layout (Top Horizontal Navbar + Centered Main View) */
 .app-container {
   display: flex;
-  min-height: 100vh;
-  background: #141518;
-  position: relative;
-}
-
-/* Pristine White Floating Vertical Pill Nav Bar (from screenshot) */
-.sidebar {
-  width: var(--sidebar-width);
-  background-color: #FFFFFF;
-  border-radius: 32px;
-  display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  position: fixed;
-  top: 14px;
-  bottom: 14px;
-  left: 14px;
-  z-index: 50;
-  padding: 1rem 0.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  border: none;
-  transition: all var(--transition-normal);
-}
-
-.brand-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0 0.75rem 0;
+  min-height: 100vh;
+  background: transparent;
+  position: relative;
   width: 100%;
 }
 
+/* Pristine Top Horizontal Navigation Bar */
+.navbar-top {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: var(--header-height);
+  background-color: rgba(10, 20, 15, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(197, 166, 107, 0.16);
+  z-index: 50;
+  transition: all var(--transition-normal);
+}
+
+.navbar-top.scrolled {
+  background-color: rgba(10, 20, 15, 0.96);
+  border-bottom-color: rgba(197, 166, 107, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.navbar-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  gap: 1.5rem;
+}
+
+/* Brand Logo (Left) */
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
 .brand-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: #0077FE;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #D4AF37;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
-  color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(0, 119, 254, 0.45);
+  color: #0A140F;
+  box-shadow: none;
   cursor: pointer;
   transition: transform var(--transition-fast);
 }
@@ -175,175 +199,189 @@ ul, ol {
   transform: scale(1.05);
 }
 
-.brand-text,
-.brand-badge {
-  display: none; /* Icon-only floating pill nav */
+.brand-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
 }
 
-/* Vertical Icon Nav Menu */
+.brand-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.45rem;
+  background: rgba(212, 175, 55, 0.12);
+  color: #E5C378;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 6px;
+}
+
+/* Horizontal Capsule Nav Menu (Center) */
 .nav-menu {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.85rem;
-  width: 100%;
-  flex: 1;
-  padding: 0.5rem 0;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.3rem 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(197, 166, 107, 0.14);
 }
 
 .nav-item {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  color: #64748B;
-  transition: all var(--transition-fast);
-  position: relative;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
   text-decoration: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .nav-item:hover {
-  background-color: #F8FAFC;
-  color: #0F172A;
-  transform: translateY(-1px);
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.06);
 }
 
-/* Active Nav Item: soft pill squircle background with dark icon */
 .nav-item.active {
-  background-color: #F1F4F9;
-  color: #0F172A;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: #D4AF37;
+  color: #0A140F;
+  font-weight: 700;
+  box-shadow: none;
 }
 
 .nav-icon {
-  font-size: 1.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .nav-label {
-  display: none;
+  display: inline;
 }
 
-/* Smooth Floating Tooltip on Hover */
-.nav-item::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: calc(100% + 14px);
-  top: 50%;
-  transform: translateY(-50%) translateX(-6px);
-  background-color: #1E1F24;
-  color: #FFFFFF;
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
-  padding: 0.375rem 0.75rem;
-  border-radius: 8px;
-  pointer-events: none;
-  opacity: 0;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  z-index: 100;
-}
-
-.nav-item:hover::after {
-  opacity: 1;
-  transform: translateY(-50%) translateX(0);
-}
-
-/* Sidebar Divider */
-.sidebar-divider {
-  width: 28px;
-  height: 1px;
-  background-color: #E2E8F0;
-  margin: 0.25rem 0;
-}
-
-/* Sidebar Footer & Bottom Arrow Button */
-.sidebar-footer {
-  width: 100%;
+/* Navbar Right Actions & User Profile */
+.navbar-actions {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.user-profile-menu {
+  display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding-top: 0.5rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--border-subtle);
 }
 
-.user-snippet {
-  display: none; /* Moved cleanly to top header */
+.user-avatar-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.65rem 0.25rem 0.25rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  cursor: pointer;
 }
 
-.sidebar-signout {
-  width: 44px;
-  height: 44px;
+.user-avatar-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(197, 166, 107, 0.35);
+}
+
+.user-avatar-pill .user-avatar {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  border: 1px solid #E2E8F0;
+  background: linear-gradient(135deg, #D4AF37, #9E7D3B);
+  color: #0A140F;
+  font-weight: 700;
+  font-size: 0.8125rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748B;
-  transition: all var(--transition-fast);
 }
 
-.sidebar-signout:hover {
-  background-color: #FEE2E2;
-  color: #EF4444;
-  border-color: #FECACA;
+.user-avatar-pill .user-name {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-signout {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.btn-signout:hover {
+  color: var(--color-expense);
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.25);
 }
 
 /* Main Content Wrapper */
 .main-wrapper {
-  margin-left: calc(var(--sidebar-width) + 28px);
+  margin-left: 0;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 100vh;
-  padding-right: 1.5rem;
+  padding: 0 1.5rem;
 }
 
-/* Top App Header with Modern Actions */
-.top-header {
-  height: var(--header-height);
-  background-color: rgba(20, 21, 24, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-subtle);
+/* Page Header */
+.page-header {
+  padding: 1.75rem 0 1rem 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1rem;
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  transition: background-color 0.25s ease, border-color 0.25s ease;
-}
-
-.top-header.scrolled {
-  background-color: rgba(20, 21, 24, 0.95);
-  border-bottom-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .header-title-section {
   display: flex;
-  align-items: center;
-  gap: 1.25rem;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .header-title-section h1 {
-  font-size: 1.35rem;
+  font-size: 1.65rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: #FFFFFF;
 }
 
 .header-subtitle {
-  display: none;
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
 }
 
 /* Navigation Arrows (< > in header from screenshot) */
@@ -369,12 +407,12 @@ ul, ol {
 }
 
 .nav-arrow-btn:hover {
-  background: #1D1E22;
+  background: rgba(212, 175, 55, 0.12);
   color: #FFFFFF;
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(212, 175, 55, 0.35);
 }
 
-/* Header Right Actions (+, 🔔, 🔍, Avatar) */
+/* Header Right Actions (+, Notifications, Search, Avatar) */
 .header-actions {
   display: flex;
   align-items: center;
@@ -385,9 +423,11 @@ ul, ol {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #1D1E22;
-  color: #D1D5DB;
+  border: 1px solid rgba(197, 166, 107, 0.2);
+  background: rgba(15, 29, 23, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #E5C378;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -397,9 +437,9 @@ ul, ol {
 }
 
 .header-circle-btn:hover {
-  background: #25262C;
+  background: rgba(212, 175, 55, 0.2);
   color: #FFFFFF;
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(212, 175, 55, 0.45);
   transform: translateY(-1px);
 }
 
@@ -437,10 +477,12 @@ ul, ol {
 .card,
 .texture-card {
   background-color: var(--bg-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
-  box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.55);
   position: relative;
   overflow: hidden;
   transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal);
@@ -449,12 +491,12 @@ ul, ol {
 .card:hover,
 .texture-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 14px 36px -4px rgba(0, 0, 0, 0.65);
+  border-color: rgba(197, 166, 107, 0.28);
+  box-shadow: 0 14px 36px -4px rgba(0, 0, 0, 0.7), 0 0 20px rgba(212, 175, 55, 0.06);
 }
 
 .card-glass {
-  background-color: rgba(29, 30, 34, 0.85);
+  background-color: rgba(15, 29, 23, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-subtle);
@@ -464,7 +506,7 @@ ul, ol {
 .texture-separator {
   height: 1px;
   width: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08) 20%, rgba(255, 255, 255, 0.08) 80%, transparent);
+  background: linear-gradient(90deg, transparent, rgba(197, 166, 107, 0.16) 20%, rgba(197, 166, 107, 0.16) 80%, transparent);
   margin: 1.25rem 0;
 }
 
@@ -532,7 +574,7 @@ ul, ol {
   font-size: 0.875rem;
   padding: 0.65rem 1.35rem;
   border-radius: var(--radius-full);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  box-shadow: none;
   transition: all var(--transition-fast);
   cursor: pointer;
   border: none;
@@ -541,7 +583,7 @@ ul, ol {
 .btn-pill-white:hover {
   background-color: #F8FAFC;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  box-shadow: none;
 }
 
 .hero-illustration {
@@ -639,7 +681,7 @@ ul, ol {
   background-color: #FFFFFF;
   color: #141518;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  box-shadow: none;
 }
 
 /* ==========================================================================
@@ -661,51 +703,64 @@ ul, ol {
   cursor: pointer;
   border: none;
   outline: none;
+  box-shadow: none;
 }
 
 .btn:active {
   transform: translateY(1px);
 }
 
-/* Primary Button (Electric Blue from Screenshot Logo) */
+/* Primary Button (Clean Matte Gold — No Glare or Halo) */
 .btn-primary,
 .texture-btn-accent {
-  background-color: #0077FE;
-  color: #FFFFFF;
-  font-weight: 600;
-  box-shadow: 0 4px 14px rgba(0, 119, 254, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #D4AF37;
+  color: #0A140F;
+  font-weight: 700;
+  box-shadow: none;
+  border: 1px solid #D4AF37;
+  transition: all var(--transition-fast);
 }
 
 .btn-primary:hover,
 .texture-btn-accent:hover {
-  background-color: #1E88E5;
-  box-shadow: 0 6px 20px rgba(0, 119, 254, 0.5);
+  background: #C29E2E;
+  border-color: #C29E2E;
+  box-shadow: none;
   transform: translateY(-1px);
+  color: #0A140F;
 }
 
-/* Secondary Button (Matte Charcoal) */
+/* Secondary Button (Matte Translucent Gold / Dark Emerald — No Glare) */
 .btn-secondary {
-  background-color: #25262C;
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(212, 175, 55, 0.08);
+  color: #E5C378;
+  border: 1px solid rgba(197, 166, 107, 0.28);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all var(--transition-fast);
 }
 
 .btn-secondary:hover {
-  background-color: #2E2F37;
-  border-color: rgba(255, 255, 255, 0.18);
+  background-color: rgba(212, 175, 55, 0.16);
+  border-color: rgba(197, 166, 107, 0.5);
+  color: #FFFFFF;
+  box-shadow: none;
   transform: translateY(-1px);
 }
 
-/* Danger Button (Warm Coral / Salmon) */
+/* Danger Button (Matte Coral — No Glare) */
 .btn-danger {
   background-color: var(--color-expense);
   color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(248, 113, 113, 0.3);
+  border: 1px solid var(--color-expense);
+  box-shadow: none;
 }
 
 .btn-danger:hover {
   background-color: #EF4444;
+  border-color: #EF4444;
+  box-shadow: none;
   transform: translateY(-1px);
 }
 
@@ -779,9 +834,10 @@ ul, ol {
   flex-shrink: 0;
 }
 
-.squircle-blue {
-  background-color: #0077FE;
-  color: #FFFFFF;
+.squircle-blue,
+.squircle-gold {
+  background: linear-gradient(135deg, #D4AF37, #A88338);
+  color: #0A140F;
 }
 
 .squircle-coral {
@@ -944,9 +1000,9 @@ ul, ol {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(10, 11, 14, 0.82);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background-color: rgba(6, 14, 10, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -963,12 +1019,14 @@ ul, ol {
 }
 
 .modal-box {
-  background-color: #1D1E22;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 29, 23, 0.92);
+  border: 1px solid rgba(197, 166, 107, 0.22);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-radius: var(--radius-xl);
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.9), 0 0 35px rgba(212, 175, 55, 0.08);
   transform: translateY(20px) scale(0.96);
   transition: transform var(--transition-smooth);
   overflow: hidden;
@@ -1008,7 +1066,7 @@ ul, ol {
 
 .modal-footer {
   padding: 1rem 1.5rem;
-  background-color: #17181C;
+  background-color: rgba(10, 20, 15, 0.75);
   border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
@@ -1022,53 +1080,56 @@ ul, ol {
 }
 
 @media (max-width: 1024px) {
-  :root {
-    --sidebar-width: 80px;
+  .nav-item {
+    padding: 0.4rem 0.75rem;
+    gap: 0.35rem;
   }
 
-  .brand-text, .brand-badge, .nav-label, .user-details {
+  .nav-label {
+    font-size: 0.8125rem;
+  }
+
+  .user-avatar-pill .user-name {
     display: none;
   }
 
-  .brand-logo {
-    justify-content: center;
-    padding: 0.5rem 0 1.5rem 0;
-  }
-
-  .nav-item {
-    justify-content: center;
-    padding: 0.875rem 0;
-  }
-
-  .nav-item:hover {
-    transform: none;
-  }
-
-  .user-snippet {
-    justify-content: center;
-    padding: 0.5rem 0;
+  .navbar-container {
+    padding: 0 1rem;
+    gap: 1rem;
   }
 }
 
 @media (max-width: 768px) {
-  .sidebar {
-    display: none;
+  .nav-menu {
+    display: none; /* Delegated to thumb-friendly bottom mobile bar */
   }
 
   .main-wrapper {
     margin-left: 0;
-    padding-bottom: 70px; /* Space for bottom nav */
+    padding: 0 1rem 75px 1rem; /* Space for mobile bottom nav */
   }
 
-  .top-header {
-    padding: 0 1rem;
+  .navbar-container {
+    padding: 0 0.85rem;
+  }
+
+  .brand-badge {
+    display: none;
+  }
+
+  .page-header {
+    padding: 1.25rem 0 0.75rem 0;
+  }
+
+  .page-header h1 {
+    font-size: 1.35rem;
   }
 
   .page-content {
-    padding: 1.25rem 1rem;
+    padding: 1rem 0;
   }
 
-  /* Mobile Bottom App Bar */
+  /* Mobile Bottom App Bar (Dark Theme) */
   .mobile-nav {
     display: flex;
     align-items: center;
@@ -1078,7 +1139,9 @@ ul, ol {
     left: 0;
     right: 0;
     height: 64px;
-    background-color: var(--bg-sidebar);
+    background-color: rgba(20, 21, 24, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid var(--border-subtle);
     z-index: 60;
     padding: 0 0.5rem;
@@ -1101,5 +1164,98 @@ ul, ol {
 
   .mobile-nav-icon {
     font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
+
+/* ==========================================================================
+   SVG Vector Icons System
+   ========================================================================== */
+.svg-icon {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast), color var(--transition-fast), stroke var(--transition-fast);
+}
+
+.brand-icon .svg-icon {
+  width: 22px;
+  height: 22px;
+  color: #FFFFFF;
+}
+
+.nav-icon .svg-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.mobile-nav-icon .svg-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.stat-icon .svg-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.insight-icon .svg-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.card-title .svg-icon {
+  width: 20px;
+  height: 20px;
+  vertical-align: -3px;
+  color: var(--color-brand-light);
+}
+
+.card-title span.title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn .svg-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: -2px;
+  margin-right: 0.35rem;
+}
+
+.btn-icon .svg-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.badge .svg-icon {
+  width: 13px;
+  height: 13px;
+  vertical-align: -2px;
+  margin-right: 0.3rem;
+}
+
+.input-icon .svg-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+

@@ -123,7 +123,7 @@ function initExportCSV() {
     if (!user) return;
 
     exportBtn.disabled = true;
-    exportBtn.textContent = '⏳ Exporting...';
+    exportBtn.innerHTML = `<span>${typeof getSvgIcon === 'function' ? getSvgIcon('spinner', 'icon-spin', { width: 16, height: 16 }) : ''}</span> Exporting...`;
 
     try {
       const { data: transactions, error } = await client
@@ -168,7 +168,7 @@ function initExportCSV() {
       alert('Failed to export transactions: ' + (err.message || err));
     } finally {
       exportBtn.disabled = false;
-      exportBtn.innerHTML = '<span>📥</span> Export Transactions (CSV)';
+      exportBtn.innerHTML = `<span>${typeof getSvgIcon === 'function' ? getSvgIcon('inbox') : ''}</span> Export Transactions (CSV)`;
     }
   });
 }
@@ -187,7 +187,7 @@ function initClearData() {
     const user = await getCurrentUser();
     if (!user) return;
 
-    const confirmed = confirm('⚠️ ARE YOU ABSOLUTELY SURE?\n\nThis will permanently delete ALL your recorded transactions in Supabase.\nThis action cannot be undone.');
+    const confirmed = confirm('ARE YOU ABSOLUTELY SURE?\n\nThis will permanently delete ALL your recorded transactions in Supabase.\nThis action cannot be undone.');
     if (!confirmed) return;
 
     const secondConfirm = prompt('Type DELETE in all capitals to permanently purge your data:');

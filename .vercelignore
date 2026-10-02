@@ -1,0 +1,16 @@
+# Non-production directories
+database/
+ml/
+ui/
+
+# Scratch & temporary artifacts
+*.xlsx
+*.py
+*.pyc
+__pycache__/
+.system_generated/
+scratch/
+
+# Git internals
+.git/
+.gitignore

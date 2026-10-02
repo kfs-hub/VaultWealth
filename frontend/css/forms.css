@@ -1,7 +1,6 @@
 /* ==========================================================================
    VaultWealth Form Controls & Auth Stylesheet
-   Phase 3 & Modern UI Theme
-   Theme: Matte Obsidian Charcoal, Crisp White & Electric Blue
+   Phase 3: Frontend Foundation
    ========================================================================== */
 
 /* 1. Auth Page Wrapper (Login & Register) */
@@ -10,7 +9,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #141518;
+  background-color: #0A140F;
+  background-image: 
+    radial-gradient(ellipse at 50% 10%, rgba(212, 175, 55, 0.12) 0%, transparent 60%),
+    linear-gradient(rgba(10, 20, 15, 0.78), rgba(10, 20, 15, 0.88)),
+    url('../assets/bg-pattern.png');
+  background-repeat: repeat;
+  background-size: 1024px auto;
+  background-attachment: fixed;
+  background-position: center top;
   padding: 1.5rem;
 }
 
@@ -22,28 +29,23 @@
 
 .auth-brand {
   text-align: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 2rem;
 }
 
 .auth-brand .brand-icon {
-  margin: 0 auto 0.75rem auto;
+  margin: 0 auto 1rem auto;
   width: 52px;
   height: 52px;
   font-size: 1.5rem;
-  background: #0077FE;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  box-shadow: 0 6px 20px rgba(0, 119, 254, 0.4);
+  background: #D4AF37;
+  color: #0A140F;
+  box-shadow: none;
 }
 
 .auth-brand h1 {
-  font-size: 1.75rem;
+  font-size: 1.625rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #FFFFFF;
 }
 
 .auth-brand p {
@@ -52,111 +54,38 @@
   margin-top: 0.25rem;
 }
 
-/* Rounded Charcoal Auth Card */
 .auth-card {
-  background-color: #1D1E22;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  padding: 2.25rem 2.25rem 0 2.25rem;
-  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.65);
+  background-color: rgba(15, 29, 23, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(197, 166, 107, 0.22);
+  border-radius: var(--radius-xl);
+  padding: 2.25rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(212, 175, 55, 0.08);
   position: relative;
   overflow: hidden;
 }
 
-.auth-card-header {
-  text-align: center;
-  margin-bottom: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.card-icon-well {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  background: #17181C;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.875rem;
-  font-size: 1.35rem;
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-brand), var(--color-accent));
 }
 
 .auth-card-title {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.35rem;
-  color: #FFFFFF;
 }
 
 .auth-card-subtitle {
   color: var(--text-secondary);
   font-size: 0.8125rem;
-}
-
-/* Social Buttons Row */
-.social-auth-group {
-  display: flex;
-  gap: 0.75rem;
-  margin: 1.25rem 0;
-}
-
-/* Auth Divider ("or continue with email") */
-.auth-divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.8125rem;
-  margin: 1.25rem 0;
-}
-
-.auth-divider::before,
-.auth-divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.auth-divider span {
-  padding: 0 0.75rem;
-  text-transform: lowercase;
-  letter-spacing: 0.02em;
-}
-
-/* Subfooter */
-.texture-card-subfooter {
-  background: #17181C;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 1.125rem 1.5rem;
-  margin: 1.5rem -2.25rem 0 -2.25rem;
-  border-radius: 0 0 24px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8125rem;
-}
-
-.texture-card-subfooter a {
-  color: #60A5FA;
-  font-weight: 600;
-  transition: color var(--transition-fast);
-}
-
-.texture-card-subfooter a:hover {
-  color: #93C5FD;
-  text-decoration: underline;
-}
-
-.security-badge {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  margin-bottom: 1.5rem;
 }
 
 /* 2. Form Inputs & Groups */
@@ -194,15 +123,18 @@
   color: var(--text-muted);
   pointer-events: none;
   font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .form-control {
   width: 100%;
-  background-color: #17181C;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
-  color: #FFFFFF;
+  color: var(--text-primary);
   font-size: 0.875rem;
   transition: all var(--transition-fast);
   outline: none;
@@ -213,9 +145,9 @@
 }
 
 .form-control:focus {
-  border-color: #0077FE;
-  background-color: #1E1F25;
-  box-shadow: 0 0 0 3px rgba(0, 119, 254, 0.25);
+  border-color: var(--border-focus);
+  background-color: #243044;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
 .form-control::placeholder {
@@ -224,7 +156,7 @@
 
 select.form-control {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 1rem;
@@ -235,7 +167,7 @@ select.form-control {
 .type-segmented-control {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background-color: #17181C;
+  background-color: var(--bg-surface);
   padding: 4px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
@@ -257,16 +189,15 @@ select.form-control {
 }
 
 .type-option.active-expense {
-  background-color: #F87171;
-  color: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(248, 113, 113, 0.35);
+  background-color: var(--color-expense);
+  color: #ffffff;
+  box-shadow: none;
 }
 
 .type-option.active-income {
-  background-color: #34D399;
-  color: #141518;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(52, 211, 153, 0.35);
+  background-color: var(--color-income);
+  color: #ffffff;
+  box-shadow: none;
 }
 
 /* 4. Alert & Feedback Notifications */
@@ -281,21 +212,21 @@ select.form-control {
 }
 
 .alert-error {
-  background-color: rgba(248, 113, 113, 0.15);
-  border: 1px solid rgba(248, 113, 113, 0.3);
-  color: #FCA5A5;
+  background-color: var(--color-expense-bg);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #fca5a5;
 }
 
 .alert-success {
-  background-color: rgba(52, 211, 153, 0.15);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  color: #6EE7B7;
+  background-color: var(--color-income-bg);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
 }
 
 .alert-info {
-  background-color: rgba(0, 119, 254, 0.15);
-  border: 1px solid rgba(0, 119, 254, 0.3);
-  color: #93C5FD;
+  background-color: var(--color-info-bg);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #67e8f9;
 }
 
 .auth-footer {
@@ -306,12 +237,12 @@ select.form-control {
 }
 
 .auth-footer a {
-  color: #60A5FA;
+  color: var(--color-brand-light);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .auth-footer a:hover {
-  color: #FFFFFF;
+  color: #ffffff;
 }

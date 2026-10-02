@@ -5,8 +5,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   initNavigationHighlight();
+  initNavbarScroll();
   initTransactionModal();
-  initScrollBlur();
 });
 
 /**
@@ -22,6 +22,25 @@ function initNavigationHighlight() {
       link.classList.add('active');
     }
   });
+}
+
+/**
+ * Adds backdrop blur and elevation when user scrolls down
+ */
+function initNavbarScroll() {
+  const navbar = document.querySelector('.navbar-top');
+  if (!navbar) return;
+
+  const onScroll = () => {
+    if (window.scrollY > 10) {
+      navbar.classList.add('scrolled');
+    } else {
+      navbar.classList.remove('scrolled');
+    }
+  };
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 }
 
 /**
@@ -80,12 +99,12 @@ function initTransactionModal() {
   function populateCategories(type) {
     if (!categorySelect || typeof CATEGORIES === 'undefined') return;
     categorySelect.innerHTML = '';
-    
+
     const list = CATEGORIES[type] || [];
     list.forEach(cat => {
       const option = document.createElement('option');
       option.value = cat.name;
-      option.textContent = `${cat.icon} ${cat.name}`;
+      option.textContent = cat.name;
       categorySelect.appendChild(option);
     });
   }
@@ -183,109 +202,3 @@ function closeModal(modal) {
   modal.classList.remove('active');
   document.body.style.overflow = '';
 }
-
-/**
- * 3. Scroll Blur Animation Controller
- * - Dynamic Sticky Header Blur on Scroll
- * - Viewport Blur-to-Clear Card Reveal
- */
-function initScrollBlur() {
-  const header = document.querySelector('.top-header');
-
-  // Sticky Header Scroll Blur Listener
-  function updateHeaderBlur() {
-    if (!header) return;
-    if (window.scrollY > 15) {
-      header.classList.add('scrolled');
-    } else {
-      header.classList.remove('scrolled');
-    }
-  }
-
-  window.addEventListener('scroll', updateHeaderBlur, { passive: true });
-  updateHeaderBlur();
-
-  // Scroll Blur-to-Clear Intersection Observer for Cards
-  const revealTargets = document.querySelectorAll(
-    '.stat-card, .card, .chart-card, .insight-card, .data-table, .auth-card'
-  );
-
-  if ('IntersectionObserver' in window && revealTargets.length > 0) {
-    const observerOptions = {
-      root: null,
-      rootMargin: '0px 0px -40px 0px',
-      threshold: 0.1
-    };
-
-    const revealObserver = new IntersectionObserver((entries, observer) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('in-view');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, observerOptions);
-
-    revealTargets.forEach((el, idx) => {
-      el.classList.add('scroll-blur-reveal');
-      // Subtle stagger delay
-      const delay = Math.min((idx % 4) * 0.08, 0.3);
-      el.style.transitionDelay = `${delay}s`;
-      revealObserver.observe(el);
-    });
-  } else {
-    // Fallback if IntersectionObserver not supported
-    revealTargets.forEach(el => el.classList.add('in-view'));
-  }
-}
-
-/**
- * 4. Rolling Number Spring Counter Animation (from ui/rolling numbers.txt)
- * Interpolates numbers smoothly with ease-out cubic spring curve
- */
-class RollingNumber {
-  static animate(element, targetValue, options = {}) {
-    if (!element) return;
-    const duration = options.duration || 900;
-    const precision = options.precision !== undefined ? options.precision : 2;
-    const prefix = options.prefix || '';
-    const suffix = options.suffix || '';
-    const isCurrency = options.isCurrency !== false;
-
-    // Parse current numeric value from element text
-    const text = element.textContent || '';
-    const cleanCurrent = text.replace(/[^0-9.-]/g, '');
-    const startValue = parseFloat(cleanCurrent) || 0;
-    const target = parseFloat(targetValue) || 0;
-    const startTime = performance.now();
-
-    function update(now) {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Quintic ease out for silky spring feel: 1 - (1 - t)^5
-      const ease = 1 - Math.pow(1 - progress, 5);
-      const current = startValue + (target - startValue) * ease;
-
-      if (isCurrency && typeof formatCurrency === 'function') {
-        element.textContent = formatCurrency(current);
-      } else {
-        element.textContent = `${prefix}${current.toFixed(precision)}${suffix}`;
-      }
-
-      if (progress < 1) {
-        requestAnimationFrame(update);
-      } else {
-        if (isCurrency && typeof formatCurrency === 'function') {
-          element.textContent = formatCurrency(target);
-        } else {
-          element.textContent = `${prefix}${target.toFixed(precision)}${suffix}`;
-        }
-        if (options.onComplete) options.onComplete();
-      }
-    }
-
-    requestAnimationFrame(update);
-  }
-}
-
-window.RollingNumber = RollingNumber;

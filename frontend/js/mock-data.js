@@ -5,25 +5,37 @@
 
 const CATEGORIES = {
   expense: [
-    { id: 'food', name: 'Food & Dining', icon: '🍔', color: '#f97316' },
-    { id: 'transport', name: 'Transport', icon: '🚗', color: '#06b6d4' },
-    { id: 'shopping', name: 'Shopping', icon: '🛍️', color: '#ec4899' },
-    { id: 'bills', name: 'Bills & Utilities', icon: '💡', color: '#eab308' },
-    { id: 'entertainment', name: 'Entertainment', icon: '🎬', color: '#8b5cf6' },
-    { id: 'education', name: 'Education', icon: '📚', color: '#3b82f6' },
-    { id: 'healthcare', name: 'Healthcare', icon: '🏥', color: '#10b981' },
-    { id: 'travel', name: 'Travel', icon: '✈️', color: '#14b8a6' },
-    { id: 'subscriptions', name: 'Subscriptions', icon: '🔄', color: '#6366f1' },
-    { id: 'other', name: 'Other', icon: '📦', color: '#64748b' }
+    { id: 'food', name: 'Food & Dining', iconId: 'food', color: '#f97316' },
+    { id: 'transport', name: 'Transport', iconId: 'transport', color: '#06b6d4' },
+    { id: 'shopping', name: 'Shopping', iconId: 'shopping', color: '#ec4899' },
+    { id: 'bills', name: 'Bills & Utilities', iconId: 'bills', color: '#eab308' },
+    { id: 'entertainment', name: 'Entertainment', iconId: 'entertainment', color: '#8b5cf6' },
+    { id: 'education', name: 'Education', iconId: 'education', color: '#3b82f6' },
+    { id: 'healthcare', name: 'Healthcare', iconId: 'healthcare', color: '#10b981' },
+    { id: 'travel', name: 'Travel', iconId: 'travel', color: '#14b8a6' },
+    { id: 'subscriptions', name: 'Subscriptions', iconId: 'subscriptions', color: '#6366f1' },
+    { id: 'other', name: 'Other', iconId: 'package', color: '#64748b' }
   ],
   income: [
-    { id: 'salary', name: 'Salary / Stipend', icon: '💼', color: '#10b981' },
-    { id: 'freelance', name: 'Freelance / Projects', icon: '💻', color: '#06b6d4' },
-    { id: 'allowance', name: 'Allowance / Pocket Money', icon: '🎁', color: '#f59e0b' },
-    { id: 'investment', name: 'Investments / Returns', icon: '📈', color: '#8b5cf6' },
-    { id: 'other_income', name: 'Other Income', icon: '💵', color: '#64748b' }
+    { id: 'salary', name: 'Salary / Stipend', iconId: 'briefcase', color: '#10b981' },
+    { id: 'freelance', name: 'Freelance / Projects', iconId: 'laptop', color: '#06b6d4' },
+    { id: 'allowance', name: 'Allowance / Pocket Money', iconId: 'gift', color: '#f59e0b' },
+    { id: 'investment', name: 'Investments / Returns', iconId: 'trending-up', color: '#8b5cf6' },
+    { id: 'other_income', name: 'Other Income', iconId: 'banknote', color: '#64748b' }
   ]
 };
+
+// Bind dynamic SVG icon getter to category items
+Object.values(CATEGORIES).forEach(list => {
+  list.forEach(item => {
+    Object.defineProperty(item, 'icon', {
+      get() {
+        return typeof getSvgIcon === 'function' ? getSvgIcon(this.iconId) : '';
+      },
+      configurable: true
+    });
+  });
+});
 
 // Formats number to Indian Rupee string (e.g. ₹50,000.00)
 function formatCurrency(num) {
@@ -34,14 +46,17 @@ function formatCurrency(num) {
   });
 }
 
-// Looks up category emoji icon
+// Looks up category SVG icon
 function getCategoryIcon(categoryName, type) {
   if (typeof CATEGORIES !== 'undefined') {
     const list = CATEGORIES[type] || [];
     const found = list.find(c => c.name.toLowerCase() === (categoryName || '').toLowerCase());
-    if (found) return found.icon;
+    if (found) {
+      return typeof getSvgIcon === 'function' ? getSvgIcon(found.iconId || found.id) : '';
+    }
   }
-  return type === 'income' ? '💼' : '📦';
+  const fallback = type === 'income' ? 'briefcase' : 'package';
+  return typeof getSvgIcon === 'function' ? getSvgIcon(fallback) : '';
 }
 
 // Formats YYYY-MM-DD into "DD Mon YYYY"

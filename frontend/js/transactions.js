@@ -13,6 +13,10 @@
 // Flag to inform app.js that transactions.js handles the modal on this page
 window.transactionsJsActive = true;
 
+// Safe stub for backwards compatibility
+window.initTransactionTable = function() {};
+function initTransactionTable() {}
+
 // Global state for transactions
 let allTransactions = [];
 let editingTransactionId = null;
@@ -23,12 +27,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!user) return;
 
   // Initialize transactions page components
-  initTransactionTable();
   initFilterControls();
   initAddEditModalIntegration();
 
   // Initial fetch
   await loadTransactions();
+
+  // Listen for refresh events (e.g. statement upload or modal submit)
+  window.addEventListener('vaultwealth:refresh', async () => {
+    await loadTransactions();
+  });
 });
 
 /**
@@ -37,10 +45,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadTransactions() {
   const client = getSupabaseClient();
   const tableBody = document.getElementById('transactionsTableBody');
-  const countEl = document.querySelector('.table-container + div span');
+  const countEl = document.getElementById('txCountSpan') || document.querySelector('.table-container + div span');
 
   if (!client) {
-    console.warn('[VaultWealth] Supabase client not available, using mock data.');
+    console.warn('[VaultWealth] Supabase client not available.');
+    allTransactions = [];
+    renderTransactionsTable([]);
     return;
   }
 
@@ -48,22 +58,31 @@ async function loadTransactions() {
     tableBody.innerHTML = `
       <tr>
         <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-          ⏳ Loading transactions from your Vault...
+          <span style="display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center;">
+            ${typeof getSvgIcon === 'function' ? getSvgIcon('spinner', 'icon-spin', { width: 18, height: 18 }) : ''}
+            Loading transactions from your Vault...
+          </span>
         </td>
       </tr>
     `;
   }
+  if (countEl) {
+    countEl.textContent = 'Loading transactions...';
+  }
 
   try {
     const user = await getCurrentUser();
-    if (!user) return;
+    if (!user) {
+      allTransactions = [];
+      renderTransactionsTable([]);
+      return;
+    }
 
     const { data, error } = await client
       .from('transactions')
       .select('*')
       .eq('user_id', user.id)
-      .order('transaction_date', { ascending: false })
-      .order('created_at', { ascending: false });
+      .order('transaction_date', { ascending: false });
 
     if (error) {
       console.error('[VaultWealth] Error fetching transactions:', error);
@@ -71,7 +90,10 @@ async function loadTransactions() {
         tableBody.innerHTML = `
           <tr>
             <td colspan="6" style="text-align: center; padding: 2rem; color: var(--color-expense);">
-              ⚠️ Failed to load transactions: ${error.message}
+              <span style="display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center;">
+                ${typeof getSvgIcon === 'function' ? getSvgIcon('warning', '', { width: 18, height: 18 }) : ''}
+                Failed to load transactions: ${error.message}
+              </span>
             </td>
           </tr>
         `;
@@ -80,10 +102,26 @@ async function loadTransactions() {
     }
 
     allTransactions = data || [];
-    renderTransactionsTable(allTransactions);
+    if (typeof window.applyTransactionFilters === 'function') {
+      window.applyTransactionFilters();
+    } else {
+      renderTransactionsTable(allTransactions);
+    }
 
   } catch (err) {
     console.error('[VaultWealth] Unexpected error in loadTransactions:', err);
+    if (tableBody) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 2rem; color: var(--color-expense);">
+            <span style="display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center;">
+              ${typeof getSvgIcon === 'function' ? getSvgIcon('warning', '', { width: 18, height: 18 }) : ''}
+              Something went wrong. Please refresh the page.
+            </span>
+          </td>
+        </tr>
+      `;
+    }
   }
 }
 
@@ -92,21 +130,28 @@ async function loadTransactions() {
  */
 function renderTransactionsTable(transactions) {
   const tableBody = document.getElementById('transactionsTableBody');
-  const countSpan = document.querySelector('.table-container + div span');
+  const countSpan = document.getElementById('txCountSpan') || document.querySelector('.table-container + div span');
   if (!tableBody) return;
 
   if (!transactions || transactions.length === 0) {
     tableBody.innerHTML = `
       <tr>
         <td colspan="6" style="text-align: center; padding: 3rem 1rem;">
-          <div style="font-size: 2rem; margin-bottom: 0.5rem;">💳</div>
+          <div style="font-size: 2rem; margin-bottom: 0.75rem; display: flex; justify-content: center; color: var(--color-brand);">
+            ${typeof getSvgIcon === 'function' ? getSvgIcon('credit-card', '', { width: 44, height: 44 }) : ''}
+          </div>
           <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">No transactions found</h4>
           <p style="font-size: 0.8125rem; color: var(--text-secondary); margin-bottom: 1rem;">
-            Click "+ Add Transaction" to record your first income or expense.
+            Click "+ Add Transaction" or "Upload Statement" to record your income or expenses.
           </p>
-          <button class="btn btn-primary btn-sm" data-open-modal="transactionModal">
-            + Add Transaction
-          </button>
+          <div style="display: flex; gap: 0.5rem; justify-content: center;">
+            <button class="btn btn-secondary btn-sm" onclick="openStatementUploadModal()">
+              Upload Statement
+            </button>
+            <button class="btn btn-primary btn-sm" data-open-modal="transactionModal">
+              + Add Transaction
+            </button>
+          </div>
         </td>
       </tr>
     `;
@@ -144,8 +189,12 @@ function renderTransactionsTable(transactions) {
         </td>
         <td style="text-align: center;">
           <div style="display: flex; align-items: center; justify-content: center; gap: 0.35rem;">
-            <button class="btn-icon btn-sm" onclick="handleEditClick('${tx.id}')" title="Edit Transaction">✏️</button>
-            <button class="btn-icon btn-sm" onclick="handleDeleteClick('${tx.id}')" title="Delete Transaction" style="color: var(--color-expense);">🗑️</button>
+            <button class="btn-icon btn-sm" onclick="handleEditClick('${tx.id}')" title="Edit Transaction" aria-label="Edit Transaction">
+              ${typeof getSvgIcon === 'function' ? getSvgIcon('edit') : 'Edit'}
+            </button>
+            <button class="btn-icon btn-sm" onclick="handleDeleteClick('${tx.id}')" title="Delete Transaction" aria-label="Delete Transaction" style="color: var(--color-expense);">
+              ${typeof getSvgIcon === 'function' ? getSvgIcon('trash') : 'Delete'}
+            </button>
           </div>
         </td>
       </tr>
@@ -197,6 +246,9 @@ function initFilterControls() {
 
     renderTransactionsTable(filtered);
   }
+
+  // Export filter function so loadTransactions can trigger it
+  window.applyTransactionFilters = applyFilters;
 
   // Bind Search input
   if (searchInput) {
@@ -420,15 +472,18 @@ function closeTransactionModal() {
 }
 
 /**
- * Helper: Looks up category emoji icon
+ * Helper: Looks up category SVG icon
  */
 function getCategoryIcon(categoryName, type) {
   if (typeof CATEGORIES !== 'undefined') {
     const list = CATEGORIES[type] || [];
-    const found = list.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
-    if (found) return found.icon;
+    const found = list.find(c => c.name.toLowerCase() === (categoryName || '').toLowerCase());
+    if (found) {
+      return typeof getSvgIcon === 'function' ? getSvgIcon(found.iconId || found.id) : (found.icon || '');
+    }
   }
-  return type === 'income' ? '💼' : '📦';
+  const fallback = type === 'income' ? 'briefcase' : 'package';
+  return typeof getSvgIcon === 'function' ? getSvgIcon(fallback) : '';
 }
 
 /**
@@ -437,7 +492,8 @@ function getCategoryIcon(categoryName, type) {
 function formatDisplayDate(dateStr) {
   if (!dateStr) return '—';
   try {
-    const [year, month, day] = dateStr.split('-');
+    const cleanDate = String(dateStr).split('T')[0].split(' ')[0];
+    const [year, month, day] = cleanDate.split('-');
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${day} ${months[parseInt(month, 10) - 1]} ${year}`;
   } catch {
@@ -457,3 +513,8 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// Global exports
+window.loadTransactions = loadTransactions;
+window.renderTransactionsTable = renderTransactionsTable;
+

@@ -12,51 +12,9 @@
 // Initialize event listeners when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   initAuthForms();
-  initSocialAuth();
   initLogoutButtons();
   syncUserProfileHeader();
 });
-
-/**
- * 0. Initializes Social OAuth Buttons (from ui/card.txt)
- */
-function initSocialAuth() {
-  const googleBtn = document.getElementById('googleAuthBtn');
-  const githubBtn = document.getElementById('githubAuthBtn');
-  const alertBox = document.getElementById('authAlert') || document.getElementById('registerAlert');
-
-  if (googleBtn) {
-    googleBtn.addEventListener('click', async () => {
-      const client = getSupabaseClient();
-      if (!client) return;
-      try {
-        const { error } = await client.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: window.location.origin + window.location.pathname.replace(/login\.html|register\.html/, 'dashboard.html') }
-        });
-        if (error) throw error;
-      } catch (err) {
-        showAuthAlert(alertBox, 'Google OAuth: Configure Google in Supabase Dashboard → Authentication → Providers to enable one-click sign in.', 'info');
-      }
-    });
-  }
-
-  if (githubBtn) {
-    githubBtn.addEventListener('click', async () => {
-      const client = getSupabaseClient();
-      if (!client) return;
-      try {
-        const { error } = await client.auth.signInWithOAuth({
-          provider: 'github',
-          options: { redirectTo: window.location.origin + window.location.pathname.replace(/login\.html|register\.html/, 'dashboard.html') }
-        });
-        if (error) throw error;
-      } catch (err) {
-        showAuthAlert(alertBox, 'GitHub OAuth: Configure GitHub in Supabase Dashboard → Authentication → Providers to enable one-click sign in.', 'info');
-      }
-    });
-  }
-}
 
 /**
  * 1. Initializes Login and Registration form submissions
@@ -69,7 +27,7 @@ function initAuthForms() {
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
       const alertBox = document.getElementById('authAlert');
