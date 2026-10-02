@@ -1,16 +1,20 @@
-# Non-production directories
+# Non-frontend directories — excluded from Vercel bundle
 database/
 ml/
 ui/
+.git/
 
-# Scratch & temporary artifacts
-*.xlsx
+# Python files (prevents Vercel from treating project as a Python serverless app)
 *.py
 *.pyc
+*.pyo
+requirements.txt
+pyproject.toml
+setup.py
+setup.cfg
 __pycache__/
-.system_generated/
-scratch/
 
-# Git internals
-.git/
-.gitignore
+# Scratch & dev-only files
+*.xlsx
+*.csv
+AccountStatement*.xlsx

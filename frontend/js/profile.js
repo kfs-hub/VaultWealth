@@ -205,7 +205,7 @@ function initClearData() {
       if (error) throw error;
 
       alert('All transactions have been permanently cleared.');
-      window.location.href = 'dashboard.html';
+      window.location.href = '/dashboard';
 
     } catch (err) {
       console.error('[VaultWealth] Error deleting transactions:', err);

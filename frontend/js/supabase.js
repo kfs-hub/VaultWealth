@@ -69,7 +69,7 @@ async function requireAuth() {
     // If Supabase is configured and user is not logged in, redirect
     const client = getSupabaseClient();
     if (client) {
-      window.location.href = 'login.html';
+      window.location.href = '/login';
     }
   }
   return user;

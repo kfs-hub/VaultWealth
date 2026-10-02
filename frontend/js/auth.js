@@ -61,7 +61,7 @@ function initAuthForms() {
 
         showAuthAlert(alertBox, 'Login successful! Redirecting...', 'success');
         setTimeout(() => {
-          window.location.href = 'dashboard.html';
+          window.location.href = '/dashboard';
         }, 800);
 
       } catch (err) {
@@ -132,7 +132,7 @@ function initAuthForms() {
         } else {
           showAuthAlert(alertBox, 'Account created successfully! Redirecting to dashboard...', 'success');
           setTimeout(() => {
-            window.location.href = 'dashboard.html';
+            window.location.href = '/dashboard';
           }, 1000);
         }
 
@@ -148,7 +148,7 @@ function initAuthForms() {
  * 2. Initializes Logout Button Listeners across all pages
  */
 function initLogoutButtons() {
-  const logoutButtons = document.querySelectorAll('[data-action="logout"], a[href="login.html"].nav-item');
+  const logoutButtons = document.querySelectorAll('[data-action="logout"], a[href="/login"].nav-item');
 
   logoutButtons.forEach(btn => {
     btn.addEventListener('click', async (e) => {
@@ -162,7 +162,7 @@ function initLogoutButtons() {
           console.error('[VaultWealth] Error signing out:', err);
         }
       }
-      window.location.href = 'login.html';
+      window.location.href = '/login';
     });
   });
 }

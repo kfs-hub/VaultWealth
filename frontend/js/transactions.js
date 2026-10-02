@@ -293,7 +293,7 @@ function initAddEditModalIntegration() {
     const { data: { user } } = await client.auth.getUser();
     if (!user) {
       alert('You must be logged in to save transactions.');
-      window.location.href = 'login.html';
+      window.location.href = '/login';
       return;
     }
 

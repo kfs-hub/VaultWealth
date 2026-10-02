@@ -144,7 +144,7 @@ function initTransactionModal() {
       const user = await getCurrentUser();
       if (!user) {
         alert('Please sign in to record transactions.');
-        window.location.href = 'login.html';
+        window.location.href = '/login';
         return;
       }
 

@@ -1,16 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "",
+  "outputDirectory": "frontend",
+  "installCommand": "",
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/", "destination": "/frontend/index.html" },
-    { "source": "/dashboard", "destination": "/frontend/dashboard.html" },
-    { "source": "/transactions", "destination": "/frontend/transactions.html" },
-    { "source": "/analytics", "destination": "/frontend/analytics.html" },
-    { "source": "/profile", "destination": "/frontend/profile.html" },
-    { "source": "/login", "destination": "/frontend/login.html" },
-    { "source": "/register", "destination": "/frontend/register.html" },
-    { "source": "/((?!frontend/).*)", "destination": "/frontend/$1" }
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/transactions", "destination": "/transactions.html" },
+    { "source": "/analytics", "destination": "/analytics.html" },
+    { "source": "/profile", "destination": "/profile.html" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/register", "destination": "/register.html" }
   ],
   "headers": [
     {
@@ -23,9 +25,12 @@
       ]
     },
     {
-      "source": "/(assets|css|js)/(.*)",
+      "source": "/(css|js|assets)/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
       ]
     }
   ]
