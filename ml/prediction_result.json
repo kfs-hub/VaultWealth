@@ -1,0 +1,64 @@
+{
+  "timestamp": 1790963368.3717601,
+  "historical_months_count": 12,
+  "historical_data": [
+    {
+      "month": "Oct 2025",
+      "amount": 14200.0
+    },
+    {
+      "month": "Nov 2025",
+      "amount": 15650.0
+    },
+    {
+      "month": "Dec 2025",
+      "amount": 16900.0
+    },
+    {
+      "month": "Jan 2026",
+      "amount": 17600.0
+    },
+    {
+      "month": "Feb 2026",
+      "amount": 18300.0
+    },
+    {
+      "month": "Mar 2026",
+      "amount": 19000.0
+    },
+    {
+      "month": "Apr 2026",
+      "amount": 19800.0
+    },
+    {
+      "month": "May 2026",
+      "amount": 20500.0
+    },
+    {
+      "month": "Jun 2026",
+      "amount": 21200.0
+    },
+    {
+      "month": "Jul 2026",
+      "amount": 21900.0
+    },
+    {
+      "month": "Aug 2026",
+      "amount": 22600.0
+    },
+    {
+      "month": "Sep 2026",
+      "amount": 23300.0
+    }
+  ],
+  "forecast_next_month": {
+    "predicted_amount": 24315.15,
+    "confidence_lower": 23887.61,
+    "confidence_upper": 24742.69,
+    "trend_slope": 779.9,
+    "trend_direction": "Increasing",
+    "r2_accuracy_score": 0.9885,
+    "mae_error": 218.13,
+    "insight_text": "Based on your 12-month spending trajectory, expenses are trending increasing by ~Rs. 780 per month. We forecast next month's total spending at ~Rs. 24,315 (range: Rs. 23,888 - Rs. 24,743)."
+  }
+}

@@ -1,0 +1,6 @@
+# VaultWealth Machine Learning Dependencies
+# Phase 11: Expense Prediction & Forecasting Engine
+
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0

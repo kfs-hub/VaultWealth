@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics & Insights — VaultWealth | Personal Finance Analyzer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-logo">
+        <div class="brand-icon">⚡</div>
+        <span class="brand-text">VaultWealth</span>
+        <span class="brand-badge">CSE</span>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="transactions.html" class="nav-item">
+          <span class="nav-icon">💳</span>
+          <span class="nav-label">Transactions</span>
+        </a>
+        <a href="analytics.html" class="nav-item active">
+          <span class="nav-icon">📈</span>
+          <span class="nav-label">Analytics</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+          <span class="nav-icon">👤</span>
+          <span class="nav-label">Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar">U</div>
+          <div class="user-details">
+            <span class="user-name">Loading...</span>
+            <span class="user-email"></span>
+          </div>
+        </div>
+        <a href="login.html" class="nav-item" style="color: var(--color-expense); margin-top: 0.25rem;">
+          <span class="nav-icon">🚪</span>
+          <span class="nav-label">Sign Out</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+      
+      <!-- Top Sticky Header -->
+      <header class="top-header">
+        <div class="header-title-section">
+          <h1>Financial Analytics & Insights</h1>
+          <p class="header-subtitle">Analyze category proportions, monthly variance, and rule-based insights.</p>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-primary" data-open-modal="transactionModal">
+            <span>+</span> Add Transaction
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="page-content">
+
+        <!-- 1. Key Analytics Stat Cards -->
+        <section class="stats-grid">
+          <!-- Month-over-Month Comparison -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Month-over-Month Shift</span>
+              <div class="stat-icon stat-icon-expense">📈</div>
+            </div>
+            <div id="analyticMomValue" class="stat-value amount">0.0%</div>
+            <div id="analyticMomFooter" class="stat-footer">
+              <span>Calculating variance against previous month...</span>
+            </div>
+          </div>
+
+          <!-- Top Spending Category -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Largest Expense Category</span>
+              <div class="stat-icon stat-icon-balance">🍔</div>
+            </div>
+            <div id="analyticTopCategory" class="stat-value amount" style="font-size: 1.5rem; color: #f97316;">None</div>
+            <div id="analyticTopCatFooter" class="stat-footer">
+              <span>No expenses recorded yet</span>
+            </div>
+          </div>
+
+          <!-- Daily Average Expense -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Avg Daily Spend</span>
+              <div class="stat-icon stat-icon-income">🗓️</div>
+            </div>
+            <div id="analyticDailyAvg" class="stat-value amount">₹0.00 / day</div>
+            <div id="analyticDailyAvgFooter" class="stat-footer">
+              <span>Averaged across active days</span>
+            </div>
+          </div>
+
+          <!-- Phase 11: Machine Learning Forecast Metric -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">AI Forecast (Next Mo)</span>
+              <div class="stat-icon" style="background-color: rgba(56, 189, 248, 0.15); color: #38bdf8;">🔮</div>
+            </div>
+            <div id="analyticForecastValue" class="stat-value amount" style="font-size: 1.5rem; color: #38bdf8;">₹0.00</div>
+            <div id="analyticForecastFooter" class="stat-footer">
+              <span>Phase 11: OLS Regression</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Detailed Analytics Visualizations (Phase 9) -->
+        <section class="charts-grid">
+          <!-- Category Spending Bar Chart -->
+          <div class="card chart-card">
+            <div class="card-header">
+              <h2 class="card-title"><span>📊</span> Category Spending Comparison</h2>
+              <span class="badge badge-category">Live Breakdown</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="analyticsCategoryBarChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Cash Flow Ratio Chart (Income vs Expense) -->
+          <div class="card chart-card">
+            <div class="card-header">
+              <h2 class="card-title"><span>⚖️</span> Cash Flow Proportions</h2>
+              <span class="badge badge-income">Net Savings: ₹0.00</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="cashflowPieChart"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Smart Insights Engine Feed (Phase 10) -->
+        <section class="card" style="margin-top: 2rem;">
+          <div class="card-header">
+            <h2 class="card-title"><span>🧠</span> Automated Smart Insights (Rule-Based Engine)</h2>
+            <span id="analyticsInsightsCount" class="badge badge-category">Live Insights</span>
+          </div>
+
+          <div id="analyticsInsightsContainer" class="insights-grid" style="margin-top: 0;">
+            <div class="insight-card" style="border-left-color: var(--color-accent);">
+              <div class="insight-icon">💡</div>
+              <div class="insight-content">
+                <h4>Smart Insights Engine</h4>
+                <p>Analyzing your financial patterns...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. Machine Learning Expense Forecasting Engine (Phase 11) -->
+        <section class="card" style="margin-top: 2rem;">
+          <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <h2 class="card-title"><span>🔮</span> AI / Machine Learning Expense Forecasting (Phase 11)</h2>
+              <p style="font-size: 0.8125rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                Time-Series Trend Projection using Ordinary Least Squares (OLS) Linear Regression
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <span id="forecastSourceBadge" class="badge badge-income">Model: Initializing...</span>
+              <button id="exportMlDataBtn" class="btn btn-secondary btn-sm" title="Export transactions as CSV for Python ML model">
+                <span>📥</span> Export ML CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- ML Metrics Grid -->
+          <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 1.25rem 0 1.5rem 0; gap: 1rem;">
+            <div class="stat-card" style="background-color: var(--bg-surface); padding: 1.125rem 1.25rem; border-color: rgba(56, 189, 248, 0.25);">
+              <div class="stat-header">
+                <span class="stat-label">Next Month Forecast</span>
+                <span style="font-size: 1.2rem;">🎯</span>
+              </div>
+              <div id="mlPredictedAmount" class="stat-value amount" style="font-size: 1.5rem; color: #38bdf8;">₹0.00</div>
+              <div id="mlConfidenceRange" class="stat-footer">
+                <span>95% CI: ₹0.00 - ₹0.00</span>
+              </div>
+            </div>
+
+            <div class="stat-card" style="background-color: var(--bg-surface); padding: 1.125rem 1.25rem;">
+              <div class="stat-header">
+                <span class="stat-label">Monthly Trend Slope (&beta;₁)</span>
+                <span style="font-size: 1.2rem;">📈</span>
+              </div>
+              <div id="mlTrendSlope" class="stat-value amount" style="font-size: 1.5rem;">+₹0.00</div>
+              <div id="mlTrendDirection" class="stat-footer">
+                <span>Spending Velocity: Stable</span>
+              </div>
+            </div>
+
+            <div class="stat-card" style="background-color: var(--bg-surface); padding: 1.125rem 1.25rem;">
+              <div class="stat-header">
+                <span class="stat-label">Goodness of Fit (R²)</span>
+                <span style="font-size: 1.2rem;">📊</span>
+              </div>
+              <div id="mlR2Score" class="stat-value amount" style="font-size: 1.5rem; color: var(--color-brand);">0.000</div>
+              <div id="mlMaeScore" class="stat-footer">
+                <span>Mean Abs Error: ₹0.00</span>
+              </div>
+            </div>
+
+            <div class="stat-card" style="background-color: var(--bg-surface); padding: 1.125rem 1.25rem;">
+              <div class="stat-header">
+                <span class="stat-label">Data Timeline</span>
+                <span style="font-size: 1.2rem;">🗓️</span>
+              </div>
+              <div id="mlMonthsCount" class="stat-value amount" style="font-size: 1.5rem;">0 Months</div>
+              <div id="mlEquationSnippet" class="stat-footer" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary);">
+                ŷ = β₀ + β₁X
+              </div>
+            </div>
+          </div>
+
+          <!-- ML Forecast Visualization Chart -->
+          <div style="background-color: var(--bg-surface); border-radius: var(--radius-md); padding: 1.25rem; border: 1px solid var(--border-subtle); margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <h3 style="font-size: 0.9375rem; font-weight: 600; color: var(--text-primary);">
+                Historical Spend Trajectory vs. AI Forecast Projection
+              </h3>
+              <div style="display: flex; gap: 1rem; font-size: 0.75rem; align-items: center;">
+                <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #60a5fa;">
+                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;"></span> Actual Monthly Spend
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 0.35rem; color: #38bdf8;">
+                  <span style="display: inline-block; width: 14px; height: 2px; border-top: 2px dashed #38bdf8;"></span> ML Projected Forecast
+                </span>
+              </div>
+            </div>
+            <div class="chart-container" style="min-height: 280px;">
+              <canvas id="mlForecastChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Academic & Viva Technical Notes Callout -->
+          <div style="background-color: rgba(59, 130, 246, 0.06); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius-md); padding: 1.125rem 1.25rem; display: flex; flex-direction: column; gap: 0.625rem; font-size: 0.8125rem;">
+            <div style="font-weight: 600; color: #93c5fd; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🎓</span> CSE 5th Semester Mini Project — Model Architecture & Viva Defense
+            </div>
+            <p style="color: var(--text-secondary); line-height: 1.5; margin: 0;">
+              This forecasting module executes a deterministic Ordinary Least Squares (OLS) Linear Regression model:
+              <strong style="color: var(--text-primary); font-family: var(--font-mono);">ŷ = β₀ + β₁·X</strong>, where
+              <strong style="color: var(--text-primary);">X</strong> represents chronological monthly periods,
+              <strong style="color: var(--text-primary);">β₁</strong> represents monthly spending rate of change (slope), and
+              <strong style="color: var(--text-primary);">ŷ</strong> produces the anticipated next-month expenditure.
+            </p>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.25rem; font-family: var(--font-mono); font-size: 0.75rem;">
+              <span style="background: rgba(0,0,0,0.35); padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid var(--border-subtle); color: #cbd5e1;">
+                Python CLI: <code>python ml/prediction.py</code>
+              </span>
+              <span style="background: rgba(0,0,0,0.35); padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid var(--border-subtle); color: #cbd5e1;">
+                Model: OLS Linear Regression
+              </span>
+              <span style="background: rgba(0,0,0,0.35); padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid var(--border-subtle); color: #cbd5e1;">
+                Confidence Interval: 95% (1.96 × MAE)
+              </span>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-nav">
+      <a href="dashboard.html" class="mobile-nav-item">
+        <span class="mobile-nav-icon">📊</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="transactions.html" class="mobile-nav-item">
+        <span class="mobile-nav-icon">💳</span>
+        <span>Transactions</span>
+      </a>
+      <a href="analytics.html" class="mobile-nav-item active">
+        <span class="mobile-nav-icon">📈</span>
+        <span>Analytics</span>
+      </a>
+      <a href="profile.html" class="mobile-nav-item">
+        <span class="mobile-nav-icon">👤</span>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <!-- Reusable Modal -->
+  <div id="transactionModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Record New Transaction</h3>
+        <button type="button" class="modal-close" data-close-modal>&times;</button>
+      </div>
+      <form id="transactionModalForm">
+        <div class="modal-body">
+          <div class="type-segmented-control">
+            <button type="button" id="modalTypeExpense" class="type-option active-expense"><span>📤</span> Expense</button>
+            <button type="button" id="modalTypeIncome" class="type-option"><span>📥</span> Income</button>
+          </div>
+          <div class="form-group">
+            <label for="modalAmount" class="form-label">Amount (₹)</label>
+            <input type="number" id="modalAmount" class="form-control" placeholder="0.00" step="0.01" min="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="modalCategorySelect" class="form-label">Category</label>
+            <select id="modalCategorySelect" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label for="modalDate" class="form-label">Date</label>
+            <input type="date" id="modalDate" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="modalDescription" class="form-label">Description <span class="optional">(Optional)</span></label>
+            <input type="text" id="modalDescription" class="form-control" placeholder="e.g. Campus meal">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Supabase JS Client CDN & App Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/mock-data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/analytics.js"></script>
+</body>
+</html>

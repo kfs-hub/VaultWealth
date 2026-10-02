@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactions — VaultWealth | Personal Finance Analyzer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/forms.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-logo">
+        <div class="brand-icon">⚡</div>
+        <span class="brand-text">VaultWealth</span>
+        <span class="brand-badge">CSE</span>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="transactions.html" class="nav-item active">
+          <span class="nav-icon">💳</span>
+          <span class="nav-label">Transactions</span>
+        </a>
+        <a href="analytics.html" class="nav-item">
+          <span class="nav-icon">📈</span>
+          <span class="nav-label">Analytics</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+          <span class="nav-icon">👤</span>
+          <span class="nav-label">Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar">U</div>
+          <div class="user-details">
+            <span class="user-name">Loading...</span>
+            <span class="user-email"></span>
+          </div>
+        </div>
+        <a href="login.html" class="nav-item" style="color: var(--color-expense); margin-top: 0.25rem;">
+          <span class="nav-icon">🚪</span>
+          <span class="nav-label">Sign Out</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+      
+      <!-- Top Sticky Header -->
+      <header class="top-header">
+        <div class="header-title-section">
+          <h1>Transaction History</h1>
+          <p class="header-subtitle">Search, filter, categorize, and manage your income & expenses.</p>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-primary" data-open-modal="transactionModal">
+            <span>+</span> Add Transaction
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="page-content">
+
+        <!-- Toolbar & Filter Controls -->
+        <div class="toolbar">
+          
+          <!-- Search Box -->
+          <div class="input-wrapper search-input-wrapper">
+            <span class="input-icon">🔍</span>
+            <input type="text" id="txSearchInput" class="form-control" placeholder="Search by description or note...">
+          </div>
+
+          <!-- Filters -->
+          <div class="filter-group">
+            <!-- Type Filter -->
+            <div class="segmented-filter">
+              <button class="segmented-filter-btn active" data-filter-type="all">All</button>
+              <button class="segmented-filter-btn" data-filter-type="income">Income</button>
+              <button class="segmented-filter-btn" data-filter-type="expense">Expenses</button>
+            </div>
+
+            <!-- Category Filter Dropdown -->
+            <select id="txCategoryFilter" class="form-control" style="width: auto; min-width: 170px;">
+              <option value="all">All Categories</option>
+              <option value="food">🍔 Food & Dining</option>
+              <option value="transport">🚗 Transport</option>
+              <option value="shopping">🛍️ Shopping</option>
+              <option value="bills">💡 Bills & Utilities</option>
+              <option value="entertainment">🎬 Entertainment</option>
+              <option value="education">📚 Education</option>
+              <option value="healthcare">🏥 Healthcare</option>
+              <option value="travel">✈️ Travel</option>
+              <option value="subscriptions">🔄 Subscriptions</option>
+              <option value="salary">💼 Salary / Stipend</option>
+            </select>
+
+            <!-- Month Filter -->
+            <select id="txMonthFilter" class="form-control" style="width: auto; min-width: 150px;">
+              <option value="2026-09" selected>September 2026</option>
+              <option value="2026-08">August 2026</option>
+              <option value="2026-07">July 2026</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Transactions Table Card -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div class="table-container" style="border: none; border-radius: 0;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Category</th>
+                  <th>Description</th>
+                  <th>Type</th>
+                  <th style="text-align: right;">Amount</th>
+                  <th style="text-align: center; width: 100px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="transactionsTableBody">
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                    ⏳ Loading transactions from your Vault...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Pagination & Count Footer -->
+          <div style="padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); background-color: rgba(255, 255, 255, 0.01);">
+            <span style="font-size: 0.8125rem; color: var(--text-secondary);">Showing <strong>7</strong> of <strong>7</strong> transactions</span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary btn-sm" disabled>Previous</button>
+              <button class="btn btn-primary btn-sm">1</button>
+              <button class="btn btn-secondary btn-sm" disabled>Next</button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-nav">
+      <a href="dashboard.html" class="mobile-nav-item">
+        <span class="mobile-nav-icon">📊</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="transactions.html" class="mobile-nav-item active">
+        <span class="mobile-nav-icon">💳</span>
+        <span>Transactions</span>
+      </a>
+      <a href="analytics.html" class="mobile-nav-item">
+        <span class="mobile-nav-icon">📈</span>
+        <span>Analytics</span>
+      </a>
+      <a href="profile.html" class="mobile-nav-item">
+        <span class="mobile-nav-icon">👤</span>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <!-- Reusable "+ Add Transaction" Modal Popup -->
+  <div id="transactionModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Record New Transaction</h3>
+        <button type="button" class="modal-close" data-close-modal>&times;</button>
+      </div>
+
+      <form id="transactionModalForm">
+        <div class="modal-body">
+          <div class="type-segmented-control">
+            <button type="button" id="modalTypeExpense" class="type-option active-expense">
+              <span>📤</span> Expense
+            </button>
+            <button type="button" id="modalTypeIncome" class="type-option">
+              <span>📥</span> Income
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label for="modalAmount" class="form-label">Amount (₹)</label>
+            <div class="input-wrapper">
+              <span class="input-icon">₹</span>
+              <input type="number" id="modalAmount" class="form-control" placeholder="0.00" step="0.01" min="0.01" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="modalCategorySelect" class="form-label">Category</label>
+            <select id="modalCategorySelect" class="form-control" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="modalDate" class="form-label">Date</label>
+            <input type="date" id="modalDate" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="modalDescription" class="form-label">
+              Description <span class="optional">(Optional)</span>
+            </label>
+            <input type="text" id="modalDescription" class="form-control" placeholder="e.g. Lunch at cafeteria">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Supabase JS Client CDN & App Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/mock-data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/transactions.js"></script>
+</body>
+</html>

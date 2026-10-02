@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — VaultWealth | Personal Finance Analyzer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <!-- Chart.js CDN for interactive visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-logo">
+        <div class="brand-icon">⚡</div>
+        <span class="brand-text">VaultWealth</span>
+        <span class="brand-badge">CSE</span>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="dashboard.html" class="nav-item active">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="transactions.html" class="nav-item">
+          <span class="nav-icon">💳</span>
+          <span class="nav-label">Transactions</span>
+        </a>
+        <a href="analytics.html" class="nav-item">
+          <span class="nav-icon">📈</span>
+          <span class="nav-label">Analytics</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+          <span class="nav-icon">👤</span>
+          <span class="nav-label">Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar">U</div>
+          <div class="user-details">
+            <span class="user-name">Loading...</span>
+            <span class="user-email"></span>
+          </div>
+        </div>
+        <a href="login.html" class="nav-item" style="color: var(--color-expense); margin-top: 0.25rem;">
+          <span class="nav-icon">🚪</span>
+          <span class="nav-label">Sign Out</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+      
+      <!-- Top Sticky Header -->
+      <header class="top-header">
+        <div class="header-title-section">
+          <h1>Financial Dashboard</h1>
+          <p class="header-subtitle">Your real-time income, expense, and savings overview.</p>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-primary" data-open-modal="transactionModal">
+            <span>+</span> Add Transaction
+          </button>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="page-content">
+
+        <!-- 1. Key Metrics Stat Cards -->
+        <section class="stats-grid">
+          <!-- Balance Card -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Net Balance</span>
+              <div class="stat-icon stat-icon-balance">💰</div>
+            </div>
+            <div id="dashNetBalance" class="stat-value amount">₹0.00</div>
+            <div id="dashSavingsRate" class="stat-footer">
+              <span class="stat-trend-up">0%</span> Savings Rate
+            </div>
+          </div>
+
+          <!-- Total Income Card -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Total Income</span>
+              <div class="stat-icon stat-icon-income">📥</div>
+            </div>
+            <div id="dashTotalIncome" class="stat-value amount amount-income">₹0.00</div>
+            <div class="stat-footer">
+              <span>Lifetime Income Recorded</span>
+            </div>
+          </div>
+
+          <!-- Total Expenses Card -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Total Expenses</span>
+              <div class="stat-icon stat-icon-expense">📤</div>
+            </div>
+            <div id="dashTotalExpense" class="stat-value amount amount-expense">₹0.00</div>
+            <div class="stat-footer">
+              <span>Lifetime Expenses Recorded</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Interactive Charts Section -->
+        <section class="charts-grid">
+          <!-- Category Spending Breakdown (Doughnut) -->
+          <div class="card chart-card">
+            <div class="card-header">
+              <h2 class="card-title"><span>🍩</span> Expense by Category</h2>
+              <span class="badge badge-category">Live Data</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="categoryDoughnutChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Monthly Spending Trend (Line/Bar) -->
+          <div class="card chart-card">
+            <div class="card-header">
+              <h2 class="card-title"><span>📈</span> Monthly Spending Trend</h2>
+              <span class="badge badge-category">Historical Trend</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="monthlyTrendChart"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Recent Transactions & Quick Insights Grid -->
+        <section style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-top: 2rem;">
+          
+          <!-- Recent Transactions Card -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title"><span>🕒</span> Recent Transactions</h2>
+              <a href="transactions.html" class="btn btn-secondary btn-sm">View All &rarr;</a>
+            </div>
+
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th style="text-align: right;">Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="recentTransactionsTableBody">
+                  <tr>
+                    <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                      ⏳ Loading transactions from your Vault...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Quick Insights Widget -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title"><span>💡</span> Smart Insights</h2>
+              <a href="analytics.html" class="btn btn-secondary btn-sm">Details</a>
+            </div>
+
+            <div id="dashboardInsightsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+              <div class="insight-card" style="margin-top: 0; padding: 1rem;">
+                <div class="insight-icon">💡</div>
+                <div class="insight-content">
+                  <h4>Smart Insights Engine</h4>
+                  <p>Analyzing your spending patterns...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-nav">
+      <a href="dashboard.html" class="mobile-nav-item active">
+        <span class="mobile-nav-icon">📊</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="transactions.html" class="mobile-nav-item">
+        <span class="mobile-nav-icon">💳</span>
+        <span>Transactions</span>
+      </a>
+      <a href="analytics.html" class="mobile-nav-item">
+        <span class="mobile-nav-icon">📈</span>
+        <span>Analytics</span>
+      </a>
+      <a href="profile.html" class="mobile-nav-item">
+        <span class="mobile-nav-icon">👤</span>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <!-- Reusable "+ Add Transaction" Modal Popup -->
+  <div id="transactionModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Record New Transaction</h3>
+        <button type="button" class="modal-close" data-close-modal>&times;</button>
+      </div>
+
+      <form id="transactionModalForm">
+        <div class="modal-body">
+          <!-- Type Switcher -->
+          <div class="type-segmented-control">
+            <button type="button" id="modalTypeExpense" class="type-option active-expense">
+              <span>📤</span> Expense
+            </button>
+            <button type="button" id="modalTypeIncome" class="type-option">
+              <span>📥</span> Income
+            </button>
+          </div>
+
+          <!-- Amount -->
+          <div class="form-group">
+            <label for="modalAmount" class="form-label">Amount (₹)</label>
+            <div class="input-wrapper">
+              <span class="input-icon">₹</span>
+              <input type="number" id="modalAmount" class="form-control" placeholder="0.00" step="0.01" min="0.01" required>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label for="modalCategorySelect" class="form-label">Category</label>
+            <select id="modalCategorySelect" class="form-control" required>
+              <!-- Populated dynamically by app.js -->
+            </select>
+          </div>
+
+          <!-- Date -->
+          <div class="form-group">
+            <label for="modalDate" class="form-label">Date</label>
+            <input type="date" id="modalDate" class="form-control" required>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label for="modalDescription" class="form-label">
+              Description <span class="optional">(Optional)</span>
+            </label>
+            <input type="text" id="modalDescription" class="form-control" placeholder="e.g. Lunch at cafeteria">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Supabase JS Client CDN & App Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/mock-data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
