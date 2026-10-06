@@ -1,74 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VaultWealth — Personal Finance Analyzer</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/forms.css">
+  <title>VaultWealth — Intelligent Personal Finance Tracking</title>
+  <meta name="description" content="VaultWealth is a minimal personal finance tracker with real-time analytics and AI expense forecasting.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/ghost-fibers.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #120f17;
+      --text: #f2f1f5;
+      --muted: rgba(242, 241, 245, 0.55);
+      --line: rgba(255, 255, 255, 0.12);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Background */
+    #bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 1.6s ease;
+    }
+    #bg.ready { opacity: 1; }
+
+    /* Layout */
+    .page {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0 3rem;
+    }
+
+    /* Nav */
+    .nav {
+      height: 84px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2.25rem;
+      list-style: none;
+    }
+    .nav-links a,
+    .nav-signin {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    .nav-links a:hover,
+    .nav-signin:hover { color: var(--text); }
+
+    /* Hero */
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding-bottom: 4rem;
+    }
+    .hero > * {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: rise 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .hero > :nth-child(2) { animation-delay: 0.12s; }
+    .hero > :nth-child(3) { animation-delay: 0.24s; }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+
+    .hero h1 {
+      font-size: clamp(2.6rem, 6.5vw, 5.25rem);
+      font-weight: 300;
+      line-height: 1.05;
+      letter-spacing: -0.045em;
+      max-width: 14ch;
+    }
+    .hero h1 em {
+      font-style: normal;
+      font-weight: 500;
+    }
+    .hero p {
+      margin-top: 1.5rem;
+      font-size: 1rem;
+      font-weight: 300;
+      line-height: 1.6;
+      color: var(--muted);
+      max-width: 34rem;
+    }
+    .ctas {
+      margin-top: 2.5rem;
+      display: flex;
+      gap: 0.75rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    }
+    .btn-primary { background: var(--text); color: var(--bg); }
+    .btn-primary:hover { background: #fff; transform: translateY(-1px); }
+    .btn-primary svg { transition: transform 0.25s ease; }
+    .btn-primary:hover svg { transform: translateX(3px); }
+    .btn-outline {
+      color: var(--text);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .btn-outline:hover { border-color: rgba(255,255,255,0.3); transform: translateY(-1px); }
+
+    /* Footer */
+    .foot {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: rgba(242, 241, 245, 0.3);
+    }
+
+    @media (max-width: 720px) {
+      .page { padding: 0 1.5rem; }
+      .nav-links { display: none; }
+      .ctas { flex-direction: column; width: 100%; max-width: 280px; }
+      .btn { justify-content: center; }
+      .foot span:last-child { display: none; }
+    }
+  </style>
 </head>
+<body>
 
-<body class="auth-page">
-  <div class="auth-container" style="max-width: 520px; text-align: center;">
-    <div class="auth-brand">
-      <div class="brand-icon" style="width: 64px; height: 64px;">
-        <svg class="svg-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"></polygon>
-        </svg>
+  <div id="bg" aria-hidden="true"></div>
+
+  <div class="page">
+    <header class="nav">
+      <a href="/" class="brand" id="navBrand">VaultWealth</a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/dashboard" id="navDashboard">Dashboard</a></li>
+          <li><a href="/transactions" id="navTransactions">Transactions</a></li>
+          <li><a href="/analytics" id="navAnalytics">Analytics</a></li>
+        </ul>
+      </nav>
+      <a href="/login" class="nav-signin" id="navSignIn">Sign in</a>
+    </header>
+
+    <main class="hero">
+      <h1>Your money, <em>clearly.</em></h1>
+      <p>Track expenses, understand your spending, and see what's ahead with AI-powered forecasts.</p>
+      <div class="ctas">
+        <a href="/register" class="btn btn-primary" id="ctaRegister">
+          Get started
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <a href="/dashboard" class="btn btn-outline" id="ctaDashboard">View dashboard</a>
       </div>
-      <h1 class="brand-text" style="font-size: 2.25rem;">VaultWealth</h1>
-      <p style="font-size: 1rem; margin-top: 0.5rem;">Intelligent Personal Finance Tracking, Analytics & Expense
-        Forecasting</p>
-    </div>
+    </main>
 
-    <div class="auth-card" style="text-align: left;">
-      <h2 class="auth-card-title">Welcome to VaultWealth</h2>
-      <p class="auth-card-subtitle">Choose where you'd like to navigate:</p>
-
-      <div style="display: flex; flex-direction: column; gap: 0.875rem; margin-top: 1.25rem;">
-        <a href="/dashboard.html" class="btn btn-primary" style="padding: 0.875rem;">
-          <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="9" rx="1"></rect>
-            <rect x="14" y="3" width="7" height="5" rx="1"></rect>
-            <rect x="14" y="12" width="7" height="9" rx="1"></rect>
-            <rect x="3" y="16" width="7" height="5" rx="1"></rect>
-          </svg>
-          Launch Dashboard
-        </a>
-        <a href="/transactions.html" class="btn btn-secondary" style="padding: 0.875rem;">
-          <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-            <line x1="1" y1="10" x2="23" y2="10"></line>
-          </svg>
-          View Transactions History
-        </a>
-        <a href="/analytics.html" class="btn btn-secondary" style="padding: 0.875rem;">
-          <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-            <polyline points="17 6 23 6 23 12"></polyline>
-          </svg>
-          View Analytics & Smart Insights
-        </a>
-        <a href="/login.html" class="btn btn-secondary" style="padding: 0.875rem;">
-          <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
-          Sign In / Register
-        </a>
-      </div>
-
-      <div class="auth-footer" style="margin-top: 1.75rem;">
-        <span style="color: var(--text-muted);">CSE 5th Semester Mini Project</span>
-      </div>
-    </div>
+    <footer class="foot">
+      <span>&copy; 2026 VaultWealth</span>
+      <span>CSE 5th Semester Project</span>
+    </footer>
   </div>
-</body>
 
+  <script type="module">
+    import { mountVaultBackground } from './js/ghost-fibers.js';
+    mountVaultBackground(document.getElementById('bg'));
+  </script>
+
+</body>
 </html>

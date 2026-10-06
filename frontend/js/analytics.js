@@ -5,6 +5,7 @@
 
 let barChartInstance = null;
 let pieChartInstance = null;
+let mlForecastChartInstance = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   const user = await requireAuth();
@@ -41,6 +42,7 @@ async function loadAnalyticsData() {
     renderCategoryBarChart(txList);
     renderCashFlowPieChart(txList);
     generateSmartInsightsFeed(txList);
+    runMLForecasting(txList);
 
   } catch (err) {
     console.error('[VaultWealth] Unexpected error in loadAnalyticsData:', err);
@@ -432,26 +434,358 @@ function generateSmartInsightsFeed(transactions) {
   container.innerHTML = html;
   if (countBadge) countBadge.textContent = `${insights.length} Insights Generated`;
 }
-function exportMLTransactions() {
-  const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-  if (!transactions.length) {
-    alert('No transactions to export.');
+/**
+ * ═══════════════════════════════════════════════════════════════════════
+ * Phase 11 — Machine Learning Expense Forecasting Engine
+ * Pure client-side OLS (Ordinary Least Squares) Linear Regression.
+ *   Model:  ŷ = β₀ + β₁·X
+ *   X     = chronological month index (1, 2, 3, ...)
+ *   ŷ     = predicted total monthly expense
+ * ═══════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * Main entry point — called from loadAnalyticsData() with live Supabase transactions.
+ */
+function runMLForecasting(transactions) {
+  const expenses = transactions.filter(t => t.type === 'expense');
+
+  // ── 1. Aggregate expenses into monthly totals ────────────────────────
+  const monthlyMap = {};  // { 'YYYY-MM': totalAmount }
+  expenses.forEach(t => {
+    const amt = parseFloat(t.amount) || 0;
+    const ym = (t.transaction_date || '').substring(0, 7); // 'YYYY-MM'
+    if (ym.length === 7) {
+      monthlyMap[ym] = (monthlyMap[ym] || 0) + amt;
+    }
+  });
+
+  // Sort chronologically
+  const sortedKeys = Object.keys(monthlyMap).sort();
+  const n = sortedKeys.length;
+
+  // ── 2. Guard: need at least 2 months for regression ──────────────────
+  if (n < 2) {
+    setForecastUIState('insufficient', n);
     return;
   }
-  const csv = ['Date,Description,Amount,Category,Type']
-    .concat(transactions.map(t =>
-      `${t.date || ''},"${(t.description || '').replace(/"/g, '""')}",${t.amount || 0},${t.category || ''},${t.type || ''}`
-    ))
-    .join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', 'vaultwealth_ml_transactions.csv');
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 
-  alert('Transactions exported as "vaultwealth_ml_transactions.csv"!\n\nTo run the Python ML pipeline on this dataset, run in your terminal:\npython ml/prediction.py --data vaultwealth_ml_transactions.csv');
+  // ── 3. Build X (1-indexed month) and Y (monthly spend) arrays ────────
+  const X = [];
+  const Y = [];
+  const monthLabels = [];
+
+  sortedKeys.forEach((key, idx) => {
+    X.push(idx + 1);
+    Y.push(monthlyMap[key]);
+    monthLabels.push(formatMonthLabel(key));
+  });
+
+  // ── 4. OLS Linear Regression: ŷ = β₀ + β₁·X ────────────────────────
+  const sumX  = X.reduce((a, b) => a + b, 0);
+  const sumY  = Y.reduce((a, b) => a + b, 0);
+  const meanX = sumX / n;
+  const meanY = sumY / n;
+
+  let ssXY = 0;  // Σ(xi - x̄)(yi - ȳ)
+  let ssXX = 0;  // Σ(xi - x̄)²
+  for (let i = 0; i < n; i++) {
+    ssXY += (X[i] - meanX) * (Y[i] - meanY);
+    ssXX += (X[i] - meanX) * (X[i] - meanX);
+  }
+
+  const beta1 = ssXX !== 0 ? ssXY / ssXX : 0;  // slope
+  const beta0 = meanY - beta1 * meanX;           // intercept
+
+  // ── 5. Predicted values & error metrics ──────────────────────────────
+  const predicted = X.map(x => beta0 + beta1 * x);
+
+  // R² (coefficient of determination)
+  let ssTot = 0;
+  let ssRes = 0;
+  for (let i = 0; i < n; i++) {
+    ssTot += (Y[i] - meanY) ** 2;
+    ssRes += (Y[i] - predicted[i]) ** 2;
+  }
+  const r2 = ssTot !== 0 ? 1 - ssRes / ssTot : 0;
+
+  // MAE (mean absolute error)
+  let absErrorSum = 0;
+  for (let i = 0; i < n; i++) {
+    absErrorSum += Math.abs(Y[i] - predicted[i]);
+  }
+  const mae = absErrorSum / n;
+
+  // ── 6. Forecast next month ───────────────────────────────────────────
+  const nextX = n + 1;
+  const forecastAmount = beta0 + beta1 * nextX;
+  const confidenceLower = forecastAmount - 1.96 * mae;
+  const confidenceUpper = forecastAmount + 1.96 * mae;
+
+  // Next month label
+  const lastKey = sortedKeys[sortedKeys.length - 1];
+  const [ly, lm] = lastKey.split('-').map(Number);
+  const nextDate = new Date(ly, lm); // lm is already 0-indexed +1, so this gives next month
+  const nextMonthLabel = formatMonthLabel(
+    `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`
+  );
+
+  // Determine trend direction
+  let trendDirection = 'Stable';
+  if (beta1 > 50)  trendDirection = 'Increasing';
+  if (beta1 < -50) trendDirection = 'Decreasing';
+
+  // ── 7. Update all DOM elements ───────────────────────────────────────
+  updateForecastDOM({
+    forecastAmount,
+    confidenceLower,
+    confidenceUpper,
+    beta0,
+    beta1,
+    r2,
+    mae,
+    n,
+    trendDirection,
+    nextMonthLabel
+  });
+
+  // ── 8. Render the forecast chart ─────────────────────────────────────
+  renderForecastChart(monthLabels, Y, predicted, nextMonthLabel, forecastAmount);
+
+  // ── 9. Wire up the Export CSV button with live Supabase data ─────────
+  wireExportButton(transactions);
+}
+
+/**
+ * Updates all Phase 11 DOM elements with computed values.
+ */
+function updateForecastDOM({ forecastAmount, confidenceLower, confidenceUpper, beta0, beta1, r2, mae, n, trendDirection, nextMonthLabel }) {
+  // Top stat card: AI Forecast (Next Mo)
+  const topForecastVal = document.getElementById('analyticForecastValue');
+  const topForecastFooter = document.getElementById('analyticForecastFooter');
+  if (topForecastVal) topForecastVal.textContent = formatCurrency(forecastAmount);
+  if (topForecastFooter) topForecastFooter.innerHTML = `<span>OLS Prediction for ${escapeHtml(nextMonthLabel)}</span>`;
+
+  // Source badge
+  const sourceBadge = document.getElementById('forecastSourceBadge');
+  if (sourceBadge) sourceBadge.textContent = `Model: JS OLS (${n} months)`;
+
+  // Next Month Forecast
+  const predictedEl = document.getElementById('mlPredictedAmount');
+  if (predictedEl) predictedEl.textContent = formatCurrency(forecastAmount);
+
+  // Confidence interval
+  const ciEl = document.getElementById('mlConfidenceRange');
+  if (ciEl) ciEl.innerHTML = `<span>95% CI: ${formatCurrency(Math.max(0, confidenceLower))} – ${formatCurrency(confidenceUpper)}</span>`;
+
+  // Trend slope
+  const slopeEl = document.getElementById('mlTrendSlope');
+  if (slopeEl) {
+    const sign = beta1 >= 0 ? '+' : '';
+    slopeEl.textContent = `${sign}${formatCurrency(beta1)}`;
+    slopeEl.style.color = beta1 >= 0 ? '#f97316' : '#10b981';
+  }
+
+  // Trend direction
+  const dirEl = document.getElementById('mlTrendDirection');
+  if (dirEl) dirEl.innerHTML = `<span>Spending Velocity: ${trendDirection}</span>`;
+
+  // R² score
+  const r2El = document.getElementById('mlR2Score');
+  if (r2El) {
+    r2El.textContent = r2.toFixed(4);
+    r2El.style.color = r2 >= 0.7 ? '#10b981' : r2 >= 0.4 ? '#eab308' : '#f43f5e';
+  }
+
+  // MAE
+  const maeEl = document.getElementById('mlMaeScore');
+  if (maeEl) maeEl.innerHTML = `<span>Mean Abs Error: ${formatCurrency(mae)}</span>`;
+
+  // Month count
+  const monthsEl = document.getElementById('mlMonthsCount');
+  if (monthsEl) monthsEl.textContent = `${n} Months`;
+
+  // Equation snippet
+  const eqEl = document.getElementById('mlEquationSnippet');
+  if (eqEl) eqEl.textContent = `ŷ = ${beta0.toFixed(1)} + ${beta1.toFixed(1)}·X`;
+}
+
+/**
+ * Sets UI state when there's insufficient data for regression.
+ */
+function setForecastUIState(reason, n) {
+  const ids = ['analyticForecastValue', 'mlPredictedAmount'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  });
+
+  const badge = document.getElementById('forecastSourceBadge');
+  if (badge) badge.textContent = n === 0 ? 'No expense data' : `Need ≥ 2 months (have ${n})`;
+
+  const footerIds = ['analyticForecastFooter', 'mlConfidenceRange', 'mlTrendDirection', 'mlMaeScore'];
+  footerIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<span>Insufficient data for regression</span>';
+  });
+
+  const monthsEl = document.getElementById('mlMonthsCount');
+  if (monthsEl) monthsEl.textContent = `${n} Month${n !== 1 ? 's' : ''}`;
+
+  const eqEl = document.getElementById('mlEquationSnippet');
+  if (eqEl) eqEl.textContent = 'ŷ = β₀ + β₁·X (awaiting data)';
+}
+
+/**
+ * Renders the Historical vs Forecast line chart on the mlForecastChart canvas.
+ */
+function renderForecastChart(monthLabels, actuals, predicted, nextMonthLabel, forecastAmount) {
+  const canvas = document.getElementById('mlForecastChart');
+  if (!canvas) return;
+
+  if (mlForecastChartInstance) {
+    mlForecastChartInstance.destroy();
+  }
+
+  // Extend arrays for the forecast point
+  const allLabels = [...monthLabels, nextMonthLabel];
+  const actualData = [...actuals, null]; // no actual for forecast month
+
+  // Regression line extended to include forecast
+  const regressionData = [...predicted, forecastAmount];
+
+  mlForecastChartInstance = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: allLabels,
+      datasets: [
+        {
+          label: 'Actual Monthly Spend',
+          data: actualData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          pointBackgroundColor: '#3b82f6',
+          pointBorderColor: '#1e3a5f',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.3,
+          spanGaps: false
+        },
+        {
+          label: 'ML Regression / Forecast',
+          data: regressionData,
+          borderColor: '#38bdf8',
+          backgroundColor: 'transparent',
+          pointBackgroundColor: (ctx) => {
+            return ctx.dataIndex === regressionData.length - 1 ? '#f59e0b' : '#38bdf8';
+          },
+          pointBorderColor: (ctx) => {
+            return ctx.dataIndex === regressionData.length - 1 ? '#b45309' : '#0e7490';
+          },
+          pointRadius: (ctx) => {
+            return ctx.dataIndex === regressionData.length - 1 ? 7 : 4;
+          },
+          pointStyle: (ctx) => {
+            return ctx.dataIndex === regressionData.length - 1 ? 'star' : 'circle';
+          },
+          borderWidth: 2,
+          borderDash: [6, 4],
+          fill: false,
+          tension: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: false  // We have a custom legend in HTML
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              if (ctx.raw === null) return null;
+              return ` ${ctx.dataset.label}: ₹${ctx.raw.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255, 255, 255, 0.04)' },
+          ticks: {
+            color: '#94a3b8',
+            font: { family: 'Inter', size: 11 },
+            maxRotation: 45
+          }
+        },
+        y: {
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: {
+            color: '#64748b',
+            font: { family: 'Inter', size: 11 },
+            callback: (val) => '₹' + val.toLocaleString('en-IN')
+          }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Converts 'YYYY-MM' to a human-readable label like 'Oct 2025'.
+ */
+function formatMonthLabel(ym) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const [year, month] = ym.split('-');
+  return `${months[parseInt(month, 10) - 1]} ${year}`;
+}
+
+/**
+ * Wires the "Export ML CSV" button to export live Supabase transaction data.
+ */
+function wireExportButton(transactions) {
+  const btn = document.getElementById('exportMlDataBtn');
+  if (!btn) return;
+
+  // Remove old listeners by cloning
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+
+  newBtn.addEventListener('click', () => {
+    const expenses = transactions.filter(t => t.type === 'expense');
+    if (!expenses.length) {
+      alert('No expense transactions to export.');
+      return;
+    }
+
+    const csv = ['Date,Description,Amount,Category,Type']
+      .concat(expenses.map(t =>
+        `${t.transaction_date || ''},"${(t.description || '').replace(/"/g, '""')}",${t.amount || 0},${t.category || ''},${t.type || ''}`
+      ))
+      .join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'vaultwealth_ml_transactions.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    alert(
+      `Exported ${expenses.length} expense transactions as CSV.\n\n` +
+      'To run the Python ML pipeline:\n' +
+      'python ml/prediction.py --data vaultwealth_ml_transactions.csv'
+    );
+  });
 }

@@ -1,0 +1,262 @@
+/* ==========================================================================
+   VaultWealth — Auth pages (login / register)
+   Shares the design language of index.html: GhostFibers backdrop, Inter,
+   light-weight display type, pill buttons, muted text.
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #120f17;
+  --text: #f2f1f5;
+  --muted: rgba(242, 241, 245, 0.55);
+  --faint: rgba(242, 241, 245, 0.3);
+  --line: rgba(255, 255, 255, 0.12);
+
+  /* Liquid glass */
+  --glass-frost: 0.22;
+  --glass-saturation: 1.2;
+  --glass-radius: 28px;
+}
+
+html, body {
+  min-height: 100%;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Background (same as index) ───────────────────────────── */
+#bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 1.6s ease;
+}
+#bg.ready { opacity: 1; }
+
+/* ── Layout ───────────────────────────────────────────────── */
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 3rem;
+}
+
+.nav {
+  height: 84px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  text-decoration: none;
+}
+.nav-link {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.nav-link:hover { color: var(--text); }
+
+.auth-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0 3rem;
+}
+
+.foot {
+  height: 64px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--faint);
+}
+
+/* ── Card ─────────────────────────────────────────────────── */
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: 2.75rem 2.5rem 2.25rem;
+  border-radius: var(--glass-radius);
+  opacity: 0;
+  transform: translateY(14px);
+  animation: rise 1s 0.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+.auth-card > *:not(.glass-surface__filter) { position: relative; z-index: 1; }
+
+.auth-title {
+  font-size: clamp(2rem, 5vw, 2.5rem);
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+.auth-title em { font-style: normal; font-weight: 500; }
+.auth-subtitle {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* ── Liquid glass ─────────────────────────────────────────── */
+.liquidglass {
+  background: hsl(0 0% 0% / var(--glass-frost, 0));
+  box-shadow:
+    inset 0 0 2px 1px #ffffff59,
+    inset 0 0 10px 4px #ffffff26,
+    inset 0 4px 16px #11111a0d,
+    inset 0 8px 24px #11111a0d,
+    inset 0 6px 56px #11111a0d,
+    0 30px 80px -20px rgba(0, 0, 0, 0.55);
+}
+.liquidglass--svg {
+  -webkit-backdrop-filter: var(--filter-id) saturate(var(--glass-saturation, 1));
+  backdrop-filter: var(--filter-id) saturate(var(--glass-saturation, 1));
+}
+.liquidglass--fallback {
+  background: hsl(0 0% 100% / 0.04);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+}
+.glass-surface__filter {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ── Alerts (classes set by js/auth.js) ───────────────────── */
+.alert {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.825rem;
+  line-height: 1.45;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.05);
+}
+.alert-error   { color: #fca5a5; border-color: rgba(248, 113, 113, 0.3); background: rgba(248, 113, 113, 0.08); }
+.alert-success { color: #86efac; border-color: rgba(74, 222, 128, 0.3);  background: rgba(74, 222, 128, 0.08); }
+.alert-info    { color: #c4c2d4; }
+
+/* ── Form ─────────────────────────────────────────────────── */
+.auth-form { margin-top: 2rem; display: flex; flex-direction: column; gap: 1.125rem; }
+
+.field { display: flex; flex-direction: column; gap: 0.5rem; }
+.field label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+.input-wrap { position: relative; }
+.input-wrap svg {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--faint);
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+.input-wrap input {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 2.75rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.input-wrap input::placeholder { color: rgba(242, 241, 245, 0.25); }
+.input-wrap input:hover { border-color: rgba(255, 255, 255, 0.2); }
+.input-wrap input:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+}
+.input-wrap:focus-within svg { color: var(--text); }
+.input-wrap input:-webkit-autofill {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px #1d1a24 inset;
+  caret-color: var(--text);
+}
+
+.btn-submit {
+  margin-top: 0.75rem;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  border: none;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--bg);
+  background: var(--text);
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+.btn-submit:hover:not(:disabled) { background: #fff; transform: translateY(-1px); }
+.btn-submit:active:not(:disabled) { transform: none; }
+.btn-submit:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+.auth-switch {
+  margin-top: 1.75rem;
+  text-align: center;
+  font-size: 0.825rem;
+  color: var(--muted);
+}
+.auth-switch a {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 1px;
+  transition: border-color 0.2s ease;
+}
+.auth-switch a:hover { border-color: var(--text); }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .page { padding: 0 1.25rem; }
+  .nav { height: 68px; }
+  .foot span:last-child { display: none; }
+}
+@media (max-width: 480px) {
+  :root { --glass-radius: 22px; }
+  .auth-main { padding: 1rem 0 2rem; align-items: flex-start; }
+  .auth-card { padding: 2rem 1.375rem 1.75rem; }
+  .auth-form { margin-top: 1.5rem; gap: 1rem; }
+  .input-wrap input { font-size: 16px; } /* prevents iOS zoom on focus */
+}
+@media (max-height: 640px) and (min-width: 481px) {
+  .auth-main { align-items: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-card { animation: none; opacity: 1; transform: none; }
+}

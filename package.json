@@ -1,0 +1,12 @@
+{
+  "name": "vaultwealth",
+  "version": "1.0.0",
+  "description": "VaultWealth - Personal Finance Dashboard",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

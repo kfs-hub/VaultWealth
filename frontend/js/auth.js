@@ -43,7 +43,7 @@ function initAuthForms() {
       const client = getSupabaseClient();
       if (!client) {
         showAuthAlert(alertBox, 'Supabase is not configured properly. Check config.js.', 'error');
-        setButtonLoading(submitBtn, false, 'Sign In to Dashboard');
+        setButtonLoading(submitBtn, false, 'Sign in');
         return;
       }
 
@@ -55,7 +55,7 @@ function initAuthForms() {
 
         if (error) {
           showAuthAlert(alertBox, error.message, 'error');
-          setButtonLoading(submitBtn, false, 'Sign In to Dashboard');
+          setButtonLoading(submitBtn, false, 'Sign in');
           return;
         }
 
@@ -66,7 +66,7 @@ function initAuthForms() {
 
       } catch (err) {
         showAuthAlert(alertBox, 'An unexpected error occurred during login.', 'error');
-        setButtonLoading(submitBtn, false, 'Sign In to Dashboard');
+        setButtonLoading(submitBtn, false, 'Sign in');
       }
     });
   }
@@ -104,7 +104,7 @@ function initAuthForms() {
       const client = getSupabaseClient();
       if (!client) {
         showAuthAlert(alertBox, 'Supabase is not configured properly. Check config.js.', 'error');
-        setButtonLoading(submitBtn, false, 'Register Account');
+        setButtonLoading(submitBtn, false, 'Create account');
         return;
       }
 
@@ -121,14 +121,14 @@ function initAuthForms() {
 
         if (error) {
           showAuthAlert(alertBox, error.message, 'error');
-          setButtonLoading(submitBtn, false, 'Register Account');
+          setButtonLoading(submitBtn, false, 'Create account');
           return;
         }
 
         // Check if email confirmation is required by Supabase
         if (data.user && data.session === null) {
           showAuthAlert(alertBox, 'Account created! Please check your email to confirm registration, or sign in if confirmation is disabled in Supabase.', 'info');
-          setButtonLoading(submitBtn, false, 'Register Account');
+          setButtonLoading(submitBtn, false, 'Create account');
         } else {
           showAuthAlert(alertBox, 'Account created successfully! Redirecting to dashboard...', 'success');
           setTimeout(() => {
@@ -138,7 +138,7 @@ function initAuthForms() {
 
       } catch (err) {
         showAuthAlert(alertBox, 'An unexpected error occurred during registration.', 'error');
-        setButtonLoading(submitBtn, false, 'Register Account');
+        setButtonLoading(submitBtn, false, 'Create account');
       }
     });
   }

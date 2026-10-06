@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,17 +10,19 @@
   <link rel="stylesheet" href="css/forms.css">
   <link rel="stylesheet" href="css/upload.css">
 </head>
+
 <body>
   <div class="app-container">
-    
+
     <!-- Top Horizontal Navigation Bar -->
     <header class="navbar-top">
       <div class="navbar-container">
-        
+
         <!-- Left: Brand Logo -->
-        <a href="/dashboard" class="brand-logo">
+        <a href="/dashboard.html" class="brand-logo">
           <div class="brand-icon">
-            <svg class="svg-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="svg-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"></polygon>
             </svg>
           </div>
@@ -29,34 +32,44 @@
 
         <!-- Center: Horizontal Navigation Links -->
         <nav class="nav-menu">
-          <a href="/dashboard" class="nav-item">
+          <a href="/dashboard.html" class="nav-item">
             <span class="nav-icon">
-              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect>
+              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+                <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+                <rect x="3" y="16" width="7" height="5" rx="1"></rect>
               </svg>
             </span>
             <span class="nav-label">Dashboard</span>
           </a>
-          <a href="/transactions" class="nav-item">
+          <a href="/transactions.html" class="nav-item">
             <span class="nav-icon">
-              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line>
+              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
               </svg>
             </span>
             <span class="nav-label">Transactions</span>
           </a>
-          <a href="/analytics" class="nav-item">
+          <a href="/analytics.html" class="nav-item">
             <span class="nav-icon">
-              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline>
+              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
               </svg>
             </span>
             <span class="nav-label">Analytics</span>
           </a>
-          <a href="/profile" class="nav-item active">
+          <a href="/profile.html" class="nav-item active">
             <span class="nav-icon">
-              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
               </svg>
             </span>
             <span class="nav-label">Profile</span>
@@ -66,17 +79,25 @@
         <!-- Right: Actions & User Profile -->
         <div class="navbar-actions">
           <button class="btn btn-secondary btn-sm" id="uploadStatementBtn" onclick="openStatementUploadModal()">
-            <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
             Upload Statement
           </button>
           <div class="user-profile-menu">
-            <a href="/profile" class="user-avatar-pill" title="View Profile">
+            <a href="/profile.html" class="user-avatar-pill" title="View Profile">
               <div class="user-avatar">U</div>
               <span class="user-name">Loading...</span>
             </a>
             <button class="btn-icon btn-signout" data-action="logout" title="Sign Out" aria-label="Sign Out">
-              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>
+              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
               </svg>
             </button>
           </div>
@@ -87,7 +108,7 @@
 
     <!-- Main Content Wrapper -->
     <div class="main-wrapper">
-      
+
       <!-- Page Header -->
       <div class="page-header">
         <div class="header-title-section">
@@ -103,22 +124,28 @@
         <div class="card" style="margin-bottom: 2rem;">
           <div class="card-header">
             <h2 class="card-title">
-              <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+              <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
               </svg>
               Personal Information
             </h2>
             <span class="badge badge-income">Active Account</span>
           </div>
 
-          <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle);">
-            <div id="profileAvatarInitial" style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: 700; color: white;">
+          <div
+            style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle);">
+            <div id="profileAvatarInitial"
+              style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: 700; color: white;">
               U
             </div>
             <div>
-              <h3 id="profileDisplayName" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">User Account</h3>
+              <h3 id="profileDisplayName" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">User
+                Account</h3>
               <p style="color: var(--text-secondary); font-size: 0.875rem;">Authenticated Vault Member</p>
-              <p id="profileJoinDate" style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Active Member</p>
+              <p id="profileJoinDate" style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Active
+                Member</p>
             </div>
           </div>
 
@@ -131,7 +158,8 @@
 
               <div class="form-group">
                 <label for="profEmail" class="form-label">Email Address</label>
-                <input type="email" id="profEmail" class="form-control" disabled style="opacity: 0.7; cursor: not-allowed;">
+                <input type="email" id="profEmail" class="form-control" disabled
+                  style="opacity: 0.7; cursor: not-allowed;">
               </div>
             </div>
 
@@ -145,8 +173,12 @@
         <div class="card" style="margin-bottom: 2rem;">
           <div class="card-header">
             <h2 class="card-title">
-              <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                </path>
               </svg>
               System Preferences
             </h2>
@@ -167,8 +199,14 @@
               Export all your transaction history for backup or spreadsheet analysis.
             </p>
             <button type="button" id="exportCsvBtn" class="btn btn-secondary">
-              <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path><line x1="12" y1="3" x2="12" y2="10"></line><polyline points="9 7 12 10 15 7"></polyline>
+              <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+                <path
+                  d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z">
+                </path>
+                <line x1="12" y1="3" x2="12" y2="10"></line>
+                <polyline points="9 7 12 10 15 7"></polyline>
               </svg>
               Export Transactions (CSV)
             </button>
@@ -179,8 +217,11 @@
         <div class="card" style="border-color: rgba(244, 63, 94, 0.3); background-color: rgba(244, 63, 94, 0.02);">
           <div class="card-header">
             <h2 class="card-title" style="color: var(--color-expense);">
-              <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
+              <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
               </svg>
               Danger Zone
             </h2>
@@ -198,34 +239,44 @@
 
     <!-- Mobile Bottom Navigation Bar -->
     <nav class="mobile-nav">
-      <a href="/dashboard" class="mobile-nav-item">
+      <a href="/dashboard.html" class="mobile-nav-item">
         <span class="mobile-nav-icon">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect>
+          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+            <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+            <rect x="3" y="16" width="7" height="5" rx="1"></rect>
           </svg>
         </span>
         <span>Dashboard</span>
       </a>
       <a href="/transactions" class="mobile-nav-item">
         <span class="mobile-nav-icon">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line>
+          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
           </svg>
         </span>
         <span>Transactions</span>
       </a>
       <a href="/analytics" class="mobile-nav-item">
         <span class="mobile-nav-icon">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline>
+          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+            <polyline points="17 6 23 6 23 12"></polyline>
           </svg>
         </span>
         <span>Analytics</span>
       </a>
       <a href="/profile" class="mobile-nav-item active">
         <span class="mobile-nav-icon">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
           </svg>
         </span>
         <span>Profile</span>
@@ -258,4 +309,5 @@
   <script src="js/statement-upload.js"></script>
   <script src="js/profile.js"></script>
 </body>
+
 </html>
