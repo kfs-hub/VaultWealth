@@ -1,0 +1,545 @@
+/* ==========================================================================
+   VaultWealth — Modern Minimalist Chart & Visualization System
+   Editorial, high-DPI SVG + DOM visualizations replacing generic canvas charts.
+   Matching the website obsidian & indigo theme (#09080e, #6366f1, #818cf8).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Category Spending Visual Breakdown (Dashboard)
+   -------------------------------------------------------------------------- */
+.modern-category-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 1.25rem;
+}
+
+/* Distribution Strip (GitHub / Stripe style linear percentage bar) */
+.category-strip {
+  display: flex;
+  height: 8px;
+  width: 100%;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  gap: 2px;
+  padding: 1px;
+}
+
+.category-strip-segment {
+  height: 100%;
+  border-radius: 999px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+
+.category-strip-segment:hover {
+  opacity: 0.85;
+}
+
+/* Dual Column Layout: Donut + Detailed Rows */
+.category-dual-layout {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+/* SVG Donut Visual */
+.donut-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.donut-slice {
+  fill: transparent;
+  stroke-width: 14;
+  transition: stroke-width 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.donut-slice:hover,
+.donut-slice.active {
+  stroke-width: 18;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+.donut-center-info {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  padding: 0.5rem;
+}
+
+.donut-center-val {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.donut-center-lbl {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-muted, rgba(242, 241, 245, 0.45));
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.2rem;
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Category Rows List */
+.category-rows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  overflow-y: auto;
+  max-height: 220px;
+  padding-right: 0.35rem;
+}
+
+.category-row-item {
+  display: grid;
+  grid-template-columns: 8px minmax(90px, 1.2fr) 2fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+  cursor: pointer;
+}
+
+.category-row-item:hover,
+.category-row-item.active {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cat-name-text {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary, #f2f1f5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cat-mini-bar-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cat-mini-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.cat-values-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+.cat-percent-badge {
+  font-size: 0.7rem;
+  color: var(--text-muted, rgba(242, 241, 245, 0.5));
+}
+
+.cat-amount-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   2. Interactive Monthly Trajectory Sparkline (Dashboard)
+   -------------------------------------------------------------------------- */
+.modern-trend-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 1rem;
+}
+
+.trend-header-metrics {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.75rem;
+}
+
+.trend-stat-left {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.trend-active-value {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.trend-active-date {
+  font-size: 0.75rem;
+  color: var(--text-muted, rgba(242, 241, 245, 0.45));
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.trend-stat-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.trend-mom-pill {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary, #a1a1aa);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.trend-mom-pill.up {
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.1);
+  border-color: rgba(244, 63, 94, 0.25);
+}
+
+.trend-mom-pill.down {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+/* SVG Chart Canvas */
+.trend-svg-viewport {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: 170px;
+}
+
+.trend-main-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.trend-grid-line {
+  stroke: rgba(255, 255, 255, 0.035);
+  stroke-dasharray: 4 4;
+  stroke-width: 1;
+}
+
+.trend-axis-label {
+  fill: rgba(242, 241, 245, 0.3);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 9px;
+}
+
+.trend-area-fill {
+  fill: url(#trendGradient);
+}
+
+.trend-line-stroke {
+  fill: none;
+  stroke: #6366f1;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.35));
+}
+
+/* Interactive Crosshair Cursor */
+.trend-crosshair {
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-dasharray: 3 3;
+  stroke-width: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.trend-dot-marker {
+  fill: #fff;
+  stroke: #6366f1;
+  stroke-width: 2.5;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.trend-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+  font-size: 0.72rem;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  color: var(--text-muted, rgba(242, 241, 245, 0.4));
+}
+
+/* --------------------------------------------------------------------------
+   3. Analytics Category Ranking Bars (Horizontal Distribution)
+   -------------------------------------------------------------------------- */
+.ranking-bars-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0.5rem 0;
+}
+
+.ranking-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: all 0.2s ease;
+}
+
+.ranking-bar-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateX(2px);
+}
+
+.ranking-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+}
+
+.ranking-cat-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: var(--text-primary, #fff);
+}
+
+.ranking-cat-values {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+.ranking-amount {
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+}
+
+.ranking-share {
+  font-size: 0.72rem;
+  color: var(--text-muted, rgba(242, 241, 245, 0.45));
+}
+
+.ranking-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ranking-bar-progress {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6366f1, #818cf8);
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   4. Analytics Cash Flow Gauge (Capital Retention vs Spent)
+   -------------------------------------------------------------------------- */
+.cashflow-gauge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  height: 100%;
+  padding: 1rem 0;
+}
+
+.cashflow-concentric-container {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cashflow-concentric-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.cashflow-center-callout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.cashflow-center-rate {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #10b981;
+  letter-spacing: -0.02em;
+}
+
+.cashflow-center-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted, rgba(242, 241, 245, 0.5));
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.15rem;
+}
+
+.cashflow-pills-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+
+.cashflow-pill-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cashflow-pill-label {
+  font-size: 0.7rem;
+  color: var(--text-muted, rgba(242, 241, 245, 0.45));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cashflow-pill-value {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   5. AI ML Predictive Forecasting Curve
+   -------------------------------------------------------------------------- */
+.ml-forecast-viewport {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  margin-top: 1rem;
+}
+
+.ml-forecast-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ml-confidence-band {
+  fill: rgba(99, 102, 241, 0.08);
+}
+
+.ml-actual-line {
+  fill: none;
+  stroke: #6366f1;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ml-projected-line {
+  fill: none;
+  stroke: rgba(242, 241, 245, 0.55);
+  stroke-width: 1.75;
+  stroke-dasharray: 4 4;
+}
+
+.ml-forecast-marker {
+  fill: #fff;
+  stroke: #6366f1;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 10px #6366f1);
+  animation: pulse-marker 2s infinite ease-in-out;
+}
+
+@keyframes pulse-marker {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px #6366f1); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 16px #818cf8); }
+}
+
+@media (max-width: 768px) {
+  .category-dual-layout {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .category-rows-list {
+    width: 100%;
+  }
+}

@@ -13,13 +13,17 @@ document.addEventListener('DOMContentLoaded', () => {
  * 1. Highlights active navigation links matching current file URL
  */
 function initNavigationHighlight() {
-  const currentPath = window.location.pathname;
+  const currentPath = window.location.pathname.replace(/\.html$/, '') || '/';
   const navLinks = document.querySelectorAll('.nav-item, .mobile-nav-item');
 
   navLinks.forEach(link => {
-    const href = link.getAttribute('href');
-    if (href && currentPath.endsWith(href)) {
+    const rawHref = link.getAttribute('href');
+    if (!rawHref) return;
+    const href = rawHref.replace(/\.html$/, '');
+    if (href === currentPath || (href !== '/' && currentPath.endsWith(href))) {
       link.classList.add('active');
+    } else {
+      link.classList.remove('active');
     }
   });
 }

@@ -1,11 +1,10 @@
 /**
  * VaultWealth — Dynamic Dashboard Engine
  * Fetches real user transactions from Supabase and computes live metrics,
- * real Chart.js visualizations, recent activity, and smart insights.
+ * High-DPI modern SVG visualizations, recent activity, and smart insights.
  */
 
-let categoryChartInstance = null;
-let trendChartInstance = null;
+import { renderModernCategoryBreakdown, renderModernMonthlyTrajectory } from './modern-visuals.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const user = await requireAuth();
@@ -137,192 +136,21 @@ function renderRecentTransactions(recentTxs) {
 }
 
 /**
- * Calculates real category breakdown and renders Chart.js Doughnut
+ * Renders modern SVG category breakdown and proportional distribution
  */
 function renderCategoryDoughnutChart(transactions) {
-  const canvas = document.getElementById('categoryDoughnutChart');
-  if (!canvas) return;
-
-  const expenses = transactions.filter(tx => tx.type === 'expense');
-  const categoryTotals = {};
-
-  expenses.forEach(tx => {
-    const cat = tx.category;
-    categoryTotals[cat] = (categoryTotals[cat] || 0) + (parseFloat(tx.amount) || 0);
-  });
-
-  const labels = Object.keys(categoryTotals);
-  const data = Object.values(categoryTotals);
-
-  if (categoryChartInstance) {
-    categoryChartInstance.destroy();
-  }
-
-  const container = canvas.parentElement;
-  const emptyNoticeId = 'doughnutEmptyNotice';
-  let emptyNotice = document.getElementById(emptyNoticeId);
-
-  if (labels.length === 0) {
-    canvas.style.display = 'none';
-    if (!emptyNotice) {
-      emptyNotice = document.createElement('div');
-      emptyNotice.id = emptyNoticeId;
-      emptyNotice.style.cssText = 'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; padding: 2rem;';
-      emptyNotice.innerHTML = `
-        <div style="font-size: 2rem; margin-bottom: 0.5rem; display: flex; justify-content: center;">
-          ${typeof getSvgIcon === 'function' ? getSvgIcon('doughnut', '', { width: 36, height: 36 }) : ''}
-        </div>
-        <p style="font-size: 0.875rem;">No expenses recorded yet.</p>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Expenses by category will appear here automatically.</p>
-      `;
-      container.appendChild(emptyNotice);
-    } else {
-      emptyNotice.style.display = 'flex';
-    }
-    return;
-  } else {
-    canvas.style.display = 'block';
-    if (emptyNotice) emptyNotice.style.display = 'none';
-  }
-
-  // Pre-defined palette for categories
-  const colorMap = [
-    '#f97316', '#06b6d4', '#ec4899', '#eab308', '#8b5cf6',
-    '#3b82f6', '#10b981', '#14b8a6', '#6366f1', '#64748b'
-  ];
-
-  categoryChartInstance = new Chart(canvas.getContext('2d'), {
-    type: 'doughnut',
-    data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: colorMap.slice(0, labels.length),
-        borderColor: '#111827',
-        borderWidth: 3,
-        hoverOffset: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'right',
-          labels: {
-            color: '#94a3b8',
-            boxWidth: 12,
-            padding: 10,
-            font: { family: 'Inter', size: 11 }
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => ` ${ctx.label}: ₹${ctx.raw.toLocaleString('en-IN')}`
-          }
-        }
-      },
-      cutout: '70%'
-    }
-  });
+  const container = document.getElementById('categoryChartContainer');
+  if (!container) return;
+  renderModernCategoryBreakdown(container, transactions);
 }
 
 /**
- * Groups expenses by month and renders Chart.js Monthly Trend Line
+ * Renders modern SVG monthly trajectory spline with live scrubber
  */
 function renderMonthlyTrendChart(transactions) {
-  const canvas = document.getElementById('monthlyTrendChart');
-  if (!canvas) return;
-
-  const expenses = transactions.filter(tx => tx.type === 'expense');
-  const monthTotals = {};
-
-  // Sort chronologically for timeline
-  const sorted = [...expenses].sort((a, b) => a.transaction_date.localeCompare(b.transaction_date));
-
-  sorted.forEach(tx => {
-    const monthKey = tx.transaction_date.substring(0, 7); // YYYY-MM
-    monthTotals[monthKey] = (monthTotals[monthKey] || 0) + (parseFloat(tx.amount) || 0);
-  });
-
-  const monthKeys = Object.keys(monthTotals);
-  const data = Object.values(monthTotals);
-  const labels = monthKeys.map(k => formatMonthLabel(k));
-
-  if (trendChartInstance) {
-    trendChartInstance.destroy();
-  }
-
-  const container = canvas.parentElement;
-  const emptyNoticeId = 'trendEmptyNotice';
-  let emptyNotice = document.getElementById(emptyNoticeId);
-
-  if (monthKeys.length === 0) {
-    canvas.style.display = 'none';
-    if (!emptyNotice) {
-      emptyNotice = document.createElement('div');
-      emptyNotice.id = emptyNoticeId;
-      emptyNotice.style.cssText = 'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; padding: 2rem;';
-      emptyNotice.innerHTML = `
-        <div style="font-size: 2rem; margin-bottom: 0.5rem; display: flex; justify-content: center;">
-          ${typeof getSvgIcon === 'function' ? getSvgIcon('trending-up', '', { width: 36, height: 36 }) : ''}
-        </div>
-        <p style="font-size: 0.875rem;">No historical expense trend yet.</p>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Your spending curve will render as you log expenses.</p>
-      `;
-      container.appendChild(emptyNotice);
-    } else {
-      emptyNotice.style.display = 'flex';
-    }
-    return;
-  } else {
-    canvas.style.display = 'block';
-    if (emptyNotice) emptyNotice.style.display = 'none';
-  }
-
-  trendChartInstance = new Chart(canvas.getContext('2d'), {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Monthly Expenses',
-        data: data,
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        borderWidth: 3,
-        fill: true,
-        tension: 0.35,
-        pointBackgroundColor: '#10b981',
-        pointRadius: 5
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: { color: '#64748b', font: { family: 'Inter', size: 11 } }
-        },
-        y: {
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: {
-            color: '#64748b',
-            font: { family: 'Inter', size: 11 },
-            callback: (val) => '₹' + val
-          }
-        }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => ` Total: ₹${ctx.raw.toLocaleString('en-IN')}`
-          }
-        }
-      }
-    }
-  });
+  const container = document.getElementById('monthlyTrendContainer');
+  if (!container) return;
+  renderModernMonthlyTrajectory(container, transactions);
 }
 
 /**

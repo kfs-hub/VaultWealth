@@ -1,156 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile & Settings — VaultWealth | Personal Finance Analyzer</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/dashboard.css">
-  <link rel="stylesheet" href="css/forms.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Profile & Settings — VaultWealth</title>
+  <meta name="description" content="Manage your VaultWealth profile settings, export transaction data to CSV, and manage account preferences.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="css/app-theme.css">
+  <link rel="stylesheet" href="css/pattern-waves.css">
   <link rel="stylesheet" href="css/upload.css">
 </head>
-
 <body>
+  <div id="bg" aria-hidden="true"></div>
   <div class="app-container">
 
-    <!-- Top Horizontal Navigation Bar -->
-    <header class="navbar-top">
-      <div class="navbar-container">
-
-        <!-- Left: Brand Logo -->
-        <a href="/dashboard.html" class="brand-logo">
-          <div class="brand-icon">
-            <svg class="svg-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"></polygon>
-            </svg>
-          </div>
-          <span class="brand-text">VaultWealth</span>
-          <span class="brand-badge">CSE</span>
-        </a>
-
-        <!-- Center: Horizontal Navigation Links -->
-        <nav class="nav-menu">
-          <a href="/dashboard.html" class="nav-item">
-            <span class="nav-icon">
-              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="9" rx="1"></rect>
-                <rect x="14" y="3" width="7" height="5" rx="1"></rect>
-                <rect x="14" y="12" width="7" height="9" rx="1"></rect>
-                <rect x="3" y="16" width="7" height="5" rx="1"></rect>
-              </svg>
-            </span>
-            <span class="nav-label">Dashboard</span>
-          </a>
-          <a href="/transactions.html" class="nav-item">
-            <span class="nav-icon">
-              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                <line x1="1" y1="10" x2="23" y2="10"></line>
-              </svg>
-            </span>
-            <span class="nav-label">Transactions</span>
-          </a>
-          <a href="/analytics.html" class="nav-item">
-            <span class="nav-icon">
-              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                <polyline points="17 6 23 6 23 12"></polyline>
-              </svg>
-            </span>
-            <span class="nav-label">Analytics</span>
-          </a>
-          <a href="/profile.html" class="nav-item active">
-            <span class="nav-icon">
-              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            </span>
-            <span class="nav-label">Profile</span>
-          </a>
-        </nav>
-
-        <!-- Right: Actions & User Profile -->
-        <div class="navbar-actions">
-          <button class="btn btn-secondary btn-sm" id="uploadStatementBtn" onclick="openStatementUploadModal()">
-            <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            Upload Statement
-          </button>
-          <div class="user-profile-menu">
-            <a href="/profile.html" class="user-avatar-pill" title="View Profile">
-              <div class="user-avatar">U</div>
-              <span class="user-name">Loading...</span>
-            </a>
-            <button class="btn-icon btn-signout" data-action="logout" title="Sign Out" aria-label="Sign Out">
-              <svg class="svg-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-              </svg>
-            </button>
-          </div>
-        </div>
-
+    <!-- Top Horizontal Navigation Bar (Minimal — identical to index.html) -->
+    <header class="nav navbar-top">
+      <a href="/" class="brand" id="navBrand">VaultWealth</a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/dashboard" id="navDashboard" class="nav-item">Dashboard</a></li>
+          <li><a href="/transactions" id="navTransactions" class="nav-item">Transactions</a></li>
+          <li><a href="/analytics" id="navAnalytics" class="nav-item">Analytics</a></li>
+          <li><a href="/profile" id="navProfile" class="nav-item active">Profile</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn btn-outline btn-sm" id="uploadStatementBtn" onclick="openStatementUploadModal()">Upload Statement</button>
+        <a href="/login" class="nav-signin" data-action="logout" id="navSignOut">Sign out</a>
       </div>
     </header>
 
     <!-- Main Content Wrapper -->
     <div class="main-wrapper">
-
+      
       <!-- Page Header -->
       <div class="page-header">
         <div class="header-title-section">
-          <h1>Account & Profile Settings</h1>
-          <p class="header-subtitle">Manage personal information, system preferences, and security.</p>
+          <h1>Account <em>Settings.</em></h1>
+          <p class="header-subtitle">Manage your credentials, system preferences, and export vault data.</p>
         </div>
       </div>
 
-      <!-- Page Content -->
-      <main class="page-content" style="max-width: 860px;">
+      <!-- Page Content (Max width centered) -->
+      <main class="page-content" style="max-width: 840px;">
 
         <!-- 1. User Profile Information Card -->
-        <div class="card" style="margin-bottom: 2rem;">
+        <div class="card" style="margin-bottom: 1.5rem;">
           <div class="card-header">
             <h2 class="card-title">
-              <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
               </svg>
-              Personal Information
+              Personal Profile
             </h2>
-            <span class="badge badge-income">Active Account</span>
+            <span class="badge badge-income">Verified Session</span>
           </div>
 
-          <div
-            style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle);">
+          <!-- Profile Badge Header -->
+          <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.75rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle);">
             <div id="profileAvatarInitial"
-              style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: 700; color: white;">
+              style="width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 1.65rem; font-weight: 700; color: #fff; box-shadow: 0 0 20px rgba(99, 102, 241, 0.35); flex-shrink: 0;">
               U
             </div>
             <div>
-              <h3 id="profileDisplayName" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">User
-                Account</h3>
-              <p style="color: var(--text-secondary); font-size: 0.875rem;">Authenticated Vault Member</p>
-              <p id="profileJoinDate" style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Active
-                Member</p>
+              <h3 id="profileDisplayName" style="font-size: 1.2rem; font-weight: 600; letter-spacing: -0.015em; color: #fff; margin-bottom: 0.2rem;">
+                User Account
+              </h3>
+              <p style="color: var(--text-secondary); font-size: 0.8125rem;">Authenticated Vault Member</p>
+              <p id="profileJoinDate" style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Active Member</p>
             </div>
           </div>
 
+          <!-- Profile Form -->
           <form id="profileForm">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
               <div class="form-group">
                 <label for="profName" class="form-label">Full Name</label>
                 <input type="text" id="profName" class="form-control" placeholder="Enter your full name" required>
@@ -158,76 +83,65 @@
 
               <div class="form-group">
                 <label for="profEmail" class="form-label">Email Address</label>
-                <input type="email" id="profEmail" class="form-control" disabled
-                  style="opacity: 0.7; cursor: not-allowed;">
+                <input type="email" id="profEmail" class="form-control" disabled style="opacity: 0.6; cursor: not-allowed;">
               </div>
             </div>
 
-            <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.4rem;">
               Save Profile Changes
             </button>
           </form>
         </div>
 
         <!-- 2. System Preferences Card -->
-        <div class="card" style="margin-bottom: 2rem;">
+        <div class="card" style="margin-bottom: 1.5rem;">
           <div class="card-header">
             <h2 class="card-title">
-              <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"></circle>
-                <path
-                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                </path>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
               </svg>
-              System Preferences
+              Preferences & Data
             </h2>
           </div>
 
-          <div class="form-group">
-            <label for="prefCurrency" class="form-label">Primary Currency</label>
-            <select id="prefCurrency" class="form-control" style="max-width: 320px;">
+          <div class="form-group" style="max-width: 320px;">
+            <label for="prefCurrency" class="form-label">Primary Display Currency</label>
+            <select id="prefCurrency" class="form-control">
               <option value="INR" selected>Indian Rupee (₹ INR)</option>
               <option value="USD">US Dollar ($ USD)</option>
               <option value="EUR">Euro (€ EUR)</option>
             </select>
           </div>
 
+          <!-- Data Export -->
           <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
-            <label class="form-label">Data Management</label>
-            <p style="color: var(--text-secondary); font-size: 0.8125rem; margin-bottom: 1rem;">
-              Export all your transaction history for backup or spreadsheet analysis.
+            <label class="form-label">Data Portability</label>
+            <p style="color: var(--text-secondary); font-size: 0.8125rem; margin-bottom: 0.85rem;">
+              Download a complete CSV backup of all transactions recorded in your Vault.
             </p>
             <button type="button" id="exportCsvBtn" class="btn btn-secondary">
-              <svg class="svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
-                <path
-                  d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z">
-                </path>
-                <line x1="12" y1="3" x2="12" y2="10"></line>
-                <polyline points="9 7 12 10 15 7"></polyline>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path><line x1="12" y1="3" x2="12" y2="10"></line><polyline points="9 7 12 10 15 7"></polyline>
               </svg>
-              Export Transactions (CSV)
+              <span>Export Transactions (CSV)</span>
             </button>
           </div>
         </div>
 
         <!-- 3. Danger Zone Card -->
-        <div class="card" style="border-color: rgba(244, 63, 94, 0.3); background-color: rgba(244, 63, 94, 0.02);">
+        <div class="card" style="border-color: rgba(244, 63, 94, 0.25); background: rgba(244, 63, 94, 0.02);">
           <div class="card-header">
-            <h2 class="card-title" style="color: var(--color-expense);">
-              <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <h2 class="card-title" style="color: #fb7185;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #fb7185;">
                 <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-                <line x1="12" y1="9" x2="12" y2="13"></line>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                <line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
               </svg>
               Danger Zone
             </h2>
           </div>
           <p style="color: var(--text-secondary); font-size: 0.8125rem; margin-bottom: 1rem;">
-            Permanently delete all transaction records from your account. This action cannot be undone.
+            Permanently delete all transaction records from your account. This action is irreversible.
           </p>
           <button type="button" id="clearDataBtn" class="btn btn-danger btn-sm">
             Clear All Transactions
@@ -239,46 +153,28 @@
 
     <!-- Mobile Bottom Navigation Bar -->
     <nav class="mobile-nav">
-      <a href="/dashboard.html" class="mobile-nav-item">
-        <span class="mobile-nav-icon">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="9" rx="1"></rect>
-            <rect x="14" y="3" width="7" height="5" rx="1"></rect>
-            <rect x="14" y="12" width="7" height="9" rx="1"></rect>
-            <rect x="3" y="16" width="7" height="5" rx="1"></rect>
-          </svg>
-        </span>
+      <a href="/dashboard" class="mobile-nav-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect>
+        </svg>
         <span>Dashboard</span>
       </a>
       <a href="/transactions" class="mobile-nav-item">
-        <span class="mobile-nav-icon">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-            <line x1="1" y1="10" x2="23" y2="10"></line>
-          </svg>
-        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line>
+        </svg>
         <span>Transactions</span>
       </a>
       <a href="/analytics" class="mobile-nav-item">
-        <span class="mobile-nav-icon">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-            <polyline points="17 6 23 6 23 12"></polyline>
-          </svg>
-        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline>
+        </svg>
         <span>Analytics</span>
       </a>
       <a href="/profile" class="mobile-nav-item active">
-        <span class="mobile-nav-icon">
-          <svg class="svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+        </svg>
         <span>Profile</span>
       </a>
     </nav>
@@ -287,10 +183,8 @@
 
   <!-- Supabase JS Client CDN & App Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <!-- SheetJS for Excel parsing -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-
   <!-- pdf.js for PDF parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
@@ -308,6 +202,9 @@
   <script src="js/statement-parser.js"></script>
   <script src="js/statement-upload.js"></script>
   <script src="js/profile.js"></script>
+  <script type="module">
+    import { mountPatternWavesBackground } from './js/pattern-waves.js';
+    mountPatternWavesBackground(document.getElementById('bg'));
+  </script>
 </body>
-
 </html>

@@ -3,8 +3,11 @@
  * Phase 9 & 10: Real-time MoM Calculations, Category Distribution & Automated Rule-based Insights
  */
 
-let barChartInstance = null;
-let pieChartInstance = null;
+import {
+  renderModernCategoryRankings,
+  renderModernCashFlowGauge
+} from './modern-visuals.js';
+
 let mlForecastChartInstance = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -138,178 +141,34 @@ function computeAnalyticsMetrics(transactions) {
 }
 
 /**
- * Renders Category Comparison Bar Chart
+ * Renders Category Comparison Volume Breakdown
  */
 function renderCategoryBarChart(transactions) {
-  const canvas = document.getElementById('analyticsCategoryBarChart');
-  if (!canvas) return;
-
-  const expenses = transactions.filter(t => t.type === 'expense');
-  const categorySums = {};
-  expenses.forEach(t => {
-    categorySums[t.category] = (categorySums[t.category] || 0) + (parseFloat(t.amount) || 0);
-  });
-
-  const labels = Object.keys(categorySums);
-  const data = Object.values(categorySums);
-
-  if (barChartInstance) {
-    barChartInstance.destroy();
-  }
-
-  const container = canvas.parentElement;
-  const emptyId = 'barEmptyNotice';
-  let emptyNotice = document.getElementById(emptyId);
-
-  if (labels.length === 0) {
-    canvas.style.display = 'none';
-    if (!emptyNotice) {
-      emptyNotice = document.createElement('div');
-      emptyNotice.id = emptyId;
-      emptyNotice.style.cssText = 'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; padding: 2rem;';
-      emptyNotice.innerHTML = `
-        <div style="font-size: 2rem; margin-bottom: 0.5rem; display: flex; justify-content: center;">
-          ${typeof getSvgIcon === 'function' ? getSvgIcon('bar-chart', '', { width: 36, height: 36 }) : ''}
-        </div>
-        <p style="font-size: 0.875rem;">No expense categories recorded yet.</p>
-      `;
-      container.appendChild(emptyNotice);
-    } else {
-      emptyNotice.style.display = 'flex';
-    }
-    return;
-  } else {
-    canvas.style.display = 'block';
-    if (emptyNotice) emptyNotice.style.display = 'none';
-  }
-
-  const colors = ['#f97316', '#ec4899', '#eab308', '#06b6d4', '#8b5cf6', '#6366f1', '#10b981', '#3b82f6'];
-
-  barChartInstance = new Chart(canvas.getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Spend Amount (₹)',
-        data: data,
-        backgroundColor: colors.slice(0, labels.length),
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => ` ₹${ctx.raw.toLocaleString('en-IN')}`
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { color: '#94a3b8', font: { family: 'Inter', size: 11 } }
-        },
-        y: {
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: {
-            color: '#64748b',
-            font: { family: 'Inter', size: 11 },
-            callback: (val) => '₹' + val
-          }
-        }
-      }
-    }
-  });
+  const container = document.getElementById('categoryBarChartContainer');
+  if (!container) return;
+  renderModernCategoryRankings(container, transactions);
 }
 
 /**
- * Renders Cash Flow (Savings vs Expenses) Pie Chart
+ * Renders Cash Flow Proportions (Retained Savings vs Outflow)
  */
 function renderCashFlowPieChart(transactions) {
-  const canvas = document.getElementById('cashflowPieChart');
-  if (!canvas) return;
+  const container = document.getElementById('cashflowChartContainer');
+  if (!container) return;
+  renderModernCashFlowGauge(container, transactions);
 
+  // Update header badge if present
   let totalIncome = 0;
   let totalExpense = 0;
-
   transactions.forEach(t => {
     const amt = parseFloat(t.amount) || 0;
     if (t.type === 'income') totalIncome += amt;
     else if (t.type === 'expense') totalExpense += amt;
   });
-
-  const retainedSavings = Math.max(0, totalIncome - totalExpense);
-
-  if (pieChartInstance) {
-    pieChartInstance.destroy();
+  const badge = document.getElementById('cashflowBadge');
+  if (badge) {
+    badge.textContent = `Net: ${formatCurrency(totalIncome - totalExpense)}`;
   }
-
-  const container = canvas.parentElement;
-  const emptyId = 'pieEmptyNotice';
-  let emptyNotice = document.getElementById(emptyId);
-
-  if (totalIncome === 0 && totalExpense === 0) {
-    canvas.style.display = 'none';
-    if (!emptyNotice) {
-      emptyNotice = document.createElement('div');
-      emptyNotice.id = emptyId;
-      emptyNotice.style.cssText = 'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; padding: 2rem;';
-      emptyNotice.innerHTML = `
-        <div style="font-size: 2rem; margin-bottom: 0.5rem; display: flex; justify-content: center;">
-          ${typeof getSvgIcon === 'function' ? getSvgIcon('scales', '', { width: 36, height: 36 }) : ''}
-        </div>
-        <p style="font-size: 0.875rem;">No cashflow transactions recorded yet.</p>
-      `;
-      container.appendChild(emptyNotice);
-    } else {
-      emptyNotice.style.display = 'flex';
-    }
-    return;
-  } else {
-    canvas.style.display = 'block';
-    if (emptyNotice) emptyNotice.style.display = 'none';
-  }
-
-  // Update header badge
-  const headerBadge = canvas.closest('.card')?.querySelector('.badge-income');
-  if (headerBadge) {
-    headerBadge.textContent = `Net Savings: ${formatCurrency(totalIncome - totalExpense)}`;
-  }
-
-  pieChartInstance = new Chart(canvas.getContext('2d'), {
-    type: 'pie',
-    data: {
-      labels: ['Retained Savings', 'Spent (Expenses)'],
-      datasets: [{
-        data: [retainedSavings, totalExpense],
-        backgroundColor: ['#10b981', '#f43f5e'],
-        borderColor: '#111827',
-        borderWidth: 3
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            color: '#94a3b8',
-            padding: 14,
-            font: { family: 'Inter', size: 11 }
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => ` ${ctx.label}: ₹${ctx.raw.toLocaleString('en-IN')}`
-          }
-        }
-      }
-    }
-  });
 }
 
 /**
@@ -634,6 +493,32 @@ function setForecastUIState(reason, n) {
 
   const eqEl = document.getElementById('mlEquationSnippet');
   if (eqEl) eqEl.textContent = 'ŷ = β₀ + β₁·X (awaiting data)';
+
+  const canvas = document.getElementById('mlForecastChart');
+  if (canvas) {
+    if (mlForecastChartInstance) {
+      mlForecastChartInstance.destroy();
+      mlForecastChartInstance = null;
+    }
+    canvas.style.display = 'none';
+    const container = canvas.parentElement;
+    let emptyNotice = document.getElementById('mlEmptyNotice');
+    if (!emptyNotice && container) {
+      emptyNotice = document.createElement('div');
+      emptyNotice.id = 'mlEmptyNotice';
+      emptyNotice.style.cssText = 'height: 100%; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; padding: 2rem;';
+      emptyNotice.innerHTML = `
+        <div style="font-size: 2rem; margin-bottom: 0.5rem; display: flex; justify-content: center; color: #38bdf8;">
+          ${typeof getSvgIcon === 'function' ? getSvgIcon('lightbulb', '', { width: 36, height: 36 }) : ''}
+        </div>
+        <p style="font-size: 0.875rem; font-weight: 500; color: var(--text-primary);">Awaiting Historical Transaction Series</p>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">The Ordinary Least Squares model requires at least 2 distinct months of expense logs.</p>
+      `;
+      container.appendChild(emptyNotice);
+    } else if (emptyNotice) {
+      emptyNotice.style.display = 'flex';
+    }
+  }
 }
 
 /**
@@ -642,6 +527,10 @@ function setForecastUIState(reason, n) {
 function renderForecastChart(monthLabels, actuals, predicted, nextMonthLabel, forecastAmount) {
   const canvas = document.getElementById('mlForecastChart');
   if (!canvas) return;
+
+  const emptyNotice = document.getElementById('mlEmptyNotice');
+  if (emptyNotice) emptyNotice.style.display = 'none';
+  canvas.style.display = 'block';
 
   if (mlForecastChartInstance) {
     mlForecastChartInstance.destroy();
@@ -654,46 +543,59 @@ function renderForecastChart(monthLabels, actuals, predicted, nextMonthLabel, fo
   // Regression line extended to include forecast
   const regressionData = [...predicted, forecastAmount];
 
-  mlForecastChartInstance = new Chart(canvas.getContext('2d'), {
+  const ctx = canvas.getContext('2d');
+  const chartHeight = canvas.parentElement.clientHeight || 280;
+  const gradient = ctx.createLinearGradient(0, 0, 0, chartHeight);
+  gradient.addColorStop(0, 'rgba(56, 189, 248, 0.18)');
+  gradient.addColorStop(0.7, 'rgba(56, 189, 248, 0.02)');
+  gradient.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+
+  mlForecastChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
       labels: allLabels,
       datasets: [
         {
-          label: 'Actual Monthly Spend',
+          label: 'Actual Spend',
           data: actualData,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          pointBackgroundColor: '#3b82f6',
-          pointBorderColor: '#1e3a5f',
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          borderWidth: 2.5,
+          borderColor: '#38bdf8',
+          backgroundColor: gradient,
+          pointBackgroundColor: '#38bdf8',
+          pointBorderColor: '#09080e',
+          pointBorderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 4.5,
+          pointHoverBackgroundColor: '#ffffff',
+          pointHoverBorderColor: '#38bdf8',
+          pointHoverBorderWidth: 2,
+          borderWidth: 1.75,
           fill: true,
-          tension: 0.3,
+          tension: 0.38,
           spanGaps: false
         },
         {
-          label: 'ML Regression / Forecast',
+          label: 'Forecast Trajectory',
           data: regressionData,
-          borderColor: '#38bdf8',
+          borderColor: '#a855f7',
           backgroundColor: 'transparent',
           pointBackgroundColor: (ctx) => {
-            return ctx.dataIndex === regressionData.length - 1 ? '#f59e0b' : '#38bdf8';
+            return ctx.dataIndex === regressionData.length - 1 ? '#ffffff' : 'transparent';
           },
           pointBorderColor: (ctx) => {
-            return ctx.dataIndex === regressionData.length - 1 ? '#b45309' : '#0e7490';
+            return ctx.dataIndex === regressionData.length - 1 ? '#a855f7' : 'transparent';
           },
+          pointBorderWidth: 2,
           pointRadius: (ctx) => {
-            return ctx.dataIndex === regressionData.length - 1 ? 7 : 4;
+            return ctx.dataIndex === regressionData.length - 1 ? 5 : 0;
           },
-          pointStyle: (ctx) => {
-            return ctx.dataIndex === regressionData.length - 1 ? 'star' : 'circle';
+          pointHoverRadius: (ctx) => {
+            return ctx.dataIndex === regressionData.length - 1 ? 7 : 3;
           },
-          borderWidth: 2,
-          borderDash: [6, 4],
+          pointStyle: 'circle',
+          borderWidth: 1.5,
+          borderDash: [4, 4],
           fill: false,
-          tension: 0
+          tension: 0.2
         }
       ]
     },
@@ -706,32 +608,47 @@ function renderForecastChart(monthLabels, actuals, predicted, nextMonthLabel, fo
       },
       plugins: {
         legend: {
-          display: false  // We have a custom legend in HTML
+          display: false
         },
         tooltip: {
+          backgroundColor: 'rgba(9, 8, 14, 0.95)',
+          titleColor: 'rgba(242, 241, 245, 0.5)',
+          bodyColor: '#f2f1f5',
+          borderColor: 'rgba(255, 255, 255, 0.08)',
+          borderWidth: 1,
+          padding: { top: 8, bottom: 8, left: 12, right: 12 },
+          cornerRadius: 8,
+          boxWidth: 6,
+          boxHeight: 6,
+          usePointStyle: true,
+          boxPadding: 4,
           callbacks: {
             label: (ctx) => {
               if (ctx.raw === null) return null;
-              return ` ${ctx.dataset.label}: ₹${ctx.raw.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+              return `  ${ctx.dataset.label}: ₹${Number(ctx.raw).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
             }
           }
         }
       },
       scales: {
         x: {
-          grid: { color: 'rgba(255, 255, 255, 0.04)' },
+          grid: { display: false },
+          border: { display: false },
           ticks: {
-            color: '#94a3b8',
-            font: { family: 'Inter', size: 11 },
-            maxRotation: 45
+            color: 'rgba(242, 241, 245, 0.4)',
+            font: { family: 'Inter', size: 10 }
           }
         },
         y: {
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.03)',
+            borderDash: [4, 4]
+          },
+          border: { display: false },
           ticks: {
-            color: '#64748b',
-            font: { family: 'Inter', size: 11 },
-            callback: (val) => '₹' + val.toLocaleString('en-IN')
+            color: 'rgba(242, 241, 245, 0.4)',
+            font: { family: 'Inter', size: 10 },
+            callback: (val) => '₹' + Number(val).toLocaleString('en-IN')
           }
         }
       }
