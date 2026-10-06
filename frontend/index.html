@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VaultWealth — Intelligent Personal Finance Tracking</title>
-  <meta name="description" content="VaultWealth is a minimal personal finance tracker with real-time analytics and AI expense forecasting.">
+  <meta name="description"
+    content="VaultWealth is a minimal personal finance tracker with real-time analytics and AI expense forecasting.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/ghost-fibers.css">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
       --bg: #120f17;
@@ -19,7 +27,8 @@
       --line: rgba(255, 255, 255, 0.12);
     }
 
-    html, body {
+    html,
+    body {
       height: 100%;
       font-family: 'Inter', sans-serif;
       background: var(--bg);
@@ -36,7 +45,10 @@
       opacity: 0;
       transition: opacity 1.6s ease;
     }
-    #bg.ready { opacity: 1; }
+
+    #bg.ready {
+      opacity: 1;
+    }
 
     /* Layout */
     .page {
@@ -55,6 +67,7 @@
       align-items: center;
       justify-content: space-between;
     }
+
     .brand {
       font-size: 0.95rem;
       font-weight: 600;
@@ -62,11 +75,13 @@
       color: var(--text);
       text-decoration: none;
     }
+
     .nav-links {
       display: flex;
       gap: 2.25rem;
       list-style: none;
     }
+
     .nav-links a,
     .nav-signin {
       font-size: 0.85rem;
@@ -75,8 +90,11 @@
       text-decoration: none;
       transition: color 0.2s ease;
     }
+
     .nav-links a:hover,
-    .nav-signin:hover { color: var(--text); }
+    .nav-signin:hover {
+      color: var(--text);
+    }
 
     /* Hero */
     .hero {
@@ -88,14 +106,27 @@
       text-align: center;
       padding-bottom: 4rem;
     }
-    .hero > * {
+
+    .hero>* {
       opacity: 0;
       transform: translateY(14px);
       animation: rise 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-    .hero > :nth-child(2) { animation-delay: 0.12s; }
-    .hero > :nth-child(3) { animation-delay: 0.24s; }
-    @keyframes rise { to { opacity: 1; transform: none; } }
+
+    .hero> :nth-child(2) {
+      animation-delay: 0.12s;
+    }
+
+    .hero> :nth-child(3) {
+      animation-delay: 0.24s;
+    }
+
+    @keyframes rise {
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
 
     .hero h1 {
       font-size: clamp(2.6rem, 6.5vw, 5.25rem);
@@ -104,10 +135,12 @@
       letter-spacing: -0.045em;
       max-width: 14ch;
     }
+
     .hero h1 em {
       font-style: normal;
       font-weight: 500;
     }
+
     .hero p {
       margin-top: 1.5rem;
       font-size: 1rem;
@@ -116,11 +149,13 @@
       color: var(--muted);
       max-width: 34rem;
     }
+
     .ctas {
       margin-top: 2.5rem;
       display: flex;
       gap: 0.75rem;
     }
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -132,17 +167,36 @@
       text-decoration: none;
       transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
     }
-    .btn-primary { background: var(--text); color: var(--bg); }
-    .btn-primary:hover { background: #fff; transform: translateY(-1px); }
-    .btn-primary svg { transition: transform 0.25s ease; }
-    .btn-primary:hover svg { transform: translateX(3px); }
+
+    .btn-primary {
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: #fff;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary svg {
+      transition: transform 0.25s ease;
+    }
+
+    .btn-primary:hover svg {
+      transform: translateX(3px);
+    }
+
     .btn-outline {
       color: var(--text);
       border: 1px solid var(--line);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
     }
-    .btn-outline:hover { border-color: rgba(255,255,255,0.3); transform: translateY(-1px); }
+
+    .btn-outline:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
 
     /* Footer */
     .foot {
@@ -155,14 +209,31 @@
     }
 
     @media (max-width: 720px) {
-      .page { padding: 0 1.5rem; }
-      .nav-links { display: none; }
-      .ctas { flex-direction: column; width: 100%; max-width: 280px; }
-      .btn { justify-content: center; }
-      .foot span:last-child { display: none; }
+      .page {
+        padding: 0 1.5rem;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .ctas {
+        flex-direction: column;
+        width: 100%;
+        max-width: 280px;
+      }
+
+      .btn {
+        justify-content: center;
+      }
+
+      .foot span:last-child {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <div id="bg" aria-hidden="true"></div>
@@ -186,7 +257,11 @@
       <div class="ctas">
         <a href="/register" class="btn btn-primary" id="ctaRegister">
           Get started
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
         </a>
         <a href="/dashboard" class="btn btn-outline" id="ctaDashboard">View dashboard</a>
       </div>
@@ -194,7 +269,7 @@
 
     <footer class="foot">
       <span>&copy; 2026 VaultWealth</span>
-      <span>CSE 5th Semester Project</span>
+
     </footer>
   </div>
 
@@ -204,4 +279,5 @@
   </script>
 
 </body>
+
 </html>

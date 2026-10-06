@@ -3,7 +3,15 @@
  * Handles real user profile synchronization, profile updates, real CSV export, and data purge.
  */
 
-document.addEventListener('DOMContentLoaded', async () => {
+function onReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
+  }
+}
+
+onReady(async () => {
   const user = await requireAuth();
   if (!user) return;
 

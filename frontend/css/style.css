@@ -1307,55 +1307,7 @@ img, svg { display: block; max-width: 100%; }
   .page-header { padding: var(--space-4) 0 var(--space-3) 0; }
   .page-header h1 { font-size: var(--text-2xl); }
   .page-content { padding: var(--space-3) 0 var(--space-4) 0; }
-
-  .mobile-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 68px;
-    background-color: rgba(9, 11, 14, 0.98);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border-top: 1px solid var(--border-subtle);
-    z-index: var(--z-sticky);
-    padding: 0 var(--space-2);
-  }
-
-  .mobile-nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-1);
-    font-size: var(--text-xs);
-    font-weight: 500;
-    color: var(--text-muted);
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-md);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    transition: color var(--transition-fast), background var(--transition-fast);
-    min-width: 60px;
-  }
-
-  .mobile-nav-item:hover {
-    background: var(--bg-surface);
-    color: var(--text-primary);
-  }
-
-  .mobile-nav-item.active {
-    color: var(--color-brand-400);
-    background: var(--color-brand-subtle);
-  }
-
-  .mobile-nav-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  /* Note: Mobile floating capsule navigation is defined in app-theme.css */
 }
 
 /* ── SVG Icons ──────────────────────────────────────────── */

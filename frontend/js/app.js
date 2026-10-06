@@ -3,7 +3,15 @@
  * Phase 3: Global Modal, Type Toggle, and Navigation Script
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+function onReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
+  }
+}
+
+onReady(() => {
   initNavigationHighlight();
   initNavbarScroll();
   initTransactionModal();
@@ -29,14 +37,14 @@ function initNavigationHighlight() {
 }
 
 /**
- * Adds backdrop blur and elevation when user scrolls down
+ * Adds backdrop blur, compact elevation when user scrolls down
  */
 function initNavbarScroll() {
-  const navbar = document.querySelector('.navbar-top');
+  const navbar = document.querySelector('.navbar-top, .nav');
   if (!navbar) return;
 
   const onScroll = () => {
-    if (window.scrollY > 10) {
+    if (window.scrollY > 15) {
       navbar.classList.add('scrolled');
     } else {
       navbar.classList.remove('scrolled');

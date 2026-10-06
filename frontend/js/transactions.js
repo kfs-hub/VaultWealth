@@ -21,7 +21,15 @@ function initTransactionTable() {}
 let allTransactions = [];
 let editingTransactionId = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
+function onReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
+  }
+}
+
+onReady(async () => {
   // Ensure user is authenticated
   const user = await requireAuth();
   if (!user) return;

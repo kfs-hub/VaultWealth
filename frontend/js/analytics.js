@@ -10,7 +10,15 @@ import {
 
 let mlForecastChartInstance = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
+function onReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
+  }
+}
+
+onReady(async () => {
   const user = await requireAuth();
   if (!user) return;
 
@@ -23,10 +31,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadAnalyticsData() {
   const client = getSupabaseClient();
-  if (!client) return;
+  if (!client) {
+    computeAnalyticsMetrics([]);
+    renderCategoryBarChart([]);
+    renderCashFlowPieChart([]);
+    generateSmartInsightsFeed([]);
+    runMLForecasting([]);
+    return;
+  }
 
   const user = await getCurrentUser();
-  if (!user) return;
+  if (!user) {
+    computeAnalyticsMetrics([]);
+    renderCategoryBarChart([]);
+    renderCashFlowPieChart([]);
+    generateSmartInsightsFeed([]);
+    runMLForecasting([]);
+    return;
+  }
 
   try {
     const { data: transactions, error } = await client
@@ -37,6 +59,11 @@ async function loadAnalyticsData() {
 
     if (error) {
       console.error('[VaultWealth] Error loading analytics data:', error);
+      computeAnalyticsMetrics([]);
+      renderCategoryBarChart([]);
+      renderCashFlowPieChart([]);
+      generateSmartInsightsFeed([]);
+      runMLForecasting([]);
       return;
     }
 
@@ -49,6 +76,11 @@ async function loadAnalyticsData() {
 
   } catch (err) {
     console.error('[VaultWealth] Unexpected error in loadAnalyticsData:', err);
+    computeAnalyticsMetrics([]);
+    renderCategoryBarChart([]);
+    renderCashFlowPieChart([]);
+    generateSmartInsightsFeed([]);
+    runMLForecasting([]);
   }
 }
 

@@ -492,3 +492,17 @@
     transform: translateX(0) translateY(0);
   }
 }
+
+@media (max-width: 480px) {
+  .upload-formats {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .upload-dropzone-title {
+    font-size: 0.95rem;
+  }
+  .upload-dropzone-subtitle {
+    font-size: 0.78rem;
+  }
+}

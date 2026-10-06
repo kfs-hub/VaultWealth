@@ -538,8 +538,47 @@
   .category-dual-layout {
     grid-template-columns: 1fr;
     justify-items: center;
+    gap: 1.15rem;
   }
   .category-rows-list {
     width: 100%;
+    max-height: 240px;
+  }
+  .donut-wrap {
+    width: 130px;
+    height: 130px;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-row-item {
+    grid-template-columns: 8px 1fr auto;
+    gap: 0.5rem;
+    padding: 0.35rem 0.25rem;
+  }
+  .cat-mini-bar-track {
+    display: none;
+  }
+  .cat-name-text {
+    font-size: 0.78rem;
+    max-width: 130px;
+  }
+  .cat-amount-text {
+    font-size: 0.78rem;
+  }
+  .cat-percent-badge {
+    font-size: 0.68rem;
+  }
+  .trend-header-metrics {
+    gap: 0.35rem;
+  }
+  .trend-active-value {
+    font-size: 1.35rem;
+  }
+  .trend-svg-viewport {
+    min-height: 140px;
+  }
+  .trend-timeline-labels {
+    font-size: 0.68rem;
   }
 }

@@ -6,7 +6,15 @@
 
 import { renderModernCategoryBreakdown, renderModernMonthlyTrajectory } from './modern-visuals.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+function onReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
+  }
+}
+
+onReady(async () => {
   const user = await requireAuth();
   if (!user) return;
 
@@ -23,10 +31,24 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function loadDashboardData() {
   const client = getSupabaseClient();
-  if (!client) return;
+  if (!client) {
+    updateMetricCards([]);
+    renderRecentTransactions([]);
+    renderCategoryDoughnutChart([]);
+    renderMonthlyTrendChart([]);
+    renderDashboardInsights([]);
+    return;
+  }
 
   const user = await getCurrentUser();
-  if (!user) return;
+  if (!user) {
+    updateMetricCards([]);
+    renderRecentTransactions([]);
+    renderCategoryDoughnutChart([]);
+    renderMonthlyTrendChart([]);
+    renderDashboardInsights([]);
+    return;
+  }
 
   try {
     const { data: transactions, error } = await client
@@ -37,6 +59,11 @@ async function loadDashboardData() {
 
     if (error) {
       console.error('[VaultWealth] Error fetching dashboard transactions:', error);
+      updateMetricCards([]);
+      renderRecentTransactions([]);
+      renderCategoryDoughnutChart([]);
+      renderMonthlyTrendChart([]);
+      renderDashboardInsights([]);
       return;
     }
 
@@ -49,6 +76,11 @@ async function loadDashboardData() {
 
   } catch (err) {
     console.error('[VaultWealth] Unexpected error in loadDashboardData:', err);
+    updateMetricCards([]);
+    renderRecentTransactions([]);
+    renderCategoryDoughnutChart([]);
+    renderMonthlyTrendChart([]);
+    renderDashboardInsights([]);
   }
 }
 
