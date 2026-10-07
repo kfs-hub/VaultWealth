@@ -57,6 +57,10 @@
             </div>
             <h4 class="upload-dropzone-title">Drop your bank statement here</h4>
             <p class="upload-dropzone-subtitle">or click to browse files from your computer</p>
+            <button type="button" class="btn btn-primary btn-sm upload-browse-btn" id="uploadBrowseBtn">
+              ${typeof getSvgIcon === 'function' ? getSvgIcon('file-text', '', { width: 15, height: 15 }) : ''}
+              Choose File (PDF, CSV, Excel)
+            </button>
             <div class="upload-formats">
               <span class="upload-format-badge">
                 ${typeof getSvgIcon === 'function' ? getSvgIcon('file-text', '', { width: 14, height: 14 }) : ''}
@@ -75,10 +79,16 @@
           </div>
 
           <div class="upload-sample-prompt">
-            Want to test without a real statement?
-            <a href="assets/sample-statement.csv" download="sample-statement.csv" id="downloadSampleLink" class="upload-sample-link">
-              Download Sample Indian Statement (CSV)
-            </a>
+            <span class="upload-sample-label">Want to test without a real statement?</span>
+            <div class="upload-sample-actions">
+              <button type="button" class="btn btn-secondary btn-sm upload-demo-btn" id="loadSampleDemoBtn">
+                ${typeof getSvgIcon === 'function' ? getSvgIcon('lightning', '', { width: 14, height: 14 }) : '⚡'}
+                Load Demo Statement
+              </button>
+              <a href="assets/sample-statement.csv" download="sample-statement.csv" id="downloadSampleLink" class="upload-sample-link">
+                Download Sample CSV
+              </a>
+            </div>
           </div>
 
           <div class="upload-info-bar">
@@ -157,7 +167,8 @@
               </div>
               <button type="button" class="btn btn-secondary btn-sm" id="uploadBackBtn">
                 ${typeof getSvgIcon === 'function' ? getSvgIcon('upload', '', { width: 14, height: 14 }) : ''}
-                Upload Another File
+                <span class="upload-btn-text-full">Upload Another File</span>
+                <span class="upload-btn-text-short">New File</span>
               </button>
             </div>
           </div>
@@ -180,10 +191,6 @@
             </div>
 
             <div class="upload-toolbar-right">
-              <div class="upload-period-badge" id="reviewPeriodBadge">
-                ${typeof getSvgIcon === 'function' ? getSvgIcon('calendar', '', { width: 14, height: 14 }) : '📅'}
-                <span id="reviewPeriodText">Statement Period</span>
-              </div>
               <div class="upload-search-wrapper">
                 <span class="upload-search-icon">
                   ${typeof getSvgIcon === 'function' ? getSvgIcon('search', '', { width: 14, height: 14 }) : '🔍'}
@@ -193,10 +200,16 @@
                   &times;
                 </button>
               </div>
-              <label class="upload-select-all-label" title="Select or deselect all transactions">
-                <input type="checkbox" id="selectAllCheckbox" checked>
-                <span>Select All</span>
-              </label>
+              <div class="upload-toolbar-meta-row">
+                <div class="upload-period-badge" id="reviewPeriodBadge">
+                  ${typeof getSvgIcon === 'function' ? getSvgIcon('calendar', '', { width: 14, height: 14 }) : '📅'}
+                  <span id="reviewPeriodText">Statement Period</span>
+                </div>
+                <label class="upload-select-all-label" title="Select or deselect all transactions">
+                  <input type="checkbox" id="selectAllCheckbox" checked>
+                  <span>Select All</span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -824,6 +837,37 @@
       currentSearchQuery = '';
       if (searchInput) searchInput.value = '';
       renderReviewTable();
+    });
+
+    // Browse button click
+    const browseBtn = document.getElementById('uploadBrowseBtn');
+    browseBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput?.click();
+    });
+
+    // Demo statement loader
+    const loadDemoBtn = document.getElementById('loadSampleDemoBtn');
+    loadDemoBtn?.addEventListener('click', async () => {
+      try {
+        const resp = await fetch('assets/sample-statement.csv');
+        if (!resp.ok) throw new Error('Fetch failed');
+        const text = await resp.text();
+        const file = new File([text], 'sample-statement.csv', { type: 'text/csv' });
+        processFile(file);
+      } catch (err) {
+        const fallbackCsv = `Date,Description,Withdrawal,Deposit,Balance
+15/01/2025,Salary Credited Infosys Ltd,,85000.00,85000.00
+16/01/2025,Swiggy Food Delivery Bangalore,450.50,,84549.50
+17/01/2025,Amazon India Online Shopping,2499.00,,82050.50
+18/01/2025,Uber Ride Indiranagar,320.00,,81730.50
+19/01/2025,Freelance Stipend Payment Stripe,,15000.00,96730.50
+20/01/2025,Electricity Bill BESCOM,1850.00,,94880.50
+21/01/2025,Netflix Entertainment Subscription,649.00,,94231.50
+22/01/2025,Grocery Store BigBasket,3120.00,,91111.50`;
+        const file = new File([fallbackCsv], 'sample-statement.csv', { type: 'text/csv' });
+        processFile(file);
+      }
     });
 
     // Dropzone click
