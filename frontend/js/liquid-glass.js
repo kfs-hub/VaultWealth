@@ -13,7 +13,19 @@
 let uid = 0;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+function isMobileOrLowPower() {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile/i.test(ua);
+  const isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  const isSmallScreen = window.innerWidth <= 768;
+  return isMobileUA || isCoarse || isSmallScreen;
+}
+
 function supportsSvgBackdrop() {
+  // Mobile GPUs experience severe fill-rate drops and compositing jank with SVG displacement backdrop filters
+  if (isMobileOrLowPower()) return false;
+
   const ua = navigator.userAgent;
   const isSafari = /Safari/.test(ua) && !/Chrome|Chromium|Edg|OPR/.test(ua);
   const isFirefox = /Firefox/.test(ua);
@@ -89,11 +101,18 @@ export function initLiquidGlass(el, options = {}) {
   el.style.setProperty('--filter-id', `url(#${id})`);
   el.classList.add('liquidglass--svg');
 
+  let lastW = 0;
+  let lastH = 0;
+  let lastR = 0;
   const update = () => {
     const rect = el.getBoundingClientRect();
     const w = Math.max(1, Math.round(rect.width));
     const h = Math.max(1, Math.round(rect.height));
     const r = Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, w / 2, h / 2);
+    if (w === lastW && h === lastH && r === lastR) return;
+    lastW = w;
+    lastH = h;
+    lastR = r;
     const href = buildDisplacementMap(w, h, r, opts);
     feImage.setAttribute('href', href);
     feImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', href);

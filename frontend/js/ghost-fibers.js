@@ -264,9 +264,16 @@ export function createGhostFibers(container, options = {}) {
     frameId = requestAnimationFrame(loop);
   };
 
+  let currentW = 0;
+  let currentH = 0;
   const setSize = () => {
     const rect = container.getBoundingClientRect();
-    renderer.setSize(Math.max(1, Math.floor(rect.width)), Math.max(1, Math.floor(rect.height)));
+    const w = Math.max(1, Math.floor(rect.width));
+    const h = Math.max(1, Math.floor(rect.height));
+    if (w === currentW && h === currentH) return;
+    currentW = w;
+    currentH = h;
+    renderer.setSize(w, h);
     program.uniforms.uResolution.value[0] = gl.drawingBufferWidth;
     program.uniforms.uResolution.value[1] = gl.drawingBufferHeight;
     render();
@@ -381,11 +388,28 @@ export const VAULT_PRESET = {
   dpr: 1
 };
 
+/** Check if running on a mobile or low-power device */
+export const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile/i.test(ua);
+  const isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  const isSmallScreen = window.innerWidth <= 768;
+  return isMobileUA || isCoarse || isSmallScreen;
+};
+
 /** Mount the VaultWealth background into an element and fade it in. */
-export function mountVaultBackground(el) {
+export function mountVaultBackground(el, extraOptions = {}) {
   if (!el) return null;
   try {
-    const instance = createGhostFibers(el, VAULT_PRESET);
+    const isMobile = isMobileDevice();
+    const mobileOverrides = isMobile ? {
+      layers: 2,
+      grain: 0,
+      dpr: 0.75,
+      fps: 30
+    } : {};
+    const instance = createGhostFibers(el, { ...VAULT_PRESET, ...mobileOverrides, ...extraOptions });
     requestAnimationFrame(() => el.classList.add('ready'));
     return instance;
   } catch (err) {
