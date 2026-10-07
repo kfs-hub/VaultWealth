@@ -1,0 +1,346 @@
+/* ==========================================================================
+   VaultWealth — Vault Assistant (chat widget)
+   Matches app-theme.css: obsidian glass, hairline borders, Inter, pill inputs.
+   Mobile: solid surfaces (no backdrop-filter) to keep scrolling/typing smooth.
+   ========================================================================== */
+
+.vw-chat-launcher {
+  position: fixed;
+  right: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  z-index: 1100;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-top-color: rgba(255, 255, 255, 0.4);
+  background:
+    radial-gradient(120% 120% at 30% 20%, rgba(139, 92, 246, 0.95), rgba(99, 102, 241, 0.9) 45%, rgba(56, 30, 120, 0.95));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow:
+    0 14px 34px -8px rgba(99, 102, 241, 0.65),
+    0 6px 16px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px rgba(255, 255, 255, 0.45);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.vw-chat-launcher:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 18px 40px -8px rgba(99, 102, 241, 0.8), 0 6px 16px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.5); }
+.vw-chat-launcher:active { transform: scale(0.96); }
+.vw-chat-launcher:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.vw-chat-launcher svg { width: 24px; height: 24px; }
+.vw-chat-launcher::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid rgba(139, 92, 246, 0.55);
+  animation: vw-pulse 2.8s ease-out infinite;
+  pointer-events: none;
+}
+.vw-chat-launcher.is-hidden { opacity: 0; pointer-events: none; transform: scale(0.8); }
+@keyframes vw-pulse { 0% { transform: scale(0.95); opacity: 0.9; } 70%, 100% { transform: scale(1.35); opacity: 0; } }
+
+/* ── Panel ─────────────────────────────────────────────────── */
+.vw-chat-panel {
+  position: fixed;
+  right: 24px;
+  bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  z-index: 1101;
+  width: 390px;
+  height: min(600px, calc(100vh - 130px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px;
+  overflow: hidden;
+  color: var(--text-primary, #f4f3f7);
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  background: rgba(16, 13, 24, 0.86);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  backdrop-filter: blur(22px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transform-origin: bottom right;
+  opacity: 0;
+  transform: translateY(12px) scale(0.97);
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.28s;
+}
+.vw-chat-panel.is-open {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  visibility: visible;
+  transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s;
+}
+
+.vw-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.12), transparent);
+  flex-shrink: 0;
+}
+.vw-chat-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #8b5cf6, #6366f1 60%, #06b6d4);
+  box-shadow: 0 6px 16px -4px rgba(99, 102, 241, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
+}
+.vw-chat-avatar svg { width: 18px; height: 18px; color: #fff; }
+.vw-chat-title { flex: 1; min-width: 0; }
+.vw-chat-title strong { display: block; font-size: 0.95rem; font-weight: 600; letter-spacing: -0.01em; }
+.vw-chat-title span { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-muted, rgba(244, 243, 247, 0.45)); }
+.vw-chat-title span::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; }
+.vw-chat-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary, rgba(244, 243, 247, 0.65));
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.vw-chat-icon-btn:hover { background: rgba(255, 255, 255, 0.06); color: #fff; border-color: rgba(255, 255, 255, 0.08); }
+.vw-chat-icon-btn:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 1px; }
+.vw-chat-icon-btn svg { width: 16px; height: 16px; }
+
+/* ── Messages ──────────────────────────────────────────────── */
+.vw-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+.vw-chat-messages::-webkit-scrollbar { width: 6px; }
+.vw-chat-messages::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+
+.vw-msg {
+  max-width: 88%;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  word-wrap: break-word;
+  animation: vw-in 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes vw-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.vw-msg--user {
+  align-self: flex-end;
+  padding: 10px 14px;
+  border-radius: 18px 18px 6px 18px;
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  color: #fff;
+  box-shadow: 0 6px 18px -6px rgba(99, 102, 241, 0.6);
+  white-space: pre-wrap;
+}
+.vw-msg--bot {
+  align-self: flex-start;
+  padding: 12px 14px;
+  border-radius: 18px 18px 18px 6px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text-primary, #f4f3f7);
+}
+.vw-msg--error { border-color: rgba(244, 63, 94, 0.35); background: rgba(244, 63, 94, 0.08); color: #fecdd3; }
+.vw-msg--bot p { margin: 0 0 0.55em; }
+.vw-msg--bot p:last-child, .vw-msg--bot ul:last-child, .vw-msg--bot ol:last-child, .vw-msg--bot .vw-table-wrap:last-child { margin-bottom: 0; }
+.vw-msg--bot strong { color: #fff; font-weight: 600; }
+.vw-msg--bot ul, .vw-msg--bot ol { margin: 0.2em 0 0.6em; padding-left: 1.2em; }
+.vw-msg--bot li { margin: 0.2em 0; }
+.vw-msg--bot li::marker { color: #a5b4fc; }
+.vw-msg--bot h4 { margin: 0.4em 0 0.35em; font-size: 0.88rem; font-weight: 600; color: #fff; }
+.vw-msg--bot code { font-family: var(--font-mono, monospace); font-size: 0.8em; padding: 1px 5px; border-radius: 5px; background: rgba(255, 255, 255, 0.08); }
+.vw-table-wrap { overflow-x: auto; margin: 0.35em 0 0.6em; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); }
+.vw-msg--bot table { width: 100%; border-collapse: collapse; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.vw-msg--bot th, .vw-msg--bot td { padding: 6px 9px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.06); white-space: nowrap; }
+.vw-msg--bot th { font-weight: 600; color: var(--text-secondary, rgba(244, 243, 247, 0.65)); background: rgba(255, 255, 255, 0.03); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.vw-msg--bot tr:last-child td { border-bottom: none; }
+
+/* Welcome */
+.vw-welcome { text-align: center; padding: 18px 10px 4px; }
+.vw-welcome .vw-chat-avatar { width: 52px; height: 52px; border-radius: 16px; margin: 0 auto 14px; }
+.vw-welcome .vw-chat-avatar svg { width: 26px; height: 26px; }
+.vw-welcome h3 { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 6px; }
+.vw-welcome p { font-size: 0.82rem; color: var(--text-secondary, rgba(244, 243, 247, 0.65)); line-height: 1.5; margin: 0 auto; max-width: 290px; }
+
+/* Typing indicator */
+.vw-typing { display: inline-flex; gap: 4px; padding: 14px 16px; }
+.vw-typing i { width: 6px; height: 6px; border-radius: 50%; background: #a5b4fc; opacity: 0.4; animation: vw-dot 1.2s infinite ease-in-out; }
+.vw-typing i:nth-child(2) { animation-delay: 0.15s; }
+.vw-typing i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes vw-dot { 0%, 80%, 100% { opacity: 0.3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+
+/* ── Confirm-transaction card ──────────────────────────────── */
+.vw-confirm {
+  align-self: flex-start;
+  width: 88%;
+  border-radius: 16px;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.12), rgba(99, 102, 241, 0.04));
+  padding: 14px;
+  animation: vw-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vw-confirm-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.vw-confirm-label { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #a5b4fc; }
+.vw-confirm-amount { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.vw-confirm-amount.is-expense { color: #fb7185; }
+.vw-confirm-amount.is-income { color: #34d399; }
+.vw-confirm-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 0.8rem; margin-bottom: 12px; }
+.vw-confirm-grid dt { color: var(--text-muted, rgba(244, 243, 247, 0.45)); }
+.vw-confirm-grid dd { margin: 0; color: var(--text-primary, #f4f3f7); overflow: hidden; text-overflow: ellipsis; }
+.vw-confirm-actions { display: flex; gap: 8px; }
+.vw-btn {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary, #f4f3f7);
+  transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+}
+.vw-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.09); }
+.vw-btn--primary { background: #f4f3f7; color: #0d0b14; border-color: transparent; }
+.vw-btn--primary:hover:not(:disabled) { background: #fff; transform: translateY(-1px); }
+.vw-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.vw-confirm-status { font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
+.vw-confirm-status.is-ok { color: #34d399; }
+.vw-confirm-status.is-cancel { color: var(--text-muted, rgba(244, 243, 247, 0.45)); }
+.vw-confirm-status.is-err { color: #fb7185; }
+
+/* ── Suggestions ───────────────────────────────────────────── */
+.vw-chat-suggestions {
+  display: flex;
+  gap: 8px;
+  padding: 4px 16px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.vw-chat-suggestions::-webkit-scrollbar { display: none; }
+.vw-chat-suggestions.is-grid { flex-wrap: wrap; justify-content: center; overflow: visible; padding-top: 12px; }
+.vw-chip {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text-secondary, rgba(244, 243, 247, 0.65));
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.vw-chip:hover { background: rgba(99, 102, 241, 0.14); border-color: rgba(99, 102, 241, 0.4); color: #fff; transform: translateY(-1px); }
+
+/* ── Composer ──────────────────────────────────────────────── */
+.vw-chat-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 0 12px;
+  padding: 6px 6px 6px 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+}
+.vw-chat-form:focus-within { border-color: rgba(165, 180, 252, 0.45); background: rgba(255, 255, 255, 0.06); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+.vw-chat-input {
+  flex: 1;
+  min-height: 24px;
+  max-height: 120px;
+  padding: 7px 0;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--text-primary, #f4f3f7);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+.vw-chat-input::placeholder { color: var(--text-faint, rgba(244, 243, 247, 0.3)); }
+.vw-chat-send {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #f4f3f7;
+  color: #0d0b14;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+}
+.vw-chat-send:hover:not(:disabled) { background: #fff; transform: scale(1.05); }
+.vw-chat-send:disabled { opacity: 0.35; cursor: not-allowed; }
+.vw-chat-send svg { width: 16px; height: 16px; }
+.vw-chat-foot {
+  padding: 8px 16px 12px;
+  text-align: center;
+  font-size: 0.66rem;
+  color: var(--text-faint, rgba(244, 243, 247, 0.3));
+  flex-shrink: 0;
+}
+
+/* ── Tablet / phone ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Sit above the floating .mobile-nav capsule (68px tall, 18px from bottom) */
+  .vw-chat-launcher {
+    right: 16px;
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    width: 52px;
+    height: 52px;
+  }
+  .vw-chat-launcher::after { animation: none; display: none; }
+}
+
+@media (max-width: 600px) {
+  .vw-chat-panel {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+    /* Solid surface on phones: no backdrop-filter for smooth typing/scrolling */
+    background: #0f0c17;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    transform: translateY(24px);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .vw-chat-panel.is-open { transform: none; }
+  .vw-msg, .vw-confirm { max-width: 92%; }
+  .vw-chat-input { font-size: 16px; } /* prevents iOS zoom on focus */
+  body.vw-chat-lock { overflow: hidden; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vw-chat-launcher::after { animation: none; }
+  .vw-chat-panel, .vw-msg, .vw-confirm { transition: none; animation: none; }
+}

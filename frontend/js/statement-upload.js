@@ -1,10 +1,14 @@
 /**
  * VaultWealth — Bank Statement Upload & Review Module
- * Provides full-page overlay with:
- *  - Drag-and-drop file upload zone
- *  - Parsed transaction preview table
+ * 
+ * Provides interactive modal with:
+ *  - Drag-and-drop file upload zone (CSV, Excel, PDF)
+ *  - Bank auto-detection badge (HDFC, SBI, ICICI, Axis, Kotak, etc.)
+ *  - Password prompt for encrypted Indian bank statements
+ *  - Download sample statement option
+ *  - Parsed transaction review table with search, select/deselect
  *  - Inline edit & remove per row
- *  - Bulk submit to Supabase
+ *  - Bulk insert directly to Supabase
  */
 
 (function () {
@@ -12,7 +16,10 @@
 
   // State
   let parsedRows = [];
+  let detectedBankInfo = null;
+  let currentFile = null;
   let uploadModalEl = null;
+  let currentSearchQuery = '';
 
   // ─── Build the Upload Modal DOM ───
 
@@ -44,7 +51,7 @@
               ${typeof getSvgIcon === 'function' ? getSvgIcon('upload-cloud', '', { width: 48, height: 48 }) : ''}
             </div>
             <h4 class="upload-dropzone-title">Drop your bank statement here</h4>
-            <p class="upload-dropzone-subtitle">or click to browse files</p>
+            <p class="upload-dropzone-subtitle">or click to browse files from your computer</p>
             <div class="upload-formats">
               <span class="upload-format-badge">
                 ${typeof getSvgIcon === 'function' ? getSvgIcon('file-text', '', { width: 14, height: 14 }) : ''}
@@ -52,19 +59,55 @@
               </span>
               <span class="upload-format-badge">
                 ${typeof getSvgIcon === 'function' ? getSvgIcon('file-spreadsheet', '', { width: 14, height: 14 }) : ''}
-                Excel (.xlsx)
+                Excel (.xlsx, .xls)
               </span>
               <span class="upload-format-badge">
                 ${typeof getSvgIcon === 'function' ? getSvgIcon('file-text', '', { width: 14, height: 14 }) : ''}
-                PDF
+                PDF e-Statement
               </span>
             </div>
             <input type="file" id="statementFileInput" accept=".csv,.xlsx,.xls,.pdf,.txt" hidden>
           </div>
 
+          <div class="upload-sample-prompt">
+            Want to test without a real statement?
+            <a href="assets/sample-statement.csv" download="sample-statement.csv" id="downloadSampleLink" class="upload-sample-link">
+              Download Sample Indian Statement (CSV)
+            </a>
+          </div>
+
           <div class="upload-info-bar">
-            ${typeof getSvgIcon === 'function' ? getSvgIcon('info', '', { width: 16, height: 16 }) : ''}
-            <span>Your file is processed locally — nothing is uploaded to any server until you review and confirm.</span>
+            ${typeof getSvgIcon === 'function' ? getSvgIcon('shield', '', { width: 16, height: 16 }) : ''}
+            <span>100% Private: Statements are parsed locally on your device. Only confirmed transactions are saved to your vault.</span>
+          </div>
+        </div>
+
+        <!-- Step 1.2: Password Protected Statement Prompt -->
+        <div class="modal-body upload-step" id="uploadStepPassword" style="display: none;">
+          <div class="upload-password-box">
+            <div class="upload-password-icon">
+              ${typeof getSvgIcon === 'function' ? getSvgIcon('lock', '', { width: 44, height: 44 }) : '🔒'}
+            </div>
+            <h4 style="font-size: 1.15rem; font-weight: 700; color: #FFFFFF; margin: 0;">Statement is Encrypted</h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
+              This bank statement is protected with a password. Please enter the password to unlock and parse transactions.
+            </p>
+            <div class="upload-password-hint">
+              <strong>💡 Common Indian Bank Passwords:</strong><br>
+              • <strong>SBI:</strong> 11-digit Account Number OR Date of Birth (DDMMYYYY) + last 5 digits of mobile<br>
+              • <strong>HDFC:</strong> Customer ID OR PAN Number (ALL CAPS)<br>
+              • <strong>ICICI:</strong> First 4 letters of name (lowercase) + DOB (DDMM)
+            </div>
+            <div class="upload-password-input-group">
+              <input type="password" id="statementPasswordInput" class="form-control" placeholder="Enter statement password">
+              <button type="button" class="btn btn-primary" id="statementUnlockBtn">
+                ${typeof getSvgIcon === 'function' ? getSvgIcon('unlock', '', { width: 15, height: 15 }) : ''}
+                Unlock & Parse
+              </button>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="cancelPasswordBtn" style="margin-top: 0.5rem;">
+              Cancel & Choose Another File
+            </button>
           </div>
         </div>
 
@@ -72,7 +115,7 @@
         <div class="modal-body upload-step" id="uploadStepLoading" style="display: none;">
           <div class="upload-loading-state">
             <div class="upload-loading-spinner">
-              ${typeof getSvgIcon === 'function' ? getSvgIcon('spinner', 'icon-spin', { width: 40, height: 40 }) : ''}
+              ${typeof getSvgIcon === 'function' ? getSvgIcon('spinner', 'icon-spin', { width: 42, height: 42 }) : ''}
             </div>
             <h4>Parsing your statement...</h4>
             <p class="upload-loading-filename" id="uploadLoadingFilename">processing file</p>
@@ -85,7 +128,7 @@
           <div class="upload-review-header">
             <div class="upload-review-stats">
               <div class="upload-stat">
-                <span class="upload-stat-label">Transactions Found</span>
+                <span class="upload-stat-label">Transactions</span>
                 <span class="upload-stat-value" id="reviewTotalCount">0</span>
               </div>
               <div class="upload-stat">
@@ -97,11 +140,29 @@
                 <span class="upload-stat-value expense" id="reviewTotalExpenses">₹0.00</span>
               </div>
             </div>
-            <div class="upload-review-actions-top">
+
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <div id="reviewBankBadge" class="upload-bank-badge" style="display: none;">
+                🏦 <span id="reviewBankName">Bank Statement</span>
+              </div>
               <button class="btn btn-secondary btn-sm" id="uploadBackBtn">
                 ${typeof getSvgIcon === 'function' ? getSvgIcon('upload', '', { width: 14, height: 14 }) : ''}
-                Upload Different File
+                Upload Another File
               </button>
+            </div>
+          </div>
+
+          <!-- Toolbar with search and period -->
+          <div class="upload-review-toolbar">
+            <div class="upload-period-badge" id="reviewPeriodBadge">
+              ${typeof getSvgIcon === 'function' ? getSvgIcon('calendar', '', { width: 14, height: 14 }) : '📅'}
+              <span id="reviewPeriodText">Statement Period</span>
+            </div>
+            <div class="upload-search-wrapper">
+              <span class="upload-search-icon">
+                ${typeof getSvgIcon === 'function' ? getSvgIcon('search', '', { width: 14, height: 14 }) : '🔍'}
+              </span>
+              <input type="text" class="form-control form-control-sm" id="reviewSearchInput" placeholder="Filter transactions...">
             </div>
           </div>
 
@@ -109,6 +170,9 @@
             <table class="data-table upload-review-table">
               <thead>
                 <tr>
+                  <th style="width: 30px; text-align: center;">
+                    <input type="checkbox" id="selectAllCheckbox" checked title="Select/Deselect all">
+                  </th>
                   <th style="width: 35px;">#</th>
                   <th>Date</th>
                   <th>Description</th>
@@ -127,21 +191,21 @@
             <div class="upload-empty-icon">
               ${typeof getSvgIcon === 'function' ? getSvgIcon('alert-circle', '', { width: 40, height: 40 }) : ''}
             </div>
-            <h4>No transactions to import</h4>
-            <p>All transactions have been removed. Upload a different file or close this dialog.</p>
+            <h4>No transactions match your filter</h4>
+            <p>Try clearing your search query or uploading another statement.</p>
           </div>
         </div>
 
         <!-- Footer (shown in review step) -->
         <div class="modal-footer upload-footer" id="uploadFooter" style="display: none;">
           <div class="upload-footer-info">
-            <span id="uploadSelectedCount">0 transactions</span> ready to import
+            <span id="uploadSelectedCount" style="font-weight: 700; color: #FFFFFF;">0 transactions</span> selected for import
           </div>
           <div class="upload-footer-buttons">
             <button type="button" class="btn btn-secondary" id="uploadCancelBtn">Cancel</button>
             <button type="button" class="btn btn-primary" id="uploadSubmitBtn">
               ${typeof getSvgIcon === 'function' ? getSvgIcon('check-circle', '', { width: 16, height: 16 }) : ''}
-              Import All Transactions
+              Import to Vault
             </button>
           </div>
         </div>
@@ -163,37 +227,95 @@
     const emptyState = document.getElementById('uploadEmptyState');
     const tableWrapper = document.querySelector('.upload-review-table-wrapper');
     const submitBtn = document.getElementById('uploadSubmitBtn');
+    const bankBadge = document.getElementById('reviewBankBadge');
+    const bankNameEl = document.getElementById('reviewBankName');
+    const periodTextEl = document.getElementById('reviewPeriodText');
+    const selectAllCb = document.getElementById('selectAllCheckbox');
 
     if (!tbody) return;
 
-    // If no rows
-    if (parsedRows.length === 0) {
+    // Display bank info
+    if (detectedBankInfo && detectedBankInfo.name) {
+      if (bankBadge) bankBadge.style.display = 'inline-flex';
+      if (bankNameEl) bankNameEl.textContent = detectedBankInfo.name;
+    } else {
+      if (bankBadge) bankBadge.style.display = 'none';
+    }
+
+    // Filter rows by search query
+    const query = currentSearchQuery.trim().toLowerCase();
+    const visibleRows = parsedRows.map((row, originalIndex) => ({ row, originalIndex }))
+      .filter(({ row }) => {
+        if (!query) return true;
+        return (
+          (row.description || '').toLowerCase().includes(query) ||
+          (row.category || '').toLowerCase().includes(query) ||
+          (row.date || '').includes(query) ||
+          String(row.amount).includes(query)
+        );
+      });
+
+    // Compute period
+    if (parsedRows.length > 0 && periodTextEl) {
+      const dates = parsedRows.map(r => r.date).filter(Boolean).sort();
+      if (dates.length > 0) {
+        const start = formatReviewDate(dates[0]);
+        const end = formatReviewDate(dates[dates.length - 1]);
+        periodTextEl.textContent = start === end ? start : `${start} – ${end}`;
+      }
+    }
+
+    // Selected count & totals across ALL selected rows
+    let selectedCount = 0;
+    let totalIncome = 0;
+    let totalExpense = 0;
+
+    parsedRows.forEach(row => {
+      const isSelected = row._selected !== false;
+      if (isSelected) {
+        selectedCount++;
+        if (row.type === 'income') totalIncome += row.amount;
+        else totalExpense += row.amount;
+      }
+    });
+
+    if (countEl) countEl.textContent = parsedRows.length;
+    if (incomeEl) incomeEl.textContent = `₹${totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (expenseEl) expenseEl.textContent = `₹${totalExpense.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (selectedCountEl) selectedCountEl.textContent = `${selectedCount} of ${parsedRows.length} transaction${parsedRows.length === 1 ? '' : 's'}`;
+
+    if (submitBtn) {
+      submitBtn.disabled = selectedCount === 0;
+      submitBtn.innerHTML = `
+        ${typeof getSvgIcon === 'function' ? getSvgIcon('check-circle', '', { width: 16, height: 16 }) : ''}
+        Import ${selectedCount} Transaction${selectedCount === 1 ? '' : 's'}
+      `;
+    }
+
+    if (selectAllCb) {
+      selectAllCb.checked = selectedCount === parsedRows.length && parsedRows.length > 0;
+      selectAllCb.indeterminate = selectedCount > 0 && selectedCount < parsedRows.length;
+    }
+
+    if (visibleRows.length === 0) {
       tbody.innerHTML = '';
       if (emptyState) emptyState.style.display = 'flex';
       if (tableWrapper) tableWrapper.style.display = 'none';
-      if (submitBtn) submitBtn.disabled = true;
-      if (countEl) countEl.textContent = '0';
-      if (incomeEl) incomeEl.textContent = '₹0.00';
-      if (expenseEl) expenseEl.textContent = '₹0.00';
-      if (selectedCountEl) selectedCountEl.textContent = '0 transactions';
       return;
     }
 
     if (emptyState) emptyState.style.display = 'none';
     if (tableWrapper) tableWrapper.style.display = 'block';
-    if (submitBtn) submitBtn.disabled = false;
 
-    let totalIncome = 0, totalExpense = 0;
-    let html = '';
-
-    // Build category options for select
     const expenseCategories = typeof CATEGORIES !== 'undefined' ? CATEGORIES.expense.map(c => c.name) : ['Other'];
     const incomeCategories = typeof CATEGORIES !== 'undefined' ? CATEGORIES.income.map(c => c.name) : ['Other Income'];
 
-    parsedRows.forEach((row, idx) => {
+    let html = '';
+
+    visibleRows.forEach(({ row, originalIndex }) => {
+      const idx = originalIndex;
       const isIncome = row.type === 'income';
-      if (isIncome) totalIncome += row.amount;
-      else totalExpense += row.amount;
+      const isSelected = row._selected !== false;
 
       const catOptions = isIncome ? incomeCategories : expenseCategories;
       const catOptionsHtml = catOptions.map(c =>
@@ -201,7 +323,10 @@
       ).join('');
 
       html += `
-        <tr data-row-idx="${idx}" class="${row._editing ? 'editing-row' : ''}">
+        <tr data-row-idx="${idx}" class="${row._editing ? 'editing-row' : ''} ${!isSelected ? 'row-deselected' : ''}">
+          <td style="text-align: center;">
+            <input type="checkbox" class="row-checkbox" data-idx="${idx}" ${isSelected ? 'checked' : ''} ${row._editing ? 'disabled' : ''}>
+          </td>
           <td class="row-num">${idx + 1}</td>
           <td>
             ${row._editing
@@ -212,7 +337,7 @@
           <td>
             ${row._editing
               ? `<input type="text" class="form-control form-control-sm edit-desc" value="${escapeAttr(row.description)}" placeholder="Description">`
-              : `<span class="review-desc" title="${escapeAttr(row.description)}">${escapeHtml(truncateStr(row.description, 45))}</span>`
+              : `<span class="review-desc" title="${escapeAttr(row._original || row.description)}">${escapeHtml(truncateStr(row.description, 45))}</span>`
             }
           </td>
           <td>
@@ -259,22 +384,33 @@
     });
 
     tbody.innerHTML = html;
-
-    // Update stats
-    if (countEl) countEl.textContent = parsedRows.length;
-    if (incomeEl) incomeEl.textContent = `₹${totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    if (expenseEl) expenseEl.textContent = `₹${totalExpense.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    if (selectedCountEl) selectedCountEl.textContent = `${parsedRows.length} transaction${parsedRows.length === 1 ? '' : 's'}`;
-
-    // Bind row actions
     bindReviewTableActions();
   }
 
-  // ─── Bind edit/remove/save actions ───
+  // ─── Bind Actions ───
 
   function bindReviewTableActions() {
     const tbody = document.getElementById('reviewTableBody');
+    const selectAllCb = document.getElementById('selectAllCheckbox');
     if (!tbody) return;
+
+    // Row selection checkboxes
+    tbody.querySelectorAll('.row-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const idx = parseInt(cb.dataset.idx, 10);
+        parsedRows[idx]._selected = cb.checked;
+        renderReviewTable();
+      });
+    });
+
+    // Select all
+    selectAllCb?.replaceWith(selectAllCb.cloneNode(true));
+    const freshSelectAll = document.getElementById('selectAllCheckbox');
+    freshSelectAll?.addEventListener('change', () => {
+      const shouldSelect = freshSelectAll.checked;
+      parsedRows.forEach(r => { r._selected = shouldSelect; });
+      renderReviewTable();
+    });
 
     // Edit buttons
     tbody.querySelectorAll('.review-edit-btn').forEach(btn => {
@@ -289,15 +425,13 @@
     tbody.querySelectorAll('.review-remove-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx, 10);
-        const row = parsedRows[idx];
-        // Animate row removal
         const tr = btn.closest('tr');
         if (tr) {
           tr.classList.add('row-removing');
           setTimeout(() => {
             parsedRows.splice(idx, 1);
             renderReviewTable();
-          }, 280);
+          }, 240);
         } else {
           parsedRows.splice(idx, 1);
           renderReviewTable();
@@ -324,7 +458,7 @@
         if (newType) parsedRows[idx].type = newType;
         if (!isNaN(newAmount) && newAmount > 0) parsedRows[idx].amount = newAmount;
 
-        // When type changes, re-infer category if it doesn't belong to the new type
+        // When type changes, re-infer category if not valid for new type
         if (newType && typeof CATEGORIES !== 'undefined') {
           const validCats = CATEGORIES[newType]?.map(c => c.name) || [];
           if (!validCats.includes(parsedRows[idx].category)) {
@@ -339,7 +473,7 @@
       });
     });
 
-    // Cancel edit buttons
+    // Cancel edit
     tbody.querySelectorAll('.review-cancel-edit-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.idx, 10);
@@ -348,11 +482,10 @@
       });
     });
 
-    // Handle type change in edit mode → update category options
+    // Type select change in edit mode
     tbody.querySelectorAll('.edit-type').forEach(select => {
       select.addEventListener('change', () => {
         const tr = select.closest('tr');
-        const idx = parseInt(tr.dataset.rowIdx, 10);
         const newType = select.value;
         const catSelect = tr.querySelector('.edit-category');
         if (!catSelect || typeof CATEGORIES === 'undefined') return;
@@ -373,6 +506,9 @@
     document.body.style.overflow = 'hidden';
     showStep('uploadStep1');
     parsedRows = [];
+    detectedBankInfo = null;
+    currentFile = null;
+    currentSearchQuery = '';
     bindUploadEvents();
   }
 
@@ -382,9 +518,13 @@
       document.body.style.overflow = '';
     }
     parsedRows = [];
+    detectedBankInfo = null;
+    currentFile = null;
+    currentSearchQuery = '';
   }
 
   function showStep(stepId) {
+    if (!uploadModalEl) return;
     const steps = uploadModalEl.querySelectorAll('.upload-step');
     steps.forEach(s => s.style.display = 'none');
 
@@ -395,7 +535,7 @@
     if (footer) footer.style.display = stepId === 'uploadStep2' ? '' : 'none';
   }
 
-  // ─── Bind All Upload Events ───
+  // ─── Bind Upload Events ───
 
   function bindUploadEvents() {
     const closeBtn = document.getElementById('uploadModalClose');
@@ -404,33 +544,56 @@
     const submitBtn = document.getElementById('uploadSubmitBtn');
     const dropzone = document.getElementById('uploadDropzone');
     const fileInput = document.getElementById('statementFileInput');
+    const searchInput = document.getElementById('reviewSearchInput');
+    const unlockBtn = document.getElementById('statementUnlockBtn');
+    const passwordInput = document.getElementById('statementPasswordInput');
+    const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
 
-    // Close handlers
     closeBtn?.addEventListener('click', closeUploadModal);
     cancelBtn?.addEventListener('click', closeUploadModal);
 
-    // Click backdrop to close
     uploadModalEl?.addEventListener('click', (e) => {
       if (e.target === uploadModalEl) closeUploadModal();
     });
 
-    // Escape key
-    const escHandler = (e) => {
-      if (e.key === 'Escape' && uploadModalEl?.classList.contains('active')) {
-        closeUploadModal();
-        document.removeEventListener('keydown', escHandler);
-      }
-    };
-    document.addEventListener('keydown', escHandler);
-
-    // Back to upload step
+    // Back to step 1
     backBtn?.addEventListener('click', () => {
       parsedRows = [];
+      detectedBankInfo = null;
+      currentFile = null;
       showStep('uploadStep1');
       if (fileInput) fileInput.value = '';
     });
 
-    // Dropzone click → open file picker
+    cancelPasswordBtn?.addEventListener('click', () => {
+      currentFile = null;
+      showStep('uploadStep1');
+      if (fileInput) fileInput.value = '';
+    });
+
+    // Password unlock
+    unlockBtn?.addEventListener('click', () => {
+      const pwd = (passwordInput?.value || '').trim();
+      if (!pwd) {
+        showToast('Please enter the statement password.', 'warning');
+        return;
+      }
+      if (currentFile) {
+        processFile(currentFile, pwd);
+      }
+    });
+
+    passwordInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') unlockBtn?.click();
+    });
+
+    // Search filter
+    searchInput?.addEventListener('input', (e) => {
+      currentSearchQuery = e.target.value;
+      renderReviewTable();
+    });
+
+    // Dropzone click
     dropzone?.addEventListener('click', () => fileInput?.click());
 
     // Drag & Drop
@@ -467,9 +630,10 @@
     submitBtn?.addEventListener('click', handleBulkSubmit);
   }
 
-  // ─── Process Uploaded File ───
+  // ─── Process File ───
 
-  async function processFile(file) {
+  async function processFile(file, password = '') {
+    currentFile = file;
     const filenameEl = document.getElementById('uploadLoadingFilename');
     if (filenameEl) filenameEl.textContent = file.name;
 
@@ -477,33 +641,54 @@
 
     try {
       if (typeof StatementParser === 'undefined') {
-        throw new Error('Statement parser is not loaded.');
+        throw new Error('Statement parser engine is not loaded.');
       }
 
-      const rows = await StatementParser.parseStatement(file);
+      const result = await StatementParser.parseStatement(file, password);
+      const rows = Array.isArray(result) ? result : (result.transactions || []);
+      const bank = result.bank || (rows.bank ? rows.bank : null);
 
       if (!rows || rows.length === 0) {
         showStep('uploadStep1');
-        showToast('No transactions could be extracted from this file. Please check the file format.', 'warning');
+        showToast('No valid transactions could be found in this statement. Please check that the file includes Date, Description, and Amount columns.', 'warning');
         return;
       }
 
-      parsedRows = rows;
+      parsedRows = rows.map(r => ({ ...r, _selected: true }));
+      detectedBankInfo = bank;
+
       showStep('uploadStep2');
       renderReviewTable();
-      showToast(`Found ${rows.length} transaction${rows.length === 1 ? '' : 's'} in your statement.`, 'success');
+
+      const bankDisplay = bank && bank.name ? ` from ${bank.name}` : '';
+      showToast(`Parsed ${rows.length} transaction${rows.length === 1 ? '' : 's'}${bankDisplay}.`, 'success');
 
     } catch (err) {
       console.error('[VaultWealth] Statement parse error:', err);
-      showStep('uploadStep1');
-      showToast(err.message || 'Failed to parse file.', 'error');
+
+      if (err.isPasswordProtected) {
+        showStep('uploadStepPassword');
+        const pwdInput = document.getElementById('statementPasswordInput');
+        if (pwdInput) {
+          pwdInput.value = '';
+          pwdInput.focus();
+        }
+        showToast('Statement is password-protected. Please enter password.', 'info');
+      } else {
+        showStep('uploadStep1');
+        showToast(err.message || 'Failed to parse file.', 'error');
+      }
     }
   }
 
   // ─── Bulk Submit to Supabase ───
 
   async function handleBulkSubmit() {
-    if (parsedRows.length === 0) return;
+    const selectedRows = parsedRows.filter(r => r._selected !== false && !r._editing);
+    if (selectedRows.length === 0) {
+      showToast('No transactions selected for import.', 'warning');
+      return;
+    }
 
     const submitBtn = document.getElementById('uploadSubmitBtn');
     const originalText = submitBtn?.innerHTML;
@@ -511,48 +696,43 @@
     try {
       const client = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
       if (!client) {
-        showToast('Supabase client not available. Check your configuration.', 'error');
+        showToast('Supabase client not available. Please verify connection.', 'error');
         return;
       }
 
       const user = typeof getCurrentUser === 'function' ? await getCurrentUser() : null;
       if (!user) {
-        showToast('Please sign in to import transactions.', 'error');
+        showToast('Please sign in to save transactions to your vault.', 'error');
         return;
       }
 
-      // Set loading state
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = `
           ${typeof getSvgIcon === 'function' ? getSvgIcon('spinner', 'icon-spin', { width: 16, height: 16 }) : ''}
-          Importing ${parsedRows.length} transactions...
+          Importing ${selectedRows.length} transactions...
         `;
       }
 
-      // Build rows for insert
-      const insertRows = parsedRows
-        .filter(r => !r._editing) // skip any currently being edited
-        .map(r => ({
-          user_id: user.id,
-          type: r.type,
-          amount: r.amount,
-          category: r.category,
-          transaction_date: r.date,
-          description: r.description || ''
-        }));
+      const insertRows = selectedRows.map(r => ({
+        user_id: user.id,
+        type: r.type,
+        amount: r.amount,
+        category: r.category,
+        transaction_date: r.date,
+        description: r.description || ''
+      }));
 
-      // Batch insert (Supabase handles array inserts)
       const { error } = await client
         .from('transactions')
         .insert(insertRows);
 
       if (error) throw error;
 
-      showToast(`Successfully imported ${insertRows.length} transaction${insertRows.length === 1 ? '' : 's'} to your Vault!`, 'success');
+      showToast(`Successfully imported ${insertRows.length} transactions into your Vault!`, 'success');
       closeUploadModal();
 
-      // Refresh transaction list
+      // Refresh transactions or dashboard
       if (typeof loadTransactions === 'function') {
         await loadTransactions();
       } else {
@@ -573,7 +753,6 @@
   // ─── Toast Notifications ───
 
   function showToast(message, type = 'info') {
-    // Remove existing toasts
     document.querySelectorAll('.upload-toast').forEach(t => t.remove());
 
     const toast = document.createElement('div');
@@ -591,20 +770,16 @@
     `;
 
     document.body.appendChild(toast);
-
-    // Animate in
     requestAnimationFrame(() => toast.classList.add('visible'));
 
-    // Close button
     toast.querySelector('.upload-toast-close')?.addEventListener('click', () => {
       toast.classList.remove('visible');
-      setTimeout(() => toast.remove(), 300);
+      setTimeout(() => toast.remove(), 250);
     });
 
-    // Auto dismiss
     setTimeout(() => {
       toast.classList.remove('visible');
-      setTimeout(() => toast.remove(), 300);
+      setTimeout(() => toast.remove(), 250);
     }, 5000);
   }
 
@@ -613,9 +788,13 @@
   function formatReviewDate(dateStr) {
     if (!dateStr) return '—';
     try {
-      const [year, month, day] = dateStr.split('-');
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return `${day} ${months[parseInt(month, 10) - 1]} ${year}`;
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const [year, month, day] = parts;
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${parseInt(day, 10)} ${months[parseInt(month, 10) - 1]} ${year}`;
+      }
+      return dateStr;
     } catch {
       return dateStr;
     }
@@ -635,11 +814,7 @@
     return escapeHtml(str);
   }
 
-  // ─── Init Table Stub ───
-
-  function initTransactionTable() {
-    // no-op if not already defined
-  }
+  function initTransactionTable() {}
 
   // ─── Export ───
   window.openStatementUploadModal = openUploadModal;
