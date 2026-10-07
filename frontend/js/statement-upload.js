@@ -6,8 +6,12 @@
  *  - Bank auto-detection badge (HDFC, SBI, ICICI, Axis, Kotak, etc.)
  *  - Password prompt for encrypted Indian bank statements
  *  - Download sample statement option
- *  - Parsed transaction review table with search, select/deselect
- *  - Inline edit & remove per row
+ *  - Dual Responsive Review UI:
+ *      * Laptop / Desktop (>768px): Spacious data table with sticky headers, fixed columns, inline editing
+ *      * Phone / Mobile (<=768px): Touch-friendly card view with thumb-friendly controls & expandable edit forms
+ *  - Quick Filter Tabs: All, Income, Expenses, Selected
+ *  - Live search with instant clear
+ *  - Select/Deselect all & per-transaction toggles with real-time net impact stats
  *  - Bulk insert directly to Supabase
  */
 
@@ -20,6 +24,7 @@
   let currentFile = null;
   let uploadModalEl = null;
   let currentSearchQuery = '';
+  let currentFilterTab = 'all'; // 'all' | 'income' | 'expense' | 'selected'
 
   // ─── Build the Upload Modal DOM ───
 
@@ -122,9 +127,10 @@
           </div>
         </div>
 
-        <!-- Step 2: Review & Edit Table -->
+        <!-- Step 2: Review & Edit Section -->
         <div class="modal-body upload-step" id="uploadStep2" style="display: none;">
           
+          <!-- Review Header: Stats & Meta -->
           <div class="upload-review-header">
             <div class="upload-review-stats">
               <div class="upload-stat">
@@ -139,64 +145,100 @@
                 <span class="upload-stat-label">Total Expenses</span>
                 <span class="upload-stat-value expense" id="reviewTotalExpenses">₹0.00</span>
               </div>
+              <div class="upload-stat upload-stat-net">
+                <span class="upload-stat-label">Net Impact</span>
+                <span class="upload-stat-value" id="reviewTotalNet">₹0.00</span>
+              </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <div class="upload-header-meta">
               <div id="reviewBankBadge" class="upload-bank-badge" style="display: none;">
                 🏦 <span id="reviewBankName">Bank Statement</span>
               </div>
-              <button class="btn btn-secondary btn-sm" id="uploadBackBtn">
+              <button type="button" class="btn btn-secondary btn-sm" id="uploadBackBtn">
                 ${typeof getSvgIcon === 'function' ? getSvgIcon('upload', '', { width: 14, height: 14 }) : ''}
                 Upload Another File
               </button>
             </div>
           </div>
 
-          <!-- Toolbar with search and period -->
+          <!-- Review Toolbar: Filter Tabs & Search -->
           <div class="upload-review-toolbar">
-            <div class="upload-period-badge" id="reviewPeriodBadge">
-              ${typeof getSvgIcon === 'function' ? getSvgIcon('calendar', '', { width: 14, height: 14 }) : '📅'}
-              <span id="reviewPeriodText">Statement Period</span>
+            <div class="upload-filter-tabs" role="tablist">
+              <button type="button" class="upload-filter-tab active" data-filter="all" role="tab" aria-selected="true">
+                All <span class="tab-count" id="countTabAll">0</span>
+              </button>
+              <button type="button" class="upload-filter-tab tab-income" data-filter="income" role="tab" aria-selected="false">
+                Income <span class="tab-count" id="countTabIncome">0</span>
+              </button>
+              <button type="button" class="upload-filter-tab tab-expense" data-filter="expense" role="tab" aria-selected="false">
+                Expenses <span class="tab-count" id="countTabExpense">0</span>
+              </button>
+              <button type="button" class="upload-filter-tab" data-filter="selected" role="tab" aria-selected="false">
+                Selected <span class="tab-count" id="countTabSelected">0</span>
+              </button>
             </div>
-            <div class="upload-search-wrapper">
-              <span class="upload-search-icon">
-                ${typeof getSvgIcon === 'function' ? getSvgIcon('search', '', { width: 14, height: 14 }) : '🔍'}
-              </span>
-              <input type="text" class="form-control form-control-sm" id="reviewSearchInput" placeholder="Filter transactions...">
+
+            <div class="upload-toolbar-right">
+              <div class="upload-period-badge" id="reviewPeriodBadge">
+                ${typeof getSvgIcon === 'function' ? getSvgIcon('calendar', '', { width: 14, height: 14 }) : '📅'}
+                <span id="reviewPeriodText">Statement Period</span>
+              </div>
+              <div class="upload-search-wrapper">
+                <span class="upload-search-icon">
+                  ${typeof getSvgIcon === 'function' ? getSvgIcon('search', '', { width: 14, height: 14 }) : '🔍'}
+                </span>
+                <input type="text" class="form-control form-control-sm" id="reviewSearchInput" placeholder="Filter transactions...">
+                <button type="button" class="upload-search-clear" id="reviewSearchClear" style="display: none;" aria-label="Clear search">
+                  &times;
+                </button>
+              </div>
+              <label class="upload-select-all-label" title="Select or deselect all transactions">
+                <input type="checkbox" id="selectAllCheckbox" checked>
+                <span>Select All</span>
+              </label>
             </div>
           </div>
 
-          <div class="upload-review-table-wrapper">
-            <table class="data-table upload-review-table">
-              <thead>
-                <tr>
-                  <th style="width: 30px; text-align: center;">
-                    <input type="checkbox" id="selectAllCheckbox" checked title="Select/Deselect all">
-                  </th>
-                  <th style="width: 35px;">#</th>
-                  <th>Date</th>
-                  <th>Description</th>
-                  <th>Category</th>
-                  <th>Type</th>
-                  <th style="text-align: right;">Amount</th>
-                  <th style="text-align: center; width: 90px;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="reviewTableBody">
-              </tbody>
-            </table>
+          <!-- Desktop View: 8-Column Data Table (min-width: 769px) -->
+          <div class="upload-desktop-view">
+            <div class="upload-review-table-wrapper">
+              <table class="data-table upload-review-table">
+                <thead>
+                  <tr>
+                    <th style="width: 34px; text-align: center;">
+                      <input type="checkbox" id="tableHeaderSelectAll" checked title="Select/Deselect all">
+                    </th>
+                    <th style="width: 38px; text-align: center;">#</th>
+                    <th style="width: 105px;">Date</th>
+                    <th>Description</th>
+                    <th style="width: 135px;">Category</th>
+                    <th style="width: 100px;">Type</th>
+                    <th style="text-align: right; width: 115px;">Amount</th>
+                    <th style="text-align: center; width: 85px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="reviewTableBody"></tbody>
+              </table>
+            </div>
           </div>
 
+          <!-- Mobile View: Touch Cards (max-width: 768px) -->
+          <div class="upload-mobile-view">
+            <div class="upload-mobile-cards-wrapper" id="reviewMobileCards"></div>
+          </div>
+
+          <!-- Empty State (No rows match filter/search) -->
           <div class="upload-empty-state" id="uploadEmptyState" style="display: none;">
             <div class="upload-empty-icon">
               ${typeof getSvgIcon === 'function' ? getSvgIcon('alert-circle', '', { width: 40, height: 40 }) : ''}
             </div>
             <h4>No transactions match your filter</h4>
-            <p>Try clearing your search query or uploading another statement.</p>
+            <p>Try clearing your search query or switching to another filter tab.</p>
           </div>
         </div>
 
-        <!-- Footer (shown in review step) -->
+        <!-- Footer (Shown in Review Step) -->
         <div class="modal-footer upload-footer" id="uploadFooter" style="display: none;">
           <div class="upload-footer-info">
             <span id="uploadSelectedCount" style="font-weight: 700; color: #FFFFFF;">0 transactions</span> selected for import
@@ -216,23 +258,34 @@
     return overlay;
   }
 
-  // ─── Render Review Table ───
+  // ─── Render Review Table & Cards ───
 
   function renderReviewTable() {
     const tbody = document.getElementById('reviewTableBody');
+    const mobileCardsContainer = document.getElementById('reviewMobileCards');
     const countEl = document.getElementById('reviewTotalCount');
     const incomeEl = document.getElementById('reviewTotalIncome');
     const expenseEl = document.getElementById('reviewTotalExpenses');
+    const netEl = document.getElementById('reviewTotalNet');
     const selectedCountEl = document.getElementById('uploadSelectedCount');
     const emptyState = document.getElementById('uploadEmptyState');
-    const tableWrapper = document.querySelector('.upload-review-table-wrapper');
+    const desktopView = document.querySelector('.upload-desktop-view');
+    const mobileView = document.querySelector('.upload-mobile-view');
     const submitBtn = document.getElementById('uploadSubmitBtn');
     const bankBadge = document.getElementById('reviewBankBadge');
     const bankNameEl = document.getElementById('reviewBankName');
     const periodTextEl = document.getElementById('reviewPeriodText');
     const selectAllCb = document.getElementById('selectAllCheckbox');
+    const tableHeaderSelectAllCb = document.getElementById('tableHeaderSelectAll');
+    const searchClearBtn = document.getElementById('reviewSearchClear');
 
-    if (!tbody) return;
+    // Tab badges
+    const countTabAll = document.getElementById('countTabAll');
+    const countTabIncome = document.getElementById('countTabIncome');
+    const countTabExpense = document.getElementById('countTabExpense');
+    const countTabSelected = document.getElementById('countTabSelected');
+
+    if (!tbody || !mobileCardsContainer) return;
 
     // Display bank info
     if (detectedBankInfo && detectedBankInfo.name) {
@@ -242,18 +295,10 @@
       if (bankBadge) bankBadge.style.display = 'none';
     }
 
-    // Filter rows by search query
-    const query = currentSearchQuery.trim().toLowerCase();
-    const visibleRows = parsedRows.map((row, originalIndex) => ({ row, originalIndex }))
-      .filter(({ row }) => {
-        if (!query) return true;
-        return (
-          (row.description || '').toLowerCase().includes(query) ||
-          (row.category || '').toLowerCase().includes(query) ||
-          (row.date || '').includes(query) ||
-          String(row.amount).includes(query)
-        );
-      });
+    // Toggle search clear button
+    if (searchClearBtn) {
+      searchClearBtn.style.display = currentSearchQuery.trim().length > 0 ? 'inline-block' : 'none';
+    }
 
     // Compute period
     if (parsedRows.length > 0 && periodTextEl) {
@@ -265,25 +310,49 @@
       }
     }
 
-    // Selected count & totals across ALL selected rows
+    // Compute totals across ALL rows & selected rows
     let selectedCount = 0;
     let totalIncome = 0;
     let totalExpense = 0;
+    let countIncome = 0;
+    let countExpense = 0;
 
     parsedRows.forEach(row => {
       const isSelected = row._selected !== false;
+      if (row.type === 'income') countIncome++;
+      else countExpense++;
+
       if (isSelected) {
         selectedCount++;
-        if (row.type === 'income') totalIncome += row.amount;
-        else totalExpense += row.amount;
+        if (row.type === 'income') totalIncome += (row.amount || 0);
+        else totalExpense += (row.amount || 0);
       }
     });
 
+    const netImpact = totalIncome - totalExpense;
+
+    // Update Header Stats
     if (countEl) countEl.textContent = parsedRows.length;
     if (incomeEl) incomeEl.textContent = `₹${totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     if (expenseEl) expenseEl.textContent = `₹${totalExpense.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    if (selectedCountEl) selectedCountEl.textContent = `${selectedCount} of ${parsedRows.length} transaction${parsedRows.length === 1 ? '' : 's'}`;
+    if (netEl) {
+      const prefix = netImpact >= 0 ? '+' : '-';
+      netEl.textContent = `${prefix} ₹${Math.abs(netImpact).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      netEl.className = `upload-stat-value ${netImpact >= 0 ? 'income' : 'expense'}`;
+    }
 
+    // Update Tab Count Badges
+    if (countTabAll) countTabAll.textContent = parsedRows.length;
+    if (countTabIncome) countTabIncome.textContent = countIncome;
+    if (countTabExpense) countTabExpense.textContent = countExpense;
+    if (countTabSelected) countTabSelected.textContent = selectedCount;
+
+    // Update Footer Selected Count
+    if (selectedCountEl) {
+      selectedCountEl.textContent = `${selectedCount} of ${parsedRows.length} transaction${parsedRows.length === 1 ? '' : 's'}`;
+    }
+
+    // Update Submit Button
     if (submitBtn) {
       submitBtn.disabled = selectedCount === 0;
       submitBtn.innerHTML = `
@@ -292,88 +361,126 @@
       `;
     }
 
+    // Update Select-All Checkboxes
+    const allChecked = selectedCount === parsedRows.length && parsedRows.length > 0;
+    const isIndeterminate = selectedCount > 0 && selectedCount < parsedRows.length;
+
     if (selectAllCb) {
-      selectAllCb.checked = selectedCount === parsedRows.length && parsedRows.length > 0;
-      selectAllCb.indeterminate = selectedCount > 0 && selectedCount < parsedRows.length;
+      selectAllCb.checked = allChecked;
+      selectAllCb.indeterminate = isIndeterminate;
+    }
+    if (tableHeaderSelectAllCb) {
+      tableHeaderSelectAllCb.checked = allChecked;
+      tableHeaderSelectAllCb.indeterminate = isIndeterminate;
     }
 
+    // Filter rows by Active Tab & Search Query
+    const query = currentSearchQuery.trim().toLowerCase();
+    const visibleRows = parsedRows.map((row, originalIndex) => ({ row, originalIndex }))
+      .filter(({ row }) => {
+        // Tab Filter
+        if (currentFilterTab === 'income' && row.type !== 'income') return false;
+        if (currentFilterTab === 'expense' && row.type !== 'expense') return false;
+        if (currentFilterTab === 'selected' && row._selected === false) return false;
+
+        // Search Filter
+        if (!query) return true;
+        return (
+          (row.description || '').toLowerCase().includes(query) ||
+          (row.category || '').toLowerCase().includes(query) ||
+          (row.date || '').toLowerCase().includes(query) ||
+          String(row.amount).includes(query)
+        );
+      });
+
+    // Handle Empty Results
     if (visibleRows.length === 0) {
       tbody.innerHTML = '';
+      mobileCardsContainer.innerHTML = '';
       if (emptyState) emptyState.style.display = 'flex';
-      if (tableWrapper) tableWrapper.style.display = 'none';
+      if (desktopView) desktopView.style.display = 'none';
+      if (mobileView) mobileView.style.display = 'none';
       return;
     }
 
     if (emptyState) emptyState.style.display = 'none';
-    if (tableWrapper) tableWrapper.style.display = 'block';
+    if (desktopView) desktopView.style.display = '';
+    if (mobileView) mobileView.style.display = '';
 
     const expenseCategories = typeof CATEGORIES !== 'undefined' ? CATEGORIES.expense.map(c => c.name) : ['Other'];
     const incomeCategories = typeof CATEGORIES !== 'undefined' ? CATEGORIES.income.map(c => c.name) : ['Other Income'];
 
-    let html = '';
+    // ── Build Desktop Table Rows ──
+    let tableHtml = '';
+    // ── Build Mobile Cards ──
+    let mobileHtml = '';
 
     visibleRows.forEach(({ row, originalIndex }) => {
       const idx = originalIndex;
       const isIncome = row.type === 'income';
       const isSelected = row._selected !== false;
+      const isEditing = !!row._editing;
 
       const catOptions = isIncome ? incomeCategories : expenseCategories;
       const catOptionsHtml = catOptions.map(c =>
         `<option value="${escapeAttr(c)}" ${c === row.category ? 'selected' : ''}>${escapeAttr(c)}</option>`
       ).join('');
 
-      html += `
-        <tr data-row-idx="${idx}" class="${row._editing ? 'editing-row' : ''} ${!isSelected ? 'row-deselected' : ''}">
+      const formattedAmount = `₹${(row.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      // 1. Desktop Row
+      tableHtml += `
+        <tr data-row-idx="${idx}" class="${isEditing ? 'editing-row' : ''} ${!isSelected ? 'row-deselected' : ''}">
           <td style="text-align: center;">
-            <input type="checkbox" class="row-checkbox" data-idx="${idx}" ${isSelected ? 'checked' : ''} ${row._editing ? 'disabled' : ''}>
+            <input type="checkbox" class="row-checkbox" data-idx="${idx}" ${isSelected ? 'checked' : ''} ${isEditing ? 'disabled' : ''}>
           </td>
           <td class="row-num">${idx + 1}</td>
           <td>
-            ${row._editing
+            ${isEditing
               ? `<input type="date" class="form-control form-control-sm edit-date" value="${row.date}">`
               : `<span class="review-date">${formatReviewDate(row.date)}</span>`
             }
           </td>
           <td>
-            ${row._editing
+            ${isEditing
               ? `<input type="text" class="form-control form-control-sm edit-desc" value="${escapeAttr(row.description)}" placeholder="Description">`
               : `<span class="review-desc" title="${escapeAttr(row._original || row.description)}">${escapeHtml(truncateStr(row.description, 45))}</span>`
             }
           </td>
           <td>
-            ${row._editing
+            ${isEditing
               ? `<select class="form-control form-control-sm edit-category">${catOptionsHtml}</select>`
               : `<span class="badge ${isIncome ? 'badge-income' : 'badge-category'}">${escapeHtml(row.category)}</span>`
             }
           </td>
           <td>
-            ${row._editing
+            ${isEditing
               ? `<select class="form-control form-control-sm edit-type">
-                   <option value="expense" ${row.type === 'expense' ? 'selected' : ''}>Expense</option>
-                   <option value="income" ${row.type === 'income' ? 'selected' : ''}>Income</option>
+                   <option value="expense" ${!isIncome ? 'selected' : ''}>Expense</option>
+                   <option value="income" ${isIncome ? 'selected' : ''}>Income</option>
                  </select>`
               : `<span class="badge ${isIncome ? 'badge-income' : 'badge-expense'}">${isIncome ? 'Income' : 'Expense'}</span>`
             }
           </td>
           <td style="text-align: right;">
-            ${row._editing
+            ${isEditing
               ? `<input type="number" class="form-control form-control-sm edit-amount" value="${row.amount}" step="0.01" min="0.01" style="text-align: right;">`
-              : `<span class="amount ${isIncome ? 'amount-income' : 'amount-expense'}">${isIncome ? '+' : '-'} ₹${row.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`
+              : `<span class="amount ${isIncome ? 'amount-income' : 'amount-expense'}">${isIncome ? '+' : '-'} ${formattedAmount}</span>`
             }
           </td>
           <td style="text-align: center;">
             <div class="review-actions">
-              ${row._editing
-                ? `<button class="btn-icon btn-sm review-save-btn" data-idx="${idx}" title="Save changes" aria-label="Save">
+              ${isEditing
+                ? `<button type="button" class="btn-icon btn-sm review-save-btn" data-idx="${idx}" title="Save changes" aria-label="Save">
                      ${typeof getSvgIcon === 'function' ? getSvgIcon('check', '', { width: 15, height: 15 }) : '✓'}
                    </button>
-                   <button class="btn-icon btn-sm review-cancel-edit-btn" data-idx="${idx}" title="Cancel edit" aria-label="Cancel">
+                   <button type="button" class="btn-icon btn-sm review-cancel-edit-btn" data-idx="${idx}" title="Cancel edit" aria-label="Cancel">
                      ${typeof getSvgIcon === 'function' ? getSvgIcon('x', '', { width: 15, height: 15 }) : '✗'}
                    </button>`
-                : `<button class="btn-icon btn-sm review-edit-btn" data-idx="${idx}" title="Edit transaction" aria-label="Edit">
+                : `<button type="button" class="btn-icon btn-sm review-edit-btn" data-idx="${idx}" title="Edit transaction" aria-label="Edit">
                      ${typeof getSvgIcon === 'function' ? getSvgIcon('edit', '', { width: 15, height: 15 }) : 'Edit'}
                    </button>
-                   <button class="btn-icon btn-sm review-remove-btn" data-idx="${idx}" title="Remove transaction" aria-label="Remove" style="color: var(--color-expense);">
+                   <button type="button" class="btn-icon btn-sm review-remove-btn" data-idx="${idx}" title="Remove transaction" aria-label="Remove" style="color: var(--color-expense);">
                      ${typeof getSvgIcon === 'function' ? getSvgIcon('trash', '', { width: 15, height: 15 }) : 'Del'}
                    </button>`
               }
@@ -381,84 +488,200 @@
           </td>
         </tr>
       `;
+
+      // 2. Mobile Card
+      if (isEditing) {
+        mobileHtml += `
+          <div class="upload-mobile-card editing-card" data-idx="${idx}">
+            <form class="mobile-edit-form" data-idx="${idx}" onsubmit="return false;">
+              <div class="mobile-edit-header">
+                <span class="mobile-edit-title">Editing #${idx + 1}</span>
+                <span style="font-size: 0.725rem; color: var(--text-muted);">Inline Edit</span>
+              </div>
+              <div class="mobile-edit-field">
+                <label>Date</label>
+                <input type="date" class="form-control form-control-sm edit-date" value="${row.date}">
+              </div>
+              <div class="mobile-edit-field">
+                <label>Description</label>
+                <input type="text" class="form-control form-control-sm edit-desc" value="${escapeAttr(row.description)}" placeholder="Description">
+              </div>
+              <div class="mobile-edit-row">
+                <div class="mobile-edit-field" style="flex: 1;">
+                  <label>Type</label>
+                  <select class="form-control form-control-sm edit-type">
+                    <option value="expense" ${!isIncome ? 'selected' : ''}>Expense (DR)</option>
+                    <option value="income" ${isIncome ? 'selected' : ''}>Income (CR)</option>
+                  </select>
+                </div>
+                <div class="mobile-edit-field" style="flex: 1.2;">
+                  <label>Category</label>
+                  <select class="form-control form-control-sm edit-category">${catOptionsHtml}</select>
+                </div>
+              </div>
+              <div class="mobile-edit-field">
+                <label>Amount (₹)</label>
+                <input type="number" class="form-control form-control-sm edit-amount" value="${row.amount}" step="0.01" min="0.01">
+              </div>
+              <div class="mobile-edit-buttons">
+                <button type="button" class="btn btn-secondary btn-sm review-cancel-edit-btn" data-idx="${idx}">
+                  Cancel
+                </button>
+                <button type="button" class="btn btn-primary btn-sm review-save-btn" data-idx="${idx}">
+                  ${typeof getSvgIcon === 'function' ? getSvgIcon('check', '', { width: 14, height: 14 }) : ''}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        `;
+      } else {
+        mobileHtml += `
+          <div class="upload-mobile-card ${!isSelected ? 'card-deselected' : ''}" data-idx="${idx}">
+            <div class="mobile-card-top">
+              <label class="mobile-card-checkbox-label">
+                <input type="checkbox" class="row-checkbox" data-idx="${idx}" ${isSelected ? 'checked' : ''}>
+                <span class="mobile-card-date">${formatReviewDate(row.date)}</span>
+              </label>
+              <div class="mobile-card-amount-wrap">
+                <span class="badge ${isIncome ? 'badge-income' : 'badge-expense'} mobile-card-type-badge">${isIncome ? 'CR' : 'DR'}</span>
+                <span class="mobile-card-amount ${isIncome ? 'amount-income' : 'amount-expense'}">
+                  ${isIncome ? '+' : '-'} ${formattedAmount}
+                </span>
+              </div>
+            </div>
+            <div class="mobile-card-desc" title="${escapeAttr(row._original || row.description)}">
+              ${escapeHtml(row.description)}
+            </div>
+            <div class="mobile-card-bottom">
+              <span class="badge ${isIncome ? 'badge-income' : 'badge-category'}">${escapeHtml(row.category)}</span>
+              <div class="mobile-card-actions">
+                <button type="button" class="btn-icon btn-sm review-edit-btn" data-idx="${idx}" title="Edit transaction" aria-label="Edit">
+                  ${typeof getSvgIcon === 'function' ? getSvgIcon('edit', '', { width: 15, height: 15 }) : 'Edit'}
+                </button>
+                <button type="button" class="btn-icon btn-sm review-remove-btn" data-idx="${idx}" title="Remove transaction" aria-label="Remove" style="color: var(--color-expense);">
+                  ${typeof getSvgIcon === 'function' ? getSvgIcon('trash', '', { width: 15, height: 15 }) : 'Del'}
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
     });
 
-    tbody.innerHTML = html;
+    tbody.innerHTML = tableHtml;
+    mobileCardsContainer.innerHTML = mobileHtml;
+
     bindReviewTableActions();
   }
 
-  // ─── Bind Actions ───
+  // ─── Bind Review Actions ───
 
   function bindReviewTableActions() {
-    const tbody = document.getElementById('reviewTableBody');
-    const selectAllCb = document.getElementById('selectAllCheckbox');
-    if (!tbody) return;
+    const modalBox = document.getElementById('statementUploadModal');
+    if (!modalBox) return;
 
-    // Row selection checkboxes
-    tbody.querySelectorAll('.row-checkbox').forEach(cb => {
+    // Checkbox toggles (both desktop table and mobile cards)
+    modalBox.querySelectorAll('.row-checkbox').forEach(cb => {
       cb.addEventListener('change', () => {
         const idx = parseInt(cb.dataset.idx, 10);
-        parsedRows[idx]._selected = cb.checked;
-        renderReviewTable();
-      });
-    });
-
-    // Select all
-    selectAllCb?.replaceWith(selectAllCb.cloneNode(true));
-    const freshSelectAll = document.getElementById('selectAllCheckbox');
-    freshSelectAll?.addEventListener('change', () => {
-      const shouldSelect = freshSelectAll.checked;
-      parsedRows.forEach(r => { r._selected = shouldSelect; });
-      renderReviewTable();
-    });
-
-    // Edit buttons
-    tbody.querySelectorAll('.review-edit-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.idx, 10);
-        parsedRows[idx]._editing = true;
-        renderReviewTable();
-      });
-    });
-
-    // Remove buttons
-    tbody.querySelectorAll('.review-remove-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.idx, 10);
-        const tr = btn.closest('tr');
-        if (tr) {
-          tr.classList.add('row-removing');
-          setTimeout(() => {
-            parsedRows.splice(idx, 1);
-            renderReviewTable();
-          }, 240);
-        } else {
-          parsedRows.splice(idx, 1);
+        if (parsedRows[idx]) {
+          parsedRows[idx]._selected = cb.checked;
           renderReviewTable();
         }
       });
     });
 
-    // Save edit buttons
-    tbody.querySelectorAll('.review-save-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.idx, 10);
-        const tr = btn.closest('tr');
-        if (!tr) return;
+    // Select-All Checkboxes
+    const selectAllCb = document.getElementById('selectAllCheckbox');
+    const tableHeaderSelectAll = document.getElementById('tableHeaderSelectAll');
 
-        const newDate = tr.querySelector('.edit-date')?.value;
-        const newDesc = tr.querySelector('.edit-desc')?.value;
-        const newCategory = tr.querySelector('.edit-category')?.value;
-        const newType = tr.querySelector('.edit-type')?.value;
-        const newAmount = parseFloat(tr.querySelector('.edit-amount')?.value);
+    const handleSelectAll = (checked) => {
+      parsedRows.forEach(r => { r._selected = checked; });
+      renderReviewTable();
+    };
+
+    if (selectAllCb) {
+      selectAllCb.onchange = () => handleSelectAll(selectAllCb.checked);
+    }
+    if (tableHeaderSelectAll) {
+      tableHeaderSelectAll.onchange = () => handleSelectAll(tableHeaderSelectAll.checked);
+    }
+
+    // Filter Tabs
+    modalBox.querySelectorAll('.upload-filter-tab').forEach(tab => {
+      tab.onclick = () => {
+        const filter = tab.dataset.filter || 'all';
+        currentFilterTab = filter;
+        modalBox.querySelectorAll('.upload-filter-tab').forEach(t => {
+          const isActive = t === tab;
+          t.classList.toggle('active', isActive);
+          t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        renderReviewTable();
+      };
+    });
+
+    // Edit transaction button
+    modalBox.querySelectorAll('.review-edit-btn').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        if (parsedRows[idx]) {
+          parsedRows[idx]._editing = true;
+          renderReviewTable();
+        }
+      };
+    });
+
+    // Cancel edit button
+    modalBox.querySelectorAll('.review-cancel-edit-btn').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        if (parsedRows[idx]) {
+          delete parsedRows[idx]._editing;
+          renderReviewTable();
+        }
+      };
+    });
+
+    // Remove transaction button
+    modalBox.querySelectorAll('.review-remove-btn').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        const container = btn.closest('tr') || btn.closest('.upload-mobile-card');
+        if (container) {
+          container.classList.add('row-removing');
+          setTimeout(() => {
+            parsedRows.splice(idx, 1);
+            renderReviewTable();
+          }, 220);
+        } else {
+          parsedRows.splice(idx, 1);
+          renderReviewTable();
+        }
+      };
+    });
+
+    // Save edit button (handles both desktop table row & mobile card form)
+    modalBox.querySelectorAll('.review-save-btn').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.idx, 10);
+        const container = btn.closest('tr') || btn.closest('.upload-mobile-card');
+        if (!container || !parsedRows[idx]) return;
+
+        const newDate = container.querySelector('.edit-date')?.value;
+        const newDesc = container.querySelector('.edit-desc')?.value;
+        const newCategory = container.querySelector('.edit-category')?.value;
+        const newType = container.querySelector('.edit-type')?.value;
+        const newAmount = parseFloat(container.querySelector('.edit-amount')?.value);
 
         if (newDate) parsedRows[idx].date = newDate;
-        if (newDesc !== undefined) parsedRows[idx].description = newDesc;
+        if (newDesc !== undefined) parsedRows[idx].description = newDesc.trim();
         if (newCategory) parsedRows[idx].category = newCategory;
         if (newType) parsedRows[idx].type = newType;
         if (!isNaN(newAmount) && newAmount > 0) parsedRows[idx].amount = newAmount;
 
-        // When type changes, re-infer category if not valid for new type
+        // Auto-reconcile category if type was flipped
         if (newType && typeof CATEGORIES !== 'undefined') {
           const validCats = CATEGORIES[newType]?.map(c => c.name) || [];
           if (!validCats.includes(parsedRows[idx].category)) {
@@ -470,31 +693,22 @@
 
         delete parsedRows[idx]._editing;
         renderReviewTable();
-      });
+      };
     });
 
-    // Cancel edit
-    tbody.querySelectorAll('.review-cancel-edit-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.idx, 10);
-        delete parsedRows[idx]._editing;
-        renderReviewTable();
-      });
-    });
-
-    // Type select change in edit mode
-    tbody.querySelectorAll('.edit-type').forEach(select => {
-      select.addEventListener('change', () => {
-        const tr = select.closest('tr');
+    // Dynamic category dropdown update on type change during edit
+    modalBox.querySelectorAll('.edit-type').forEach(select => {
+      select.onchange = () => {
+        const container = select.closest('tr') || select.closest('.upload-mobile-card');
         const newType = select.value;
-        const catSelect = tr.querySelector('.edit-category');
+        const catSelect = container?.querySelector('.edit-category');
         if (!catSelect || typeof CATEGORIES === 'undefined') return;
 
         const newCats = CATEGORIES[newType] || [];
         catSelect.innerHTML = newCats.map(c =>
           `<option value="${escapeAttr(c.name)}">${escapeAttr(c.name)}</option>`
         ).join('');
-      });
+      };
     });
   }
 
@@ -509,6 +723,15 @@
     detectedBankInfo = null;
     currentFile = null;
     currentSearchQuery = '';
+    currentFilterTab = 'all';
+
+    // Reset filter tabs active state
+    uploadModalEl.querySelectorAll('.upload-filter-tab').forEach(t => {
+      const isAll = (t.dataset.filter || 'all') === 'all';
+      t.classList.toggle('active', isAll);
+      t.setAttribute('aria-selected', isAll ? 'true' : 'false');
+    });
+
     bindUploadEvents();
   }
 
@@ -521,6 +744,7 @@
     detectedBankInfo = null;
     currentFile = null;
     currentSearchQuery = '';
+    currentFilterTab = 'all';
   }
 
   function showStep(stepId) {
@@ -535,7 +759,7 @@
     if (footer) footer.style.display = stepId === 'uploadStep2' ? '' : 'none';
   }
 
-  // ─── Bind Upload Events ───
+  // ─── Bind Initial Upload Events ───
 
   function bindUploadEvents() {
     const closeBtn = document.getElementById('uploadModalClose');
@@ -545,6 +769,7 @@
     const dropzone = document.getElementById('uploadDropzone');
     const fileInput = document.getElementById('statementFileInput');
     const searchInput = document.getElementById('reviewSearchInput');
+    const searchClear = document.getElementById('reviewSearchClear');
     const unlockBtn = document.getElementById('statementUnlockBtn');
     const passwordInput = document.getElementById('statementPasswordInput');
     const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
@@ -561,6 +786,7 @@
       parsedRows = [];
       detectedBankInfo = null;
       currentFile = null;
+      currentFilterTab = 'all';
       showStep('uploadStep1');
       if (fileInput) fileInput.value = '';
     });
@@ -587,9 +813,16 @@
       if (e.key === 'Enter') unlockBtn?.click();
     });
 
-    // Search filter
+    // Search input
     searchInput?.addEventListener('input', (e) => {
       currentSearchQuery = e.target.value;
+      renderReviewTable();
+    });
+
+    // Search clear button
+    searchClear?.addEventListener('click', () => {
+      currentSearchQuery = '';
+      if (searchInput) searchInput.value = '';
       renderReviewTable();
     });
 
@@ -626,7 +859,7 @@
       }
     });
 
-    // Submit all
+    // Submit all selected
     submitBtn?.addEventListener('click', handleBulkSubmit);
   }
 
@@ -656,6 +889,8 @@
 
       parsedRows = rows.map(r => ({ ...r, _selected: true }));
       detectedBankInfo = bank;
+      currentFilterTab = 'all';
+      currentSearchQuery = '';
 
       showStep('uploadStep2');
       renderReviewTable();
@@ -788,11 +1023,14 @@
   function formatReviewDate(dateStr) {
     if (!dateStr) return '—';
     try {
-      const parts = dateStr.split('-');
-      if (parts.length === 3) {
-        const [year, month, day] = parts;
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        const [year, month, day] = dateStr.split('-');
         return `${parseInt(day, 10)} ${months[parseInt(month, 10) - 1]} ${year}`;
+      }
+      if (/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(dateStr)) {
+        const parts = dateStr.split(/[-/]/);
+        return `${parseInt(parts[0], 10)} ${months[parseInt(parts[1], 10) - 1]} ${parts[2]}`;
       }
       return dateStr;
     } catch {
@@ -807,7 +1045,12 @@
 
   function escapeHtml(str) {
     if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   function escapeAttr(str) {
