@@ -15,6 +15,9 @@ onReady(() => {
   initNavigationHighlight();
   initNavbarScroll();
   initTransactionModal();
+  if (window.GlassSurface && typeof window.GlassSurface.init === 'function') {
+    window.GlassSurface.init();
+  }
 });
 
 /**
