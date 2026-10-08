@@ -15,8 +15,9 @@ const { buildSystemPrompt } = require('./_lib/prompt');
 
 const FALLBACK_MODELS = [
   process.env.GEMINI_MODEL,
-  'gemini-flash-lite-latest',
   'gemini-3.5-flash-lite',
+  'gemini-3.5-flash',
+  'gemini-flash-lite-latest',
   'gemini-flash-latest'
 ].filter(Boolean);
 const MODELS = [...new Set(FALLBACK_MODELS)];
@@ -95,8 +96,15 @@ module.exports = async function handler(req, res) {
     return send(res, 405, { error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return send(res, 500, { error: 'The assistant is not configured yet (missing GEMINI_API_KEY).' });
+  const rawKey = process.env.GEMINI_API_KEY ||
+                 process.env.GEMINI_KEY ||
+                 process.env.GOOGLE_API_KEY ||
+                 process.env.GOOGLE_GEMINI_API_KEY || '';
+  const apiKey = String(rawKey).trim().replace(/^["']|["']$/g, '');
+  if (!apiKey) {
+    console.error('[chat] Missing GEMINI_API_KEY. Environment variables present:', Object.keys(process.env).filter(k => k.includes('GEMINI') || k.includes('GOOGLE')));
+    return send(res, 500, { error: 'The assistant is not configured yet (missing GEMINI_API_KEY).' });
+  }
 
   // ── Auth ──
   const auth = req.headers.authorization || '';
