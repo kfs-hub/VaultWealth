@@ -32,6 +32,7 @@
         <ul class="nav-links">
           <li><a href="/dashboard" id="navDashboard" class="nav-item">Dashboard</a></li>
           <li><a href="/transactions" id="navTransactions" class="nav-item">Transactions</a></li>
+          <li><a href="/subscriptions" id="navSubscriptions" class="nav-item">Subscriptions</a></li>
           <li><a href="/analytics" id="navAnalytics" class="nav-item">Analytics</a></li>
           <li><a href="/profile" id="navProfile" class="nav-item active">Profile</a></li>
         </ul>
@@ -139,6 +140,47 @@
             </select>
           </div>
 
+          <!-- In-App Toast Reminders -->
+          <div style="margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+            <div>
+              <label class="form-label" style="margin-bottom: 0.2rem;">In-App Renewal Reminders</label>
+              <p style="color: var(--text-secondary); font-size: 0.8125rem;">
+                Display in-app toast alerts 3 days prior to scheduled recurring renewals when browsing VaultWealth.
+              </p>
+            </div>
+            <input type="checkbox" id="prefSubReminders" checked style="width: 20px; height: 20px; accent-color: var(--brand-primary); cursor: pointer;">
+          </div>
+
+          <!-- Native Device & Desktop Push Notifications (3 Days Prior) -->
+          <div style="margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 260px;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                  <label class="form-label" style="margin: 0; font-weight: 600;">Device Renewal Notifications</label>
+                  <span id="notifStatusBadge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--text-muted); font-weight: 500;">
+                    Checking...
+                  </span>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.8125rem; margin: 0; line-height: 1.45;">
+                  Send native push notifications directly to this desktop or mobile device 3 days before any subscription renews.
+                </p>
+                <div id="notifBlockedHelp" style="display: none; margin-top: 0.6rem; font-size: 0.75rem; color: #fb7185; background: rgba(244,63,94,0.08); padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(244,63,94,0.25);">
+                  Notifications are blocked in your browser. Click the lock or tune icon next to the URL in your browser address bar to allow notifications for VaultWealth.
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem;">
+                <button type="button" id="btnTestNotification" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;" title="Trigger a sample device notification right now">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
+                  Send Test Alert
+                </button>
+                <input type="checkbox" id="prefDeviceNotifications" style="width: 20px; height: 20px; accent-color: var(--brand-primary); cursor: pointer;" title="Toggle device notifications">
+              </div>
+            </div>
+          </div>
+
           <!-- Data Export -->
           <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
             <label class="form-label">Data Portability</label>
@@ -192,6 +234,14 @@
         </svg>
         <span>Transactions</span>
       </a>
+      <a href="/subscriptions" class="mobile-nav-item" id="mobileNavSubscriptions">
+        <svg class="mobile-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        <span>Subscriptions</span>
+      </a>
       <a href="/analytics" class="mobile-nav-item" id="mobileNavAnalytics">
         <svg class="mobile-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -232,6 +282,7 @@
   <script src="js/statement-parser.js"></script>
   <script src="js/statement-upload.js"></script>
   <script src="js/glass-surface.js"></script>
+  <script src="js/notifications.js"></script>
   <script src="js/profile.js"></script>
   <script src="js/chatbot.js"></script>
   <script type="module">

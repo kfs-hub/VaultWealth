@@ -9,6 +9,7 @@
   "rewrites": [
     { "source": "/dashboard", "destination": "/dashboard.html" },
     { "source": "/transactions", "destination": "/transactions.html" },
+    { "source": "/subscriptions", "destination": "/subscriptions.html" },
     { "source": "/analytics", "destination": "/analytics.html" },
     { "source": "/profile", "destination": "/profile.html" },
     { "source": "/login", "destination": "/login.html" },

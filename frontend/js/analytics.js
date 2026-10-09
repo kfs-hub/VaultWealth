@@ -74,6 +74,9 @@ async function loadAnalyticsData() {
     generateSmartInsightsFeed(txList);
     runMLForecasting(txList);
 
+    // Compute subscription commitments analytics
+    await computeSubscriptionAnalytics(client, user, txList);
+
   } catch (err) {
     console.error('[VaultWealth] Unexpected error in loadAnalyticsData:', err);
     computeAnalyticsMetrics([]);
@@ -81,6 +84,7 @@ async function loadAnalyticsData() {
     renderCashFlowPieChart([]);
     generateSmartInsightsFeed([]);
     runMLForecasting([]);
+    await computeSubscriptionAnalytics(null, null, []);
   }
 }
 
@@ -325,6 +329,112 @@ function generateSmartInsightsFeed(transactions) {
   container.innerHTML = html;
   if (countBadge) countBadge.textContent = `${insights.length} Insights Generated`;
 }
+
+/**
+ * Computes recurring subscription commitment ratio and smart insight
+ */
+async function computeSubscriptionAnalytics(client, user, transactions) {
+  let subs = [];
+  if (client && user) {
+    try {
+      const { data, error } = await client
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id);
+      if (!error && data) {
+        subs = data;
+      }
+    } catch {
+      subs = [];
+    }
+  } else {
+    const raw = localStorage.getItem('vaultwealth_subscriptions');
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        subs = Array.isArray(parsed) ? parsed.filter(s => !String(s.id).startsWith('sub-mock-')) : [];
+      } catch {
+        subs = [];
+      }
+    }
+  }
+
+  let monthlyBurn = 0;
+  let activeSubs = [];
+  let topSub = null;
+  let topSubBurn = 0;
+
+  subs.forEach(s => {
+    if (s.status === 'active') {
+      const amt = parseFloat(s.amount) || 0;
+      let norm = amt;
+      switch (s.billing_cycle) {
+        case 'weekly': norm = amt * (52 / 12); break;
+        case 'monthly': norm = amt; break;
+        case 'quarterly': norm = amt / 3; break;
+        case 'yearly': norm = amt / 12; break;
+        case 'custom': norm = amt * (30 / (s.custom_cycle_days || 30)); break;
+      }
+      monthlyBurn += norm;
+      activeSubs.push({ ...s, normalizedMonthly: norm });
+      if (norm > topSubBurn) {
+        topSubBurn = norm;
+        topSub = s;
+      }
+    }
+  });
+
+  // Calculate monthly average expense from transactions
+  let totalExpenses = 0;
+  const monthSet = new Set();
+  transactions.filter(t => t.type === 'expense').forEach(t => {
+    totalExpenses += (parseFloat(t.amount) || 0);
+    const ym = (t.transaction_date || '').substring(0, 7);
+    if (ym) monthSet.add(ym);
+  });
+
+  const monthCount = Math.max(1, monthSet.size);
+  const avgMonthlyExpense = totalExpenses > 0 ? (totalExpenses / monthCount) : monthlyBurn;
+  const burnRatio = avgMonthlyExpense > 0 ? ((monthlyBurn / avgMonthlyExpense) * 100).toFixed(1) : 0;
+
+  const spendValEl = document.getElementById('analyticSubscriptionSpend');
+  const spendFooterEl = document.getElementById('analyticSubscriptionFooter');
+
+  if (spendValEl) {
+    spendValEl.textContent = `${formatCurrency(monthlyBurn)} / mo`;
+  }
+  if (spendFooterEl) {
+    spendFooterEl.innerHTML = `<strong>${burnRatio}%</strong> of typical monthly outflow (${activeSubs.length} active)`;
+  }
+
+  // Inject subscription insight if active subscriptions exist
+  const container = document.getElementById('analyticsInsightsContainer');
+  const countBadge = document.getElementById('analyticsInsightsCount');
+  if (container && activeSubs.length > 0 && topSub) {
+    const subCard = document.createElement('div');
+    subCard.className = 'insight-card info';
+    subCard.style.borderLeftColor = 'var(--brand-primary)';
+    subCard.innerHTML = `
+      <div class="insight-icon" style="color: #a5b4fc;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+      </div>
+      <div class="insight-content">
+        <h4>Recurring Subscription Impact</h4>
+        <p>You have <strong>${activeSubs.length} active subscriptions</strong> totaling <strong>${formatCurrency(monthlyBurn)}/month</strong> (~${burnRatio}% of monthly spend). Your largest commitment is <strong>${escapeHtml(topSub.name)}</strong> at ${formatCurrency(topSub.amount)}/${escapeHtml(topSub.billing_cycle)}.</p>
+      </div>
+    `;
+    container.appendChild(subCard);
+    if (countBadge) {
+      const curCount = container.querySelectorAll('.insight-card').length;
+      countBadge.textContent = `${curCount} Insights Generated`;
+    }
+  }
+}
+
 /**
  * ═══════════════════════════════════════════════════════════════════════
  * Phase 11 — Machine Learning Expense Forecasting Engine

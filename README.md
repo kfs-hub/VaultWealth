@@ -113,5 +113,6 @@ Copy `frontend/js/config.example.js` → `frontend/js/config.js` locally and fil
 10. ✅ **Phase 10:** Automated Rule-Based Smart Insights
 11. ✅ **Phase 11:** Bank Statement Upload & Parser (CSV/Excel/PDF)
 12. ✅ **Phase 13:** Vercel Deployment & GitHub CI/CD
-13. ⏳ **Phase 12:** Python Machine Learning Expense Forecasting
-14. ⏳ **Phase 14:** End-to-End Testing & Security Audit
+13. ✅ **Phase 15:** Personal Recurring Subscription & Bill Tracker Engine
+14. ⏳ **Phase 12:** Python Machine Learning Expense Forecasting
+15. ⏳ **Phase 14:** End-to-End Testing & Security Audit

@@ -1296,3 +1296,148 @@
     font-size: 0.65rem;
   }
 }
+
+/* ==========================================================================
+   Detected Subscriptions Confirmation Modal
+   ========================================================================== */
+.sub-detect-modal-box {
+  max-width: 580px !important;
+  width: 92vw !important;
+  border-radius: 20px !important;
+  background: rgba(18, 16, 27, 0.96) !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(99, 102, 241, 0.15) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+}
+
+.sub-detect-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.sub-detect-banner-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--brand-primary, #6366f1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sub-detect-banner-text {
+  font-size: 0.82rem;
+  color: var(--text-secondary, rgba(244, 243, 247, 0.75));
+  line-height: 1.45;
+}
+
+.sub-detect-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.sub-detect-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.95rem 1.1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.sub-detect-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.sub-detect-card.selected {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.sub-detect-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand-primary, #6366f1);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.sub-detect-badge-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sub-detect-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sub-detect-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary, #f4f3f7);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sub-detect-reason {
+  font-size: 0.7rem;
+  color: var(--text-muted, rgba(244, 243, 247, 0.4));
+  margin-top: 0.15rem;
+}
+
+.sub-detect-pricing {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.sub-detect-amount {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary, #f4f3f7);
+}
+
+.sub-detect-cycle {
+  font-size: 0.72rem;
+  color: var(--text-muted, rgba(244, 243, 247, 0.4));
+  text-transform: capitalize;
+}
+
+.sub-detect-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+

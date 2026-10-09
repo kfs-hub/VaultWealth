@@ -101,14 +101,14 @@
         <div class="modal-body upload-step" id="uploadStepPassword" style="display: none;">
           <div class="upload-password-box">
             <div class="upload-password-icon">
-              ${typeof getSvgIcon === 'function' ? getSvgIcon('lock', '', { width: 44, height: 44 }) : '🔒'}
+              ${typeof getSvgIcon === 'function' ? getSvgIcon('lock', '', { width: 44, height: 44 }) : '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>'}
             </div>
             <h4 style="font-size: 1.15rem; font-weight: 700; color: #FFFFFF; margin: 0;">Statement is Encrypted</h4>
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
               This bank statement is protected with a password. Please enter the password to unlock and parse transactions.
             </p>
             <div class="upload-password-hint">
-              <strong>💡 Common Indian Bank Passwords:</strong><br>
+              <strong>Common Indian Bank Passwords:</strong><br>
               • <strong>SBI:</strong> 11-digit Account Number OR Date of Birth (DDMMYYYY) + last 5 digits of mobile<br>
               • <strong>HDFC:</strong> Customer ID OR PAN Number (ALL CAPS)<br>
               • <strong>ICICI:</strong> First 4 letters of name (lowercase) + DOB (DDMM)
@@ -163,7 +163,7 @@
 
             <div class="upload-header-meta">
               <div id="reviewBankBadge" class="upload-bank-badge" style="display: none;">
-                🏦 <span id="reviewBankName">Bank Statement</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><line x1="3" y1="21" x2="21" y2="21"></line><line x1="3" y1="10" x2="21" y2="10"></line><polyline points="5 6 12 3 19 6"></polyline><line x1="4" y1="10" x2="4" y2="21"></line><line x1="20" y1="10" x2="20" y2="21"></line><line x1="8" y1="14" x2="8" y2="17"></line><line x1="12" y1="14" x2="12" y2="17"></line><line x1="16" y1="14" x2="16" y2="17"></line></svg><span id="reviewBankName">Bank Statement</span>
               </div>
               <button type="button" class="btn btn-secondary btn-sm" id="uploadBackBtn">
                 ${typeof getSvgIcon === 'function' ? getSvgIcon('upload', '', { width: 14, height: 14 }) : ''}
@@ -193,7 +193,7 @@
             <div class="upload-toolbar-right">
               <div class="upload-search-wrapper">
                 <span class="upload-search-icon">
-                  ${typeof getSvgIcon === 'function' ? getSvgIcon('search', '', { width: 14, height: 14 }) : '🔍'}
+                  ${typeof getSvgIcon === 'function' ? getSvgIcon('search', '', { width: 14, height: 14 }) : ''}
                 </span>
                 <input type="text" class="form-control form-control-sm" id="reviewSearchInput" placeholder="Filter transactions...">
                 <button type="button" class="upload-search-clear" id="reviewSearchClear" style="display: none;" aria-label="Clear search">
@@ -202,7 +202,7 @@
               </div>
               <div class="upload-toolbar-meta-row">
                 <div class="upload-period-badge" id="reviewPeriodBadge">
-                  ${typeof getSvgIcon === 'function' ? getSvgIcon('calendar', '', { width: 14, height: 14 }) : '📅'}
+                  ${typeof getSvgIcon === 'function' ? getSvgIcon('calendar', '', { width: 14, height: 14 }) : ''}
                   <span id="reviewPeriodText">Statement Period</span>
                 </div>
                 <label class="upload-select-all-label" title="Select or deselect all transactions">
@@ -1018,6 +1018,9 @@
         window.dispatchEvent(new CustomEvent('vaultwealth:refresh'));
       }
 
+      // Check for recurring subscriptions in the imported rows
+      checkAndPromptSubscriptions(selectedRows, client, user);
+
     } catch (err) {
       console.error('[VaultWealth] Bulk import error:', err);
       showToast('Failed to import transactions: ' + (err.message || err), 'error');
@@ -1027,6 +1030,282 @@
         if (originalText) submitBtn.innerHTML = originalText;
       }
     }
+  }
+
+  // ─── Subscriptions Detection & Confirmation Prompt ───
+
+  async function checkAndPromptSubscriptions(importedRows, client, user) {
+    if (!window.StatementParser || typeof window.StatementParser.detectSubscriptions !== 'function') {
+      return;
+    }
+
+    try {
+      // 1. Fetch recent user transactions for cross-statement cadence matching
+      let historicalTxs = [];
+      try {
+        const { data: hist } = await client
+          .from('transactions')
+          .select('amount, category, transaction_date, description, type')
+          .eq('user_id', user.id)
+          .eq('type', 'expense')
+          .order('transaction_date', { ascending: false })
+          .limit(300);
+        if (hist) historicalTxs = hist;
+      } catch (e) {
+        console.warn('[StatementUpload] Could not fetch historical transactions for cadence detection:', e);
+      }
+
+      // 2. Run detection engine
+      const detected = window.StatementParser.detectSubscriptions(importedRows, historicalTxs);
+      if (!detected || detected.length === 0) return;
+
+      // 3. Query existing subscriptions to eliminate duplicates
+      let existingSubs = [];
+      try {
+        const { data: subs } = await client
+          .from('subscriptions')
+          .select('name, amount, billing_cycle')
+          .eq('user_id', user.id);
+        if (subs) existingSubs = subs;
+      } catch (e) {
+        console.warn('[StatementUpload] Could not fetch existing subscriptions:', e);
+      }
+
+      const existingNames = new Set(
+        existingSubs.map(s => (s.name || '').trim().toLowerCase())
+      );
+
+      // Filter out any candidates that are already tracked in user's vault
+      const newCandidates = detected.filter(cand => {
+        const cName = (cand.name || '').trim().toLowerCase();
+        if (existingNames.has(cName)) return false;
+        return !Array.from(existingNames).some(ex => cName.includes(ex) || ex.includes(cName));
+      });
+
+      if (newCandidates.length === 0) return;
+
+      // 4. Prompt user via popup modal after upload modal has transitioned out
+      setTimeout(() => {
+        openDetectedSubscriptionsModal(newCandidates, client, user);
+      }, 400);
+
+    } catch (err) {
+      console.warn('[StatementUpload] Error during subscription detection check:', err);
+    }
+  }
+
+  let detectedSubsModalEl = null;
+
+  function closeDetectedSubsModal() {
+    if (detectedSubsModalEl) {
+      detectedSubsModalEl.classList.remove('active');
+      setTimeout(() => {
+        detectedSubsModalEl?.remove();
+        detectedSubsModalEl = null;
+      }, 250);
+    }
+  }
+
+  function openDetectedSubscriptionsModal(candidates, client, user) {
+    closeDetectedSubsModal();
+
+    detectedSubsModalEl = document.createElement('div');
+    detectedSubsModalEl.id = 'detectedSubsModal';
+    detectedSubsModalEl.className = 'modal-overlay upload-modal-overlay active';
+
+    const selectedIndices = new Set(candidates.map((_, i) => i));
+
+    const renderCardsHtml = () => {
+      return candidates.map((cand, idx) => {
+        const isSelected = selectedIndices.has(idx);
+        const cycleLabel = cand.billing_cycle || 'monthly';
+        const color = cand.brand_color || '#6366f1';
+        const initial = (cand.name || 'S').charAt(0).toUpperCase();
+        const formattedAmount = Number(cand.amount).toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+        const formattedDate = formatReviewDate(cand.next_billing_date);
+
+        return `
+          <div class="sub-detect-card ${isSelected ? 'selected' : ''}" data-idx="${idx}">
+            <input type="checkbox" class="sub-detect-checkbox" data-idx="${idx}" ${isSelected ? 'checked' : ''}>
+            <div class="sub-detect-badge-circle" style="background: ${color};">
+              ${escapeHtml(initial)}
+            </div>
+            <div class="sub-detect-info">
+              <div class="sub-detect-name">
+                <span>${escapeHtml(cand.name)}</span>
+                <span style="font-size: 0.68rem; font-weight: 500; padding: 2px 7px; border-radius: 6px; background: rgba(99,102,241,0.18); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); text-transform: capitalize;">
+                  ${escapeHtml(cycleLabel)}
+                </span>
+              </div>
+              <div class="sub-detect-reason">
+                ${escapeHtml(cand.reason || 'Recurring commitment')} • Next: ${formattedDate}
+              </div>
+            </div>
+            <div class="sub-detect-pricing">
+              <div class="sub-detect-amount">₹${formattedAmount}</div>
+              <div class="sub-detect-cycle">/${escapeHtml(cycleLabel === 'monthly' ? 'mo' : cycleLabel)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
+    detectedSubsModalEl.innerHTML = `
+      <div class="modal-box sub-detect-modal-box">
+        <div class="modal-header">
+          <h3 class="modal-title" style="display: flex; align-items: center; gap: 0.6rem;">
+            ${typeof getSvgIcon === 'function' ? getSvgIcon('subscriptions', '', { width: 22, height: 22 }) : ''}
+            Subscriptions Detected
+          </h3>
+          <button type="button" class="modal-close" id="detectedSubsModalClose" aria-label="Close modal">
+            ${typeof getSvgIcon === 'function' ? getSvgIcon('x', '', { width: 20, height: 20 }) : '&times;'}
+          </button>
+        </div>
+
+        <div class="modal-body" style="padding: 1.25rem 1.5rem;">
+          <div class="sub-detect-banner">
+            <div class="sub-detect-banner-icon">
+              ${typeof getSvgIcon === 'function' ? getSvgIcon('lightning', '', { width: 20, height: 20 }) : '⚡'}
+            </div>
+            <div class="sub-detect-banner-text">
+              Found <strong>${candidates.length} recurring subscription${candidates.length > 1 ? 's' : ''}</strong> in your statement.
+              Select which ones you would like to track in your <strong>Subscription Tracker</strong>.
+            </div>
+          </div>
+
+          <div class="sub-detect-list" id="detectedSubsList">
+            ${renderCardsHtml()}
+          </div>
+
+          <div class="sub-detect-footer">
+            <button type="button" class="btn btn-secondary btn-sm" id="skipDetectedSubsBtn">
+              Skip
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="confirmTrackSubsBtn">
+              ${typeof getSvgIcon === 'function' ? getSvgIcon('check-circle', '', { width: 15, height: 15 }) : '✓'}
+              Track Selected (${selectedIndices.size})
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(detectedSubsModalEl);
+
+    const listEl = detectedSubsModalEl.querySelector('#detectedSubsList');
+    const confirmBtn = detectedSubsModalEl.querySelector('#confirmTrackSubsBtn');
+    const closeBtn = detectedSubsModalEl.querySelector('#detectedSubsModalClose');
+    const skipBtn = detectedSubsModalEl.querySelector('#skipDetectedSubsBtn');
+
+    const updateConfirmBtn = () => {
+      if (!confirmBtn) return;
+      confirmBtn.disabled = selectedIndices.size === 0;
+      confirmBtn.innerHTML = `
+        ${typeof getSvgIcon === 'function' ? getSvgIcon('check-circle', '', { width: 15, height: 15 }) : '✓'}
+        Track Selected (${selectedIndices.size})
+      `;
+    };
+
+    // Toggle card selection
+    listEl?.addEventListener('click', (e) => {
+      const card = e.target.closest('.sub-detect-card');
+      if (!card) return;
+      const idx = parseInt(card.dataset.idx, 10);
+      const checkbox = card.querySelector('.sub-detect-checkbox');
+
+      if (e.target === checkbox) {
+        if (checkbox.checked) {
+          selectedIndices.add(idx);
+          card.classList.add('selected');
+        } else {
+          selectedIndices.delete(idx);
+          card.classList.remove('selected');
+        }
+      } else {
+        if (selectedIndices.has(idx)) {
+          selectedIndices.delete(idx);
+          checkbox.checked = false;
+          card.classList.remove('selected');
+        } else {
+          selectedIndices.add(idx);
+          checkbox.checked = true;
+          card.classList.add('selected');
+        }
+      }
+      updateConfirmBtn();
+    });
+
+    closeBtn?.addEventListener('click', closeDetectedSubsModal);
+    skipBtn?.addEventListener('click', closeDetectedSubsModal);
+
+    detectedSubsModalEl.addEventListener('click', (e) => {
+      if (e.target === detectedSubsModalEl) {
+        closeDetectedSubsModal();
+      }
+    });
+
+    const onKeydown = (e) => {
+      if (e.key === 'Escape') {
+        closeDetectedSubsModal();
+        document.removeEventListener('keydown', onKeydown);
+      }
+    };
+    document.addEventListener('keydown', onKeydown);
+
+    confirmBtn?.addEventListener('click', async () => {
+      const chosen = candidates.filter((_, idx) => selectedIndices.has(idx));
+      if (chosen.length === 0) {
+        closeDetectedSubsModal();
+        return;
+      }
+
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = `
+        ${typeof getSvgIcon === 'function' ? getSvgIcon('spinner', 'icon-spin', { width: 15, height: 15 }) : ''}
+        Saving ${chosen.length} subscriptions...
+      `;
+
+      try {
+        const toInsert = chosen.map(cand => ({
+          user_id: user.id,
+          name: cand.name,
+          amount: parseFloat(cand.amount),
+          currency: cand.currency || 'INR',
+          billing_cycle: cand.billing_cycle || 'monthly',
+          category: 'Subscriptions',
+          payment_method: 'Auto-Debit / Statement',
+          next_billing_date: cand.next_billing_date,
+          start_date: cand.last_transaction_date || new Date().toISOString().split('T')[0],
+          status: 'active',
+          auto_create_transaction: true,
+          reminder_days_before: 3,
+          brand_color: cand.brand_color || '#6366f1',
+          description: `Detected from statement (${cand.reason || 'Recurring'})`
+        }));
+
+        const { error } = await client
+          .from('subscriptions')
+          .insert(toInsert);
+
+        if (error) throw error;
+
+        showToast(`Added ${toInsert.length} subscription${toInsert.length > 1 ? 's' : ''} to your tracker!`, 'success');
+        closeDetectedSubsModal();
+
+        window.dispatchEvent(new CustomEvent('vaultwealth:refresh'));
+        if (typeof window.loadSubscriptions === 'function') {
+          await window.loadSubscriptions();
+        }
+      } catch (err) {
+        console.error('[StatementUpload] Failed to save detected subscriptions:', err);
+        showToast('Failed to save subscriptions: ' + (err.message || err), 'error');
+        confirmBtn.disabled = false;
+        updateConfirmBtn();
+      }
+    });
   }
 
   // ─── Toast Notifications ───
@@ -1106,6 +1385,8 @@
   // ─── Export ───
   window.openStatementUploadModal = openUploadModal;
   window.closeStatementUploadModal = closeUploadModal;
+  window.openDetectedSubscriptionsModal = openDetectedSubscriptionsModal;
+  window.closeDetectedSubscriptionsModal = closeDetectedSubsModal;
   window.initTransactionTable = initTransactionTable;
 
 })();

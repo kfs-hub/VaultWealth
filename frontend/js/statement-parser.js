@@ -293,11 +293,11 @@
       if (diff < -0.05) return 'expense';
     }
 
-    // 3. Single-column Type indicator (CR, DR, C, D, etc.)
+    // 3. Single-column Type indicator (CR, DR, C, D, Income, Expense, etc.)
     if (typeCell) {
       const t = String(typeCell).trim().toUpperCase();
-      if (/^(C|CR|CREDIT|DEP|DEPOSIT|\+)$/i.test(t)) return 'income';
-      if (/^(D|DR|DEBIT|WDL|WITHDRAWAL|-)$/i.test(t)) return 'expense';
+      if (/^(C|CR|CREDIT|DEP|DEPOSIT|\+|INCOME)$/i.test(t)) return 'income';
+      if (/^(D|DR|DEBIT|WDL|WITHDRAWAL|-|EXPENSE)$/i.test(t)) return 'expense';
     }
 
     // 4. Amount string suffix / sign (e.g. "3,539.00 C" in SBI Card, "-350.00", "350.00 CR")
@@ -318,12 +318,18 @@
       desc.includes('DEP TFR') ||
       desc.includes('BY TRANSFER') ||
       desc.includes('SALARY') ||
+      desc.includes('STIPEND') ||
+      desc.includes('FREELANCE') ||
       desc.includes('INTEREST') ||
       desc.includes('DIVIDEND') ||
       desc.includes('REFUND') ||
       desc.includes('CASHBACK') ||
+      desc.includes('CREDITED') ||
       desc.includes('PAYMENT RECEIVED') ||
-      desc.includes('RECEIVED FROM')
+      desc.includes('RECEIVED FROM') ||
+      desc.includes('PAYMENT FROM') ||
+      desc.includes('INWARD') ||
+      desc.includes('BONUS')
     ) {
       return 'income';
     }
@@ -417,24 +423,27 @@
       }
 
       // Debit / Withdrawal
+      // Debit / Withdrawal / Charges / Purchases
       if (mapping.debit < 0 && (
         h.includes('withdrawal') || h.includes('debit') || h === 'dr' ||
-        h.startsWith('dr ') || h.endsWith(' dr') || h.includes('paid out') || h.includes('outflow')
+        h.startsWith('dr ') || h.endsWith(' dr') || h.includes('paid out') || h.includes('outflow') ||
+        h.includes('charge') || h.includes('purchase')
       )) {
         mapping.debit = i;
         return;
       }
 
-      // Credit / Deposit
+      // Credit / Deposit / Payments / Inflow
       if (mapping.credit < 0 && (
         h.includes('deposit') || h.includes('credit') || h === 'cr' ||
-        h.startsWith('cr ') || h.endsWith(' cr') || h.includes('paid in') || h.includes('inflow')
+        h.startsWith('cr ') || h.endsWith(' cr') || h.includes('paid in') || h.includes('inflow') ||
+        h.includes('payment received') || h === 'payments' || h === 'payment'
       )) {
         mapping.credit = i;
         return;
       }
 
-      // Type column (CR/DR)
+      // Type column (CR/DR/Income/Expense)
       if (mapping.type < 0 && (
         h === 'type' || h === 'cr dr' || h === 'dr cr' || h.includes('tran type') || h.includes('transaction type')
       )) {
@@ -442,9 +451,9 @@
         return;
       }
 
-      // Single Amount column
+      // Single Amount column (Amount, Amount (INR), Net Amount, etc.)
       if (mapping.amount < 0 && (
-        h === 'amount' || h.includes('txn amount') || h.includes('transaction amount') || h === 'value'
+        h === 'amount' || h.includes('amount') || h.includes('txn amount') || h.includes('transaction amount') || h === 'value'
       )) {
         mapping.amount = i;
         return;
@@ -588,8 +597,9 @@
       {
         category: 'Transport',
         keywords: [
-          'uber', 'ola', 'rapido', 'fuel', 'petrol', 'diesel', 'metro', 'toll', 'railway',
-          'irctc', 'train', 'namma', 'hpcl', 'bpcl', 'iocl', 'shell', 'fastag',
+          'bmtc', 'ksrtc', 'uber', 'ola', 'rapido', 'fuel', 'petrol', 'diesel', 'metro', 'toll', 'railway',
+          'irctc', 'train', 'namma', 'bmrcl', 'hpcl', 'bpcl', 'iocl', 'shell', 'fastag', 'chalo', 'yulu',
+          'transit', 'bus pass',
           /\bauto\b(?!-debit)/i, /\bcab\b/i, /\bbus\b/i
         ]
       },
@@ -1195,6 +1205,235 @@
     throw new Error(`Unsupported file format: .${ext}. Please upload a CSV, Excel (.xlsx/.xls), or PDF bank statement.`);
   }
 
+  // ─── Subscription Detection Engine ───
+
+  const KNOWN_SUBSCRIPTION_BRANDS = [
+    { key: 'netflix', name: 'Netflix', color: '#E50914', cycle: 'monthly' },
+    { key: 'spotify', name: 'Spotify', color: '#1DB954', cycle: 'monthly' },
+    { key: 'youtube', name: 'YouTube Premium', color: '#FF0000', cycle: 'monthly' },
+    { key: 'aws', name: 'AWS Cloud', color: '#FF9900', cycle: 'monthly' },
+    { key: 'amazon web', name: 'AWS Cloud', color: '#FF9900', cycle: 'monthly' },
+    { key: 'github', name: 'GitHub Copilot', color: '#333333', cycle: 'monthly' },
+    { key: 'apple.com/bill', name: 'Apple Services', color: '#888888', cycle: 'monthly' },
+    { key: 'itunes', name: 'Apple Services', color: '#888888', cycle: 'monthly' },
+    { key: 'icloud', name: 'iCloud+', color: '#0070C9', cycle: 'monthly' },
+    { key: 'openai', name: 'ChatGPT Plus', color: '#10A37F', cycle: 'monthly' },
+    { key: 'chatgpt', name: 'ChatGPT Plus', color: '#10A37F', cycle: 'monthly' },
+    { key: 'prime video', name: 'Amazon Prime', color: '#00A8E1', cycle: 'monthly' },
+    { key: 'hotstar', name: 'Disney+ Hotstar', color: '#113CCF', cycle: 'monthly' },
+    { key: 'disney', name: 'Disney+ Hotstar', color: '#113CCF', cycle: 'monthly' },
+    { key: 'sonyliv', name: 'SonyLIV', color: '#000000', cycle: 'monthly' },
+    { key: 'zee5', name: 'Zee5 Premium', color: '#8230C6', cycle: 'monthly' },
+    { key: 'cult.fit', name: 'Cult.fit Pass', color: '#FF3278', cycle: 'monthly' },
+    { key: 'curefit', name: 'Cult.fit Pass', color: '#FF3278', cycle: 'monthly' },
+    { key: 'gym', name: 'Fitness Gym', color: '#10B981', cycle: 'monthly' },
+    { key: 'notion', name: 'Notion Plus', color: '#191919', cycle: 'monthly' },
+    { key: 'google *', name: 'Google One', color: '#4285F4', cycle: 'monthly' },
+    { key: 'google one', name: 'Google One', color: '#4285F4', cycle: 'monthly' },
+    { key: 'google storage', name: 'Google One', color: '#4285F4', cycle: 'monthly' },
+    { key: 'figma', name: 'Figma Professional', color: '#F24E1E', cycle: 'monthly' },
+    { key: 'linkedin', name: 'LinkedIn Premium', color: '#0A66C2', cycle: 'monthly' },
+    { key: 'coursera', name: 'Coursera Plus', color: '#0056D2', cycle: 'monthly' },
+    { key: 'adobe', name: 'Adobe Creative Cloud', color: '#FF0000', cycle: 'monthly' },
+    { key: 'microsoft', name: 'Microsoft 365', color: '#00A4EF', cycle: 'monthly' },
+    { key: 'canva', name: 'Canva Pro', color: '#00C4CC', cycle: 'monthly' },
+    { key: 'dropbox', name: 'Dropbox', color: '#0061FF', cycle: 'monthly' },
+    { key: 'zoom', name: 'Zoom Video', color: '#2D8CFF', cycle: 'monthly' },
+    { key: 'medium', name: 'Medium Membership', color: '#000000', cycle: 'monthly' },
+    { key: 'audible', name: 'Audible Membership', color: '#F8991D', cycle: 'monthly' }
+  ];
+
+  function sanitizeMerchantForCadence(str) {
+    if (!str) return '';
+    return str
+      .replace(/\b(?:UPI|POS|NEFT|IMPS|ACH|NACH|DR|CR|ATM|TFR|BILL|PAY|PAYMENT|PAID|MUMBAI|DELHI|BANGALORE|CHENNAI|PUNE|HYDERABAD|IN|INDIA)\b/gi, '')
+      .replace(/[0-9*#/@_\-:()[\]{}]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function toTitleCase(str) {
+    if (!str) return '';
+    return str.toLowerCase().replace(/(?:^|\s)\w/g, match => match.toUpperCase()).trim();
+  }
+
+  function computeNextRenewalDate(dateStr, cycle) {
+    try {
+      const parts = (dateStr || new Date().toISOString().split('T')[0]).split('-');
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+
+      switch (cycle) {
+        case 'weekly':
+          d.setDate(d.getDate() + 7);
+          break;
+        case 'quarterly': {
+          const expectedMonth = (d.getMonth() + 3) % 12;
+          d.setMonth(d.getMonth() + 3);
+          if (d.getMonth() !== expectedMonth) d.setDate(0);
+          break;
+        }
+        case 'yearly':
+          d.setFullYear(d.getFullYear() + 1);
+          break;
+        case 'monthly':
+        default: {
+          const expectedMonth = (d.getMonth() + 1) % 12;
+          d.setMonth(d.getMonth() + 1);
+          if (d.getMonth() !== expectedMonth) d.setDate(0);
+          break;
+        }
+      }
+
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const dayStr = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${dayStr}`;
+    } catch {
+      return new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+    }
+  }
+
+  function detectSubscriptions(transactions, existingTransactions = []) {
+    if (!Array.isArray(transactions) || transactions.length === 0) return [];
+
+    const newExpenses = transactions.filter(t => (t.type || '').toLowerCase() === 'expense');
+    if (newExpenses.length === 0) return [];
+
+    const existingExpenses = Array.isArray(existingTransactions) 
+      ? existingTransactions.filter(t => (t.type || '').toLowerCase() === 'expense')
+      : [];
+
+    const allExpenses = [...existingExpenses, ...newExpenses].sort((a, b) => {
+      const da = new Date(a.date || a.transaction_date);
+      const db = new Date(b.date || b.transaction_date);
+      return da - db;
+    });
+
+    const detected = [];
+    const seenSignatures = new Set();
+
+    // 1. Signal A: Known Brand Recognition
+    newExpenses.forEach(tx => {
+      const desc = (tx.description || '').toLowerCase();
+      const rawAmt = parseFloat(tx.amount) || 0;
+      if (rawAmt <= 0) return;
+
+      for (const brand of KNOWN_SUBSCRIPTION_BRANDS) {
+        if (desc.includes(brand.key)) {
+          const sigKey = `${brand.name.toLowerCase()}_${rawAmt.toFixed(2)}`;
+          if (!seenSignatures.has(sigKey)) {
+            seenSignatures.add(sigKey);
+
+            const txDateStr = tx.date || tx.transaction_date || new Date().toISOString().split('T')[0];
+            const nextDate = computeNextRenewalDate(txDateStr, brand.cycle);
+
+            detected.push({
+              name: brand.name,
+              amount: rawAmt,
+              currency: 'INR',
+              billing_cycle: brand.cycle,
+              category: 'Subscriptions',
+              next_billing_date: nextDate,
+              last_transaction_date: txDateStr,
+              brand_color: brand.color,
+              reason: `Recognized subscription (${brand.name})`,
+              source: 'brand_match',
+              raw_description: tx.description
+            });
+          }
+          break;
+        }
+      }
+    });
+
+    // 2. Signal B: Cadence Interval Detection
+    const NON_SUBSCRIPTION_KEYWORDS = [
+      'bmtc', 'ksrtc', 'uber', 'ola', 'rapido', 'metro', 'swiggy', 'zomato',
+      'blinkit', 'zepto', 'instamart', 'petrol', 'fuel', 'diesel', 'canteen'
+    ];
+
+    const groups = {};
+    allExpenses.forEach(tx => {
+      const amt = parseFloat(tx.amount) || 0;
+      if (amt < 50) return; // Ignore small pocket change transactions
+      const category = (tx.category || '').toLowerCase();
+      if (category === 'transport') return; // Commuting rides/fares are everyday transit, not recurring subscriptions
+
+      const cleanDesc = sanitizeMerchantForCadence(tx.description || '');
+      if (cleanDesc.length < 3) return;
+
+      const lowerDesc = cleanDesc.toLowerCase();
+      if (NON_SUBSCRIPTION_KEYWORDS.some(kw => lowerDesc.includes(kw))) return;
+
+      const groupKey = `${lowerDesc}_${amt.toFixed(0)}`;
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(tx);
+    });
+
+    for (const [key, txs] of Object.entries(groups)) {
+      if (txs.length < 2) continue;
+
+      txs.sort((a, b) => new Date(a.date || a.transaction_date) - new Date(b.date || b.transaction_date));
+
+      for (let i = 1; i < txs.length; i++) {
+        const d1 = new Date(txs[i - 1].date || txs[i - 1].transaction_date);
+        const d2 = new Date(txs[i].date || txs[i].transaction_date);
+        const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+
+        const latestTx = txs[txs.length - 1];
+        const latestAmt = parseFloat(latestTx.amount) || 0;
+
+        let cycle = null;
+        if (diffDays >= 26 && diffDays <= 34) {
+          cycle = 'monthly';
+        } else if (diffDays >= 6 && diffDays <= 8 && latestAmt >= 100) {
+          cycle = 'weekly';
+        } else if (diffDays >= 85 && diffDays <= 95) {
+          cycle = 'quarterly';
+        } else if (diffDays >= 355 && diffDays <= 375) {
+          cycle = 'yearly';
+        }
+
+        if (cycle) {
+          const latestTx = txs[txs.length - 1];
+          const latestAmt = parseFloat(latestTx.amount) || 0;
+          const cleanName = toTitleCase(sanitizeMerchantForCadence(latestTx.description || ''));
+
+          const sigKey = `${cleanName.toLowerCase()}_${latestAmt.toFixed(2)}`;
+          if (!seenSignatures.has(sigKey)) {
+            seenSignatures.add(sigKey);
+
+            const latestDateStr = latestTx.date || latestTx.transaction_date || new Date().toISOString().split('T')[0];
+            const nextDate = computeNextRenewalDate(latestDateStr, cycle);
+            const brandInfo = typeof detectBrandInfo === 'function' ? detectBrandInfo(cleanName) : { color: '#6366f1' };
+
+            detected.push({
+              name: cleanName,
+              amount: latestAmt,
+              currency: 'INR',
+              billing_cycle: cycle,
+              category: 'Subscriptions',
+              next_billing_date: nextDate,
+              last_transaction_date: latestDateStr,
+              brand_color: brandInfo.color,
+              reason: `Repeating charge (~${diffDays} days interval)`,
+              source: 'cadence_detection',
+              raw_description: latestTx.description
+            });
+          }
+          break;
+        }
+      }
+    }
+
+    return detected;
+  }
+
   // ─── Export ───
 
   window.StatementParser = {
@@ -1205,6 +1444,7 @@
     cleanDescription,
     inferCategory,
     resolveTransactionType,
+    detectSubscriptions,
     CATEGORY_RULES,
     BANK_PROFILES
   };

@@ -186,6 +186,7 @@ function renderTransactionsTable(transactions) {
         <td><span class="badge ${badgeClass}">${catIcon} ${escapeHtml(tx.category)}</span></td>
         <td style="color: var(--text-primary); font-weight: 500;">
           ${escapeHtml(tx.description || '—')}
+          ${(tx.description || '').includes('(Recurring renewal)') || tx.category === 'Subscriptions' ? '<span style="display: inline-flex; align-items: center; gap: 3px; font-size: 0.68rem; padding: 1px 6px; border-radius: 999px; background: rgba(99, 102, 241, 0.15); color: #a5b4fc; margin-left: 6px; border: 1px solid rgba(99, 102, 241, 0.3);">↻ Subscription</span>' : ''}
         </td>
         <td>
           <span class="badge ${isIncome ? 'badge-income' : 'badge-expense'}">
@@ -305,15 +306,19 @@ function initAddEditModalIntegration() {
       return;
     }
 
-    // Determine type (expense or income)
+    // Determine type (expense, income, or subscription)
     const expenseBtn = document.getElementById('modalTypeExpense');
+    const subBtn = document.getElementById('modalTypeSubscription');
+    const isSub = subBtn?.classList.contains('active-subscription');
     const isExpense = expenseBtn?.classList.contains('active-expense');
-    const type = isExpense ? 'expense' : 'income';
+    const type = isSub ? 'expense' : (isExpense ? 'expense' : 'income');
 
     const amount = parseFloat(document.getElementById('modalAmount').value);
-    const category = document.getElementById('modalCategorySelect').value;
+    const category = document.getElementById('modalCategorySelect').value || (isSub ? 'Subscriptions' : 'Other');
     const date = document.getElementById('modalDate').value;
     const description = document.getElementById('modalDescription').value.trim();
+    const cadence = document.getElementById('modalSubCadence')?.value || 'monthly';
+    const nextRenewalDate = document.getElementById('modalSubNextRenewal')?.value;
 
     if (isNaN(amount) || amount <= 0) {
       alert('Please enter a valid amount greater than 0.');
@@ -322,6 +327,11 @@ function initAddEditModalIntegration() {
 
     if (!category || !date) {
       alert('Please select both a category and transaction date.');
+      return;
+    }
+
+    if (isSub && !description) {
+      alert('Please enter the service or subscription name.');
       return;
     }
 
@@ -348,9 +358,24 @@ function initAddEditModalIntegration() {
 
         if (error) throw error;
 
+        // Sync with subscriptions table
+        if (typeof window.syncTransactionWithSubscriptions === 'function') {
+          await window.syncTransactionWithSubscriptions(client, user, {
+            action: 'update',
+            txId: editingTransactionId,
+            amount,
+            category,
+            date,
+            description,
+            billingCycle: cadence,
+            nextRenewalDate: nextRenewalDate,
+            forceSubscription: isSub
+          });
+        }
+
       } else {
         // --- INSERT NEW TRANSACTION ---
-        const { error } = await client
+        const { data: insertedData, error } = await client
           .from('transactions')
           .insert([{
             user_id: user.id,
@@ -358,10 +383,26 @@ function initAddEditModalIntegration() {
             amount: amount,
             category: category,
             transaction_date: date,
-            description: description
-          }]);
+            description: description || (isSub ? 'Subscription Expense' : '')
+          }])
+          .select();
 
         if (error) throw error;
+
+        // Sync with subscriptions table
+        if (insertedData && insertedData[0] && typeof window.syncTransactionWithSubscriptions === 'function') {
+          await window.syncTransactionWithSubscriptions(client, user, {
+            action: 'insert',
+            txId: insertedData[0].id,
+            amount,
+            category,
+            date,
+            description,
+            billingCycle: cadence,
+            nextRenewalDate: nextRenewalDate,
+            forceSubscription: isSub
+          });
+        }
       }
 
       // Reset Modal & State
@@ -369,9 +410,13 @@ function initAddEditModalIntegration() {
       editingTransactionId = null;
       if (modalTitle) modalTitle.textContent = 'Record New Transaction';
       modalForm.reset();
+      if (typeof window.setTransactionModalType === 'function') {
+        window.setTransactionModalType('expense');
+      }
 
       // Refresh table or page data
       await loadTransactions();
+      window.dispatchEvent(new CustomEvent('vaultwealth:refresh'));
 
     } catch (err) {
       console.error('[VaultWealth] Error saving transaction:', err);
@@ -403,10 +448,20 @@ window.handleEditClick = function(id) {
   const incomeBtn = document.getElementById('modalTypeIncome');
   const categorySelect = document.getElementById('modalCategorySelect');
 
-  if (tx.type === 'income') {
-    incomeBtn?.click();
+  if (tx.category === 'Subscriptions' && typeof window.setTransactionModalType === 'function') {
+    window.setTransactionModalType('subscription');
+  } else if (tx.type === 'income') {
+    if (typeof window.setTransactionModalType === 'function') {
+      window.setTransactionModalType('income');
+    } else {
+      incomeBtn?.click();
+    }
   } else {
-    expenseBtn?.click();
+    if (typeof window.setTransactionModalType === 'function') {
+      window.setTransactionModalType('expense');
+    } else {
+      expenseBtn?.click();
+    }
   }
 
   // Set Form Values
@@ -449,6 +504,14 @@ window.handleDeleteClick = async function(id) {
   if (!client) return;
 
   try {
+    const user = await getCurrentUser();
+    if (user && typeof window.syncTransactionWithSubscriptions === 'function') {
+      await window.syncTransactionWithSubscriptions(client, user, {
+        action: 'delete',
+        txId: id
+      });
+    }
+
     const { error } = await client
       .from('transactions')
       .delete()

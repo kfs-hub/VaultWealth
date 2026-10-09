@@ -22,6 +22,16 @@ const CATEGORIES = {
     { id: 'allowance', name: 'Allowance / Pocket Money', iconId: 'gift', color: '#f59e0b' },
     { id: 'investment', name: 'Investments / Returns', iconId: 'trending-up', color: '#8b5cf6' },
     { id: 'other_income', name: 'Other Income', iconId: 'banknote', color: '#64748b' }
+  ],
+  subscription: [
+    { id: 'subscriptions', name: 'Subscriptions', iconId: 'subscriptions', color: '#6366f1' },
+    { id: 'entertainment', name: 'Entertainment', iconId: 'entertainment', color: '#8b5cf6' },
+    { id: 'bills', name: 'Bills & Utilities', iconId: 'bills', color: '#eab308' },
+    { id: 'healthcare', name: 'Healthcare & Fitness', iconId: 'healthcare', color: '#10b981' },
+    { id: 'education', name: 'Education', iconId: 'education', color: '#3b82f6' },
+    { id: 'shopping', name: 'Shopping & Prime', iconId: 'shopping', color: '#ec4899' },
+    { id: 'transport', name: 'Transport', iconId: 'transport', color: '#06b6d4' },
+    { id: 'other', name: 'Other', iconId: 'package', color: '#64748b' }
   ]
 };
 
@@ -81,3 +91,46 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// Brand Visual Database for Subscriptions
+const BRAND_METADATA = {
+  'netflix': { name: 'Netflix', color: '#E50914', letter: 'N' },
+  'spotify': { name: 'Spotify', color: '#1DB954', letter: 'S' },
+  'youtube': { name: 'YouTube', color: '#FF0000', letter: 'Y' },
+  'aws': { name: 'AWS', color: '#FF9900', letter: 'A' },
+  'github': { name: 'GitHub', color: '#333333', letter: 'G' },
+  'apple': { name: 'Apple', color: '#888888', letter: 'A' },
+  'icloud': { name: 'iCloud', color: '#0070C9', letter: 'iC' },
+  'chatgpt': { name: 'ChatGPT', color: '#10A37F', letter: 'AI' },
+  'openai': { name: 'OpenAI', color: '#10A37F', letter: 'AI' },
+  'prime': { name: 'Amazon Prime', color: '#00A8E1', letter: 'P' },
+  'amazon': { name: 'Amazon Prime', color: '#00A8E1', letter: 'P' },
+  'disney': { name: 'Disney+', color: '#113CCF', letter: 'D' },
+  'hotstar': { name: 'Disney+ Hotstar', color: '#113CCF', letter: 'H' },
+  'gym': { name: 'Gym / Fitness', color: '#10B981', letter: 'G' },
+  'fitness': { name: 'Fitness Club', color: '#10B981', letter: 'F' },
+  'notion': { name: 'Notion', color: '#191919', letter: 'N' },
+  'google': { name: 'Google One', color: '#4285F4', letter: 'G' },
+  'figma': { name: 'Figma', color: '#F24E1E', letter: 'F' },
+  'linkedin': { name: 'LinkedIn Premium', color: '#0A66C2', letter: 'in' },
+  'coursera': { name: 'Coursera Plus', color: '#0056D2', letter: 'C' }
+};
+
+function detectBrandInfo(serviceName) {
+  if (!serviceName) return { color: '#6366f1', letter: 'S' };
+  const clean = serviceName.toLowerCase();
+  for (const [key, val] of Object.entries(BRAND_METADATA)) {
+    if (clean.includes(key)) {
+      return val;
+    }
+  }
+  return {
+    color: '#6366f1',
+    letter: (serviceName.trim()[0] || 'S').toUpperCase()
+  };
+}
+
+// Empty fallback - only real user subscriptions are tracked
+const MOCK_SUBSCRIPTIONS = [];
+
+

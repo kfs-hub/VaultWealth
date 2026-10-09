@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Subscriptions — VaultWealth</title>
+  <meta name="description"
+    content="Track recurring subscriptions, monthly burn rate, upcoming renewals, and auto-generated ledger expenses.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="css/app-theme.css">
+  <link rel="stylesheet" href="css/pattern-waves.css">
+  <link rel="stylesheet" href="css/modern-charts.css">
+  <link rel="stylesheet" href="css/upload.css">
+  <link rel="stylesheet" href="css/subscriptions.css">
+  <link rel="stylesheet" href="css/chatbot.css">
+</head>
+
+<body>
+  <div id="bg" aria-hidden="true"></div>
+  <div class="app-container">
+
+    <!-- Top Horizontal Navigation Bar -->
+    <header class="nav navbar-top">
+      <a href="/" class="brand" id="navBrand">
+        <span class="brand-icon-mark" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+            <path d="M2 17l10 5 10-5"></path>
+            <path d="M2 12l10 5 10-5"></path>
+          </svg>
+        </span>
+        <span class="brand-text">VaultWealth</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="/dashboard" id="navDashboard" class="nav-item">Dashboard</a></li>
+          <li><a href="/transactions" id="navTransactions" class="nav-item">Transactions</a></li>
+          <li><a href="/subscriptions" id="navSubscriptions" class="nav-item active">Subscriptions</a></li>
+          <li><a href="/analytics" id="navAnalytics" class="nav-item">Analytics</a></li>
+          <li><a href="/profile" id="navProfile" class="nav-item">Profile</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn btn-outline btn-sm nav-btn-upload" id="uploadStatementBtn"
+          onclick="openStatementUploadModal()" title="Upload Bank Statement">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span class="btn-text-full">Upload Statement</span>
+          <span class="btn-text-short">Upload</span>
+        </button>
+        <button class="btn btn-primary btn-sm nav-btn-add" data-open-modal="transactionModal" title="Record Transaction">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span class="btn-text-full">Add Transaction</span>
+          <span class="btn-text-short">Add</span>
+        </button>
+        <a href="/login" class="nav-signin nav-btn-signout" data-action="logout" id="navSignOut" title="Sign out">
+          <span class="btn-text-full">Sign out</span>
+          <svg class="btn-text-short" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Content Wrapper -->
+    <main class="main-wrapper">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="header-title-section">
+          <h1>Subscription <em>Tracker.</em></h1>
+          <p class="header-subtitle">Manage recurring services, view monthly burn rates, and forecast upcoming renewals.</p>
+        </div>
+        <div class="sub-header-actions">
+          <button type="button" id="btnHeaderNotifStatus" class="btn btn-secondary btn-sm" onclick="handleNotificationToggleClick()" title="Configure 3-Day Renewal Notifications">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span id="headerNotifStatusText">Alerts (3d)</span>
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="openTransactionModalWithSubscription()" title="Add Subscription via Transaction Modal">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add Subscription
+          </button>
+        </div>
+      </div>
+
+      <!-- Device 3-Day Notification Prompt Banner -->
+      <div id="deviceNotifBanner" class="device-notif-banner" style="display: none;">
+        <div class="device-notif-banner-left">
+          <div class="device-notif-icon-ring">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+          <div class="device-notif-banner-text">
+            <div class="device-notif-banner-title">Enable 3-Day Renewal Alerts on This Device</div>
+            <div class="device-notif-banner-desc">Get notified directly on your desktop or phone 3 days prior to recurring renewals so you never miss a payment or unwanted charge.</div>
+          </div>
+        </div>
+        <div class="device-notif-banner-actions">
+          <button type="button" id="btnEnableDeviceNotif" class="btn btn-primary btn-sm" onclick="enableDeviceNotificationsFromBanner()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Enable Notifications
+          </button>
+          <button type="button" id="btnDismissDeviceNotif" class="btn btn-secondary btn-sm" onclick="dismissDeviceNotificationBanner()" title="Dismiss for now">
+            Maybe Later
+          </button>
+        </div>
+      </div>
+
+      <!-- Top Summary Metric Cards -->
+      <section class="sub-metrics-grid" aria-label="Subscription Summary Metrics">
+        <!-- Monthly Burn -->
+        <div class="sub-metric-card sub-metric-burn">
+          <div class="sub-metric-label">
+            <span>Monthly Burn</span>
+            <div class="sub-metric-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="sub-metric-value" id="metricMonthlyBurn">₹0.00</div>
+          <div class="sub-metric-subtext">Normalized monthly recurring total</div>
+        </div>
+
+        <!-- Annual Run Rate -->
+        <div class="sub-metric-card sub-metric-annual">
+          <div class="sub-metric-label">
+            <span>Annual Run Rate</span>
+            <div class="sub-metric-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div class="sub-metric-value" id="metricAnnualRunRate">₹0.00</div>
+          <div class="sub-metric-subtext">Projected 12-month commitment</div>
+        </div>
+
+        <!-- Active Subscriptions -->
+        <div class="sub-metric-card sub-metric-active">
+          <div class="sub-metric-label">
+            <span>Active Services</span>
+            <div class="sub-metric-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div class="sub-metric-value" id="metricActiveCount">0 Active</div>
+          <div class="sub-metric-subtext" id="metricActiveSubtext">0 paused · 0 total</div>
+        </div>
+
+        <!-- Next Immediate Renewal -->
+        <div class="sub-metric-card sub-metric-next">
+          <div class="sub-metric-label">
+            <span>Imminent Renewal</span>
+            <div class="sub-metric-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+          </div>
+          <div class="sub-metric-value" id="metricNextRenewal" style="font-size: 1.35rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">—</div>
+          <div class="sub-metric-subtext" id="metricNextSubtext">Next billing schedule</div>
+        </div>
+      </section>
+
+      <!-- Upcoming Renewals Timeline Ribbon -->
+      <section class="sub-timeline-section" aria-label="Upcoming Renewals in 30 Days">
+        <div class="sub-timeline-header">
+          <h2 class="sub-timeline-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            Upcoming Renewals Timeline (Next 30 Days)
+          </h2>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">Horizontal scroll to preview</span>
+        </div>
+        <div class="sub-timeline-strip" id="upcomingTimelineStrip">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- Filter, Search & Controls Bar -->
+      <div class="sub-controls-bar">
+        <div class="sub-search-box">
+          <svg class="sub-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="subSearchInput" class="sub-search-input" placeholder="Search subscriptions (e.g. Netflix, Gym)..." autocomplete="off">
+        </div>
+
+        <div class="sub-filters-group">
+          <!-- Status Pills -->
+          <div class="sub-status-pills">
+            <button class="status-pill-btn active" data-status-filter="all">All</button>
+            <button class="status-pill-btn" data-status-filter="active">Active</button>
+            <button class="status-pill-btn" data-status-filter="paused">Paused</button>
+            <button class="status-pill-btn" data-status-filter="cancelled">Cancelled</button>
+          </div>
+
+          <!-- Billing Cycle Filter -->
+          <select id="subCycleFilterSelect" class="filter-select" aria-label="Filter by billing cycle">
+            <option value="all">All Cycles</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="weekly">Weekly</option>
+            <option value="custom">Custom</option>
+          </select>
+
+          <!-- Sort Select -->
+          <select id="subSortSelect" class="filter-select" aria-label="Sort subscriptions">
+            <option value="date_asc">Renewal Date: Soonest</option>
+            <option value="amount_desc">Cost: Highest First</option>
+            <option value="name_asc">Name: A to Z</option>
+          </select>
+
+          <!-- View Mode Toggle -->
+          <div class="sub-view-toggle">
+            <button class="view-btn active" id="viewGridBtn" title="Grid View">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </button>
+            <button class="view-btn" id="viewTableBtn" title="Table View">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subscriptions Grid Container -->
+      <section class="sub-cards-grid" id="subscriptionsGrid">
+        <!-- Rendered by subscriptions.js -->
+      </section>
+
+      <!-- Subscriptions Table View (Alternative) -->
+      <div class="table-container sub-table-view" id="subscriptionsTableView">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Cadence Cost</th>
+              <th>Monthly Equivalent</th>
+              <th>Renewal Date</th>
+              <th>Status</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="subscriptionsTableBody">
+            <!-- Rendered by subscriptions.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Analytics Breakdown Donut -->
+      <section class="sub-analytics-grid" aria-label="Subscription Analytics">
+        <div class="sub-chart-box">
+          <div class="sub-chart-header">
+            <h3 class="sub-chart-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+              </svg>
+              Spend by Category (Monthly Burn)
+            </h3>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Active Subscriptions</span>
+          </div>
+          <div class="sub-chart-canvas-wrapper">
+            <canvas id="subCategoryDonutCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="sub-chart-box" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div class="sub-chart-header">
+              <h3 class="sub-chart-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                Auto-Ledger Reconciliation
+              </h3>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+              VaultWealth automatically records recurring expense transactions on your ledger whenever a renewal date arrives. 
+              Each cycle rollover keeps your net cash flow and balance metrics completely synchronized without manual data entry.
+            </p>
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.5rem;">
+                <span style="color: var(--text-muted);">Auto-Create Status:</span>
+                <span style="color: #34d399; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  Engine Running
+                </span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem;">
+                <span style="color: var(--text-muted);">Notification Window:</span>
+                <span style="color: var(--text-secondary);">3 Days Before Due Date</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <a href="/transactions" class="btn btn-outline btn-sm" style="width: 100%; justify-content: center; display: inline-flex; align-items: center; gap: 6px;">
+              <span>View Main Transactions Ledger</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- App Bottom Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="brand-text">VaultWealth</span>
+          <span class="footer-copy">&copy; 2026 VaultWealth</span>
+        </div>
+        <div class="footer-links">
+          <a href="/dashboard">Dashboard</a>
+          <a href="/transactions">Transactions</a>
+          <a href="/subscriptions">Subscriptions</a>
+          <a href="/analytics">Analytics</a>
+          <a href="/profile">Profile</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-nav" aria-label="Mobile Navigation">
+      <a href="/dashboard" class="mobile-nav-item" id="mobileNavDashboard">
+        <svg class="mobile-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2.69l8 6.4V20a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-5a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.09l8-6.4z"/>
+        </svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="/transactions" class="mobile-nav-item" id="mobileNavTransactions">
+        <svg class="mobile-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+          <line x1="2" y1="10" x2="22" y2="10"></line>
+        </svg>
+        <span>Transactions</span>
+      </a>
+      <a href="/subscriptions" class="mobile-nav-item active" id="mobileNavSubscriptions">
+        <svg class="mobile-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        <span>Subscriptions</span>
+      </a>
+      <a href="/analytics" class="mobile-nav-item" id="mobileNavAnalytics">
+        <svg class="mobile-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        <span>Analytics</span>
+      </a>
+      <a href="/profile" class="mobile-nav-item" id="mobileNavProfile">
+        <svg class="mobile-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <!-- In-App Toast Container for Renewal Alerts -->
+  <div class="sub-alert-container" id="subAlertContainer"></div>
+
+  <!-- Reusable "+ Add Transaction" Modal Popup -->
+  <div id="transactionModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Record Transaction</h3>
+        <button type="button" class="modal-close" data-close-modal>&times;</button>
+      </div>
+
+      <form id="transactionModalForm">
+        <div class="modal-body">
+          <div class="type-segmented-control">
+            <button type="button" id="modalTypeExpense" class="type-option active-expense">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path><line x1="12" y1="10" x2="12" y2="3"></line><polyline points="9 6 12 3 15 6"></polyline>
+              </svg>
+              Expense
+            </button>
+            <button type="button" id="modalTypeIncome" class="type-option">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path><line x1="12" y1="3" x2="12" y2="10"></line><polyline points="9 7 12 10 15 7"></polyline>
+              </svg>
+              Income
+            </button>
+            <button type="button" id="modalTypeSubscription" class="type-option">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              Subscription
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label for="modalAmount" class="form-label">Amount (₹)</label>
+            <div class="input-wrapper" style="width: 100%;">
+              <span class="input-icon" style="font-family: var(--font-mono); font-weight: 600;">₹</span>
+              <input type="number" id="modalAmount" class="form-control" placeholder="0.00" step="0.01" min="0.01" required>
+            </div>
+          </div>
+
+          <!-- Subscription-specific Cadence & Renewal Row -->
+          <div class="form-row" id="modalSubCadenceRow" style="display: none; gap: 0.75rem;">
+            <div class="form-group" style="flex: 1;">
+              <label for="modalSubCadence" class="form-label">Billing Cadence</label>
+              <select id="modalSubCadence" class="form-control">
+                <option value="monthly" selected>Monthly</option>
+                <option value="yearly">Yearly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="modalSubNextRenewal" class="form-label">Next Renewal Date</label>
+              <input type="date" id="modalSubNextRenewal" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="modalCategorySelect" class="form-label">Category</label>
+            <select id="modalCategorySelect" class="form-control" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="modalDate" class="form-label" id="modalDateLabel">Date</label>
+            <input type="date" id="modalDate" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="modalDescription" class="form-label" id="modalDescLabel">
+              Description <span class="optional">(Optional)</span>
+            </label>
+            <input type="text" id="modalDescription" class="form-control" placeholder="e.g. Grocery store, freelance stipend">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Save to Vault</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add / Edit Subscription Modal -->
+  <div class="modal-overlay" id="subscriptionModal" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="subModalTitle">Add New Subscription</h3>
+        <button type="button" class="modal-close" onclick="closeSubscriptionModal()" aria-label="Close modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form id="subscriptionForm" class="modal-form">
+        <div class="form-row">
+          <div class="form-group" style="flex: 2;">
+            <label class="form-label" for="subFormName">Service / Subscription Name *</label>
+            <input type="text" id="subFormName" class="form-control" placeholder="e.g. Netflix, Spotify, Gym, AWS" required>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label" for="subFormAmount">Amount (₹) *</label>
+            <input type="number" id="subFormAmount" class="form-control" step="0.01" min="0.01" placeholder="649.00" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="subFormCycle">Billing Cadence *</label>
+            <select id="subFormCycle" class="form-control" required>
+              <option value="monthly" selected>Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="weekly">Weekly</option>
+              <option value="custom">Custom Days</option>
+            </select>
+          </div>
+          <div class="form-group" id="customCycleDaysGroup" style="display: none;">
+            <label class="form-label" for="subFormCustomDays">Cycle Length (Days) *</label>
+            <input type="number" id="subFormCustomDays" class="form-control" min="1" max="365" placeholder="45">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="subFormNextDate">Next Renewal Date *</label>
+            <input type="date" id="subFormNextDate" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="subFormCategory">Category</label>
+            <select id="subFormCategory" class="form-control">
+              <option value="Subscriptions" selected>Subscriptions</option>
+              <option value="Bills & Utilities">Bills & Utilities</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Healthcare">Healthcare & Fitness</option>
+              <option value="Education">Education</option>
+              <option value="Shopping">Shopping & Prime</option>
+              <option value="Transport">Transport</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="subFormPayment">Payment Method</label>
+            <select id="subFormPayment" class="form-control">
+              <option value="Credit Card" selected>Credit Card</option>
+              <option value="Debit Card">Debit Card</option>
+              <option value="UPI AutoPay">UPI AutoPay</option>
+              <option value="Net Banking">Net Banking</option>
+              <option value="Apple Pay">Apple Pay</option>
+              <option value="PayPal">PayPal</option>
+              <option value="Cash / Other">Cash / Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="subFormStatus">Status</label>
+            <select id="subFormStatus" class="form-control">
+              <option value="active" selected>Active</option>
+              <option value="paused">Paused</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="subFormReminderDays">Alert Days Before</label>
+            <input type="number" id="subFormReminderDays" class="form-control" min="0" max="30" value="3">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="subFormBrandColor">Brand Accent Color (Optional)</label>
+          <input type="color" id="subFormBrandColor" class="form-control" style="height: 42px; padding: 4px; cursor: pointer;" value="#6366f1">
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem;">
+          <input type="checkbox" id="subFormAutoLog" checked style="width: 18px; height: 18px; accent-color: var(--brand-primary); cursor: pointer;">
+          <label for="subFormAutoLog" style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer;">
+            Auto-generate expense in transactions ledger when renewal date arrives
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="subFormNotes">Notes / Description (Optional)</label>
+          <input type="text" id="subFormNotes" class="form-control" placeholder="e.g. Shared with family, Student discount">
+        </div>
+
+        <div class="modal-actions" style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeSubscriptionModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Subscription</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Supabase JS Client CDN & App Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SheetJS for Excel parsing -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <!-- pdf.js for PDF parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <!-- Application scripts -->
+  <script src="js/icons.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/mock-data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/statement-parser.js"></script>
+  <script src="js/statement-upload.js"></script>
+  <script src="js/glass-surface.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/subscriptions.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script type="module">
+    import { mountPatternWavesBackground } from './js/pattern-waves.js';
+    mountPatternWavesBackground(document.getElementById('bg'));
+  </script>
+</body>
+
+</html>

@@ -35,6 +35,7 @@
         <ul class="nav-links">
           <li><a href="/dashboard" id="navDashboard" class="nav-item">Dashboard</a></li>
           <li><a href="/transactions" id="navTransactions" class="nav-item">Transactions</a></li>
+          <li><a href="/subscriptions" id="navSubscriptions" class="nav-item">Subscriptions</a></li>
           <li><a href="/analytics" id="navAnalytics" class="nav-item active">Analytics</a></li>
           <li><a href="/profile" id="navProfile" class="nav-item">Profile</a></li>
         </ul>
@@ -151,6 +152,24 @@
             <div id="analyticForecastValue" class="stat-value" style="color: #38bdf8;">₹0.00</div>
             <div id="analyticForecastFooter" class="stat-footer">
               <span>Ordinary Least Squares Model</span>
+            </div>
+          </div>
+
+          <!-- Subscription Spend Commitment Card -->
+          <div class="stat-card" style="border-color: rgba(99, 102, 241, 0.3); cursor: pointer;" onclick="window.location.href='/subscriptions'" title="Manage Subscriptions">
+            <div class="stat-header">
+              <span class="stat-label">Subscription Commitments</span>
+              <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.25);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+              </div>
+            </div>
+            <div id="analyticSubscriptionSpend" class="stat-value" style="color: #a5b4fc;">₹0.00 / mo</div>
+            <div id="analyticSubscriptionFooter" class="stat-footer">
+              <span>0% of monthly average expenses</span>
             </div>
           </div>
         </section>
@@ -358,6 +377,14 @@
         </svg>
         <span>Transactions</span>
       </a>
+      <a href="/subscriptions" class="mobile-nav-item" id="mobileNavSubscriptions">
+        <svg class="mobile-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        <span>Subscriptions</span>
+      </a>
       <a href="/analytics" class="mobile-nav-item active" id="mobileNavAnalytics">
         <svg class="mobile-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -400,6 +427,14 @@
               </svg>
               Income
             </button>
+            <button type="button" id="modalTypeSubscription" class="type-option">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              Subscription
+            </button>
           </div>
 
           <div class="form-group">
@@ -407,6 +442,23 @@
             <div class="input-wrapper" style="width: 100%;">
               <span class="input-icon" style="font-family: var(--font-mono); font-weight: 600;">₹</span>
               <input type="number" id="modalAmount" class="form-control" placeholder="0.00" step="0.01" min="0.01" required>
+            </div>
+          </div>
+
+          <!-- Subscription-specific Cadence & Renewal Row -->
+          <div class="form-row" id="modalSubCadenceRow" style="display: none; gap: 0.75rem;">
+            <div class="form-group" style="flex: 1;">
+              <label for="modalSubCadence" class="form-label">Billing Cadence</label>
+              <select id="modalSubCadence" class="form-control">
+                <option value="monthly" selected>Monthly</option>
+                <option value="yearly">Yearly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="modalSubNextRenewal" class="form-label">Next Renewal Date</label>
+              <input type="date" id="modalSubNextRenewal" class="form-control">
             </div>
           </div>
 

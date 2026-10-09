@@ -22,6 +22,7 @@ app.post('/api/chat', express.json({ limit: '64kb' }), require('./api/chat'));
 const rewrites = {
   '/dashboard': '/dashboard.html',
   '/transactions': '/transactions.html',
+  '/subscriptions': '/subscriptions.html',
   '/analytics': '/analytics.html',
   '/profile': '/profile.html',
   '/login': '/login.html',

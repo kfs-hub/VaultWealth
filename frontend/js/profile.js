@@ -17,9 +17,132 @@ onReady(async () => {
 
   await loadUserProfile();
   initProfileForm();
+  initPreferences();
   initExportCSV();
   initClearData();
 });
+
+function initPreferences() {
+  const subReminderCheckbox = document.getElementById('prefSubReminders');
+  if (subReminderCheckbox) {
+    const savedPref = localStorage.getItem('vaultwealth_sub_reminders');
+    if (savedPref !== null) {
+      subReminderCheckbox.checked = savedPref === 'true';
+    }
+    subReminderCheckbox.addEventListener('change', async (e) => {
+      localStorage.setItem('vaultwealth_sub_reminders', e.target.checked);
+      const client = getSupabaseClient();
+      const user = await getCurrentUser();
+      if (client && user) {
+        try {
+          await client
+            .from('profiles')
+            .update({ subscription_reminders_enabled: e.target.checked, updated_at: new Date().toISOString() })
+            .eq('id', user.id);
+        } catch (err) {
+          console.warn('[VaultWealth] Could not save reminder pref to DB:', err);
+        }
+      }
+    });
+  }
+
+  // Device & Desktop Push Notifications
+  const deviceNotifCheckbox = document.getElementById('prefDeviceNotifications');
+  const notifStatusBadge = document.getElementById('notifStatusBadge');
+  const notifBlockedHelp = document.getElementById('notifBlockedHelp');
+  const testNotifBtn = document.getElementById('btnTestNotification');
+
+  function updateDeviceNotifUI() {
+    if (!window.VaultNotifications || !window.VaultNotifications.isSupported()) {
+      if (notifStatusBadge) {
+        notifStatusBadge.textContent = 'Not Supported';
+        notifStatusBadge.style.background = 'rgba(255,255,255,0.08)';
+        notifStatusBadge.style.color = 'var(--text-muted)';
+      }
+      if (deviceNotifCheckbox) deviceNotifCheckbox.disabled = true;
+      if (testNotifBtn) testNotifBtn.disabled = true;
+      return;
+    }
+
+    const perm = window.VaultNotifications.getPermission();
+    const isEnabled = window.VaultNotifications.isEnabled();
+
+    if (perm === 'granted') {
+      if (notifStatusBadge) {
+        notifStatusBadge.textContent = isEnabled ? 'Active (3 Days Prior)' : 'Muted';
+        notifStatusBadge.style.background = isEnabled ? 'rgba(52, 211, 153, 0.15)' : 'rgba(255, 255, 255, 0.08)';
+        notifStatusBadge.style.color = isEnabled ? '#34d399' : 'var(--text-muted)';
+      }
+      if (deviceNotifCheckbox) {
+        deviceNotifCheckbox.disabled = false;
+        deviceNotifCheckbox.checked = isEnabled;
+      }
+      if (notifBlockedHelp) notifBlockedHelp.style.display = 'none';
+      if (testNotifBtn) testNotifBtn.disabled = false;
+    } else if (perm === 'denied') {
+      if (notifStatusBadge) {
+        notifStatusBadge.textContent = 'Blocked by Browser';
+        notifStatusBadge.style.background = 'rgba(244, 63, 94, 0.15)';
+        notifStatusBadge.style.color = '#fb7185';
+      }
+      if (deviceNotifCheckbox) {
+        deviceNotifCheckbox.disabled = true;
+        deviceNotifCheckbox.checked = false;
+      }
+      if (notifBlockedHelp) notifBlockedHelp.style.display = 'block';
+      if (testNotifBtn) testNotifBtn.disabled = true;
+    } else {
+      // 'default'
+      if (notifStatusBadge) {
+        notifStatusBadge.textContent = 'Permission Needed';
+        notifStatusBadge.style.background = 'rgba(251, 191, 36, 0.15)';
+        notifStatusBadge.style.color = '#fbbf24';
+      }
+      if (deviceNotifCheckbox) {
+        deviceNotifCheckbox.disabled = false;
+        deviceNotifCheckbox.checked = false;
+      }
+      if (notifBlockedHelp) notifBlockedHelp.style.display = 'none';
+      if (testNotifBtn) testNotifBtn.disabled = false;
+    }
+  }
+
+  updateDeviceNotifUI();
+
+  if (deviceNotifCheckbox) {
+    deviceNotifCheckbox.addEventListener('change', async (e) => {
+      if (e.target.checked) {
+        const perm = window.VaultNotifications.getPermission();
+        if (perm === 'default') {
+          const res = await window.VaultNotifications.requestPermission();
+          if (res !== 'granted') {
+            e.target.checked = false;
+          }
+        } else if (perm === 'granted') {
+          localStorage.setItem('vaultwealth_device_notifications', 'true');
+          window.VaultNotifications.saveProfilePref(true);
+        }
+      } else {
+        localStorage.setItem('vaultwealth_device_notifications', 'false');
+        window.VaultNotifications.saveProfilePref(false);
+      }
+      updateDeviceNotifUI();
+    });
+  }
+
+  if (testNotifBtn) {
+    testNotifBtn.addEventListener('click', async () => {
+      if (window.VaultNotifications) {
+        await window.VaultNotifications.sendTestNotification();
+        updateDeviceNotifUI();
+      }
+    });
+  }
+
+  window.addEventListener('vaultwealth:notif-permission-changed', () => {
+    updateDeviceNotifUI();
+  });
+}
 
 /**
  * Loads real profile information from Supabase
@@ -147,17 +270,27 @@ function initExportCSV() {
         return;
       }
 
-      // Build CSV
-      const headers = ['ID', 'Date', 'Type', 'Category', 'Amount (INR)', 'Description', 'Created At'];
-      const rows = transactions.map(t => [
-        t.id,
-        t.transaction_date,
-        t.type,
-        `"${(t.category || '').replace(/"/g, '""')}"`,
-        t.amount,
-        `"${(t.description || '').replace(/"/g, '""')}"`,
-        t.created_at
-      ]);
+      // Build CSV with standard financial Debit/Credit separation
+      const headers = ['ID', 'Date', 'Type', 'Category', 'Withdrawal (Debit)', 'Deposit (Credit)', 'Amount (INR)', 'Description', 'Created At'];
+      const rows = transactions.map(t => {
+        const isIncome = (t.type || '').toLowerCase() === 'income';
+        const numAmt = (parseFloat(t.amount) || 0).toFixed(2);
+        const withdrawal = isIncome ? '' : numAmt;
+        const deposit = isIncome ? numAmt : '';
+        const displayType = isIncome ? 'Income' : 'Expense';
+
+        return [
+          t.id,
+          t.transaction_date,
+          displayType,
+          `"${(t.category || '').replace(/"/g, '""')}"`,
+          withdrawal,
+          deposit,
+          numAmt,
+          `"${(t.description || '').replace(/"/g, '""')}"`,
+          t.created_at
+        ];
+      });
 
       const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
       
