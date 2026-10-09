@@ -39,6 +39,8 @@ function renderDashboardSkeletons() {
   const incomeEl = document.getElementById('dashTotalIncome');
   const expenseEl = document.getElementById('dashTotalExpense');
   const savingsEl = document.getElementById('dashSavingsRate');
+  const incomeFooterEl = document.getElementById('dashIncomeFooter');
+  const expenseFooterEl = document.getElementById('dashExpenseFooter');
   const burnEl = document.getElementById('dashMonthlySubBurn');
   const countEl = document.getElementById('dashActiveSubsCount');
   const tbody = document.getElementById('recentTransactionsTableBody');
@@ -49,6 +51,8 @@ function renderDashboardSkeletons() {
   if (incomeEl) incomeEl.innerHTML = '<span class="skeleton skeleton-metric" style="width: 110px;"></span>';
   if (expenseEl) expenseEl.innerHTML = '<span class="skeleton skeleton-metric" style="width: 110px;"></span>';
   if (savingsEl) savingsEl.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 140px;"></span>';
+  if (incomeFooterEl) incomeFooterEl.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 140px;"></span>';
+  if (expenseFooterEl) expenseFooterEl.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 140px;"></span>';
   if (burnEl) burnEl.innerHTML = '<span class="skeleton skeleton-metric" style="width: 100px;"></span>';
   if (countEl) countEl.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 140px;"></span>';
 
@@ -139,13 +143,29 @@ async function loadDashboardData() {
 function updateMetricCards(transactions) {
   let totalIncome = 0;
   let totalExpense = 0;
+  let curMonthIncome = 0;
+  let curMonthExpense = 0;
+  let incomeTxCount = 0;
+  let expenseTxCount = 0;
+
+  const now = new Date();
+  const currentYearMonth = now.toISOString().substring(0, 7); // "YYYY-MM"
 
   transactions.forEach(tx => {
     const amt = parseFloat(tx.amount) || 0;
+    const yyyymm = tx.transaction_date ? tx.transaction_date.substring(0, 7) : '';
     if (tx.type === 'income') {
       totalIncome += amt;
+      incomeTxCount++;
+      if (yyyymm === currentYearMonth) {
+        curMonthIncome += amt;
+      }
     } else if (tx.type === 'expense') {
       totalExpense += amt;
+      expenseTxCount++;
+      if (yyyymm === currentYearMonth) {
+        curMonthExpense += amt;
+      }
     }
   });
 
@@ -157,6 +177,8 @@ function updateMetricCards(transactions) {
   const incomeEl = document.getElementById('dashTotalIncome');
   const expenseEl = document.getElementById('dashTotalExpense');
   const savingsEl = document.getElementById('dashSavingsRate');
+  const incomeFooterEl = document.getElementById('dashIncomeFooter');
+  const expenseFooterEl = document.getElementById('dashExpenseFooter');
 
   if (balanceEl) balanceEl.textContent = formatCurrency(netBalance);
   if (incomeEl) incomeEl.textContent = formatCurrency(totalIncome);
@@ -167,6 +189,24 @@ function updateMetricCards(transactions) {
       savingsEl.innerHTML = `<span class="${netBalance >= 0 ? 'stat-trend-up' : 'stat-trend-down'}">${savingsRate}%</span> Savings Rate`;
     } else {
       savingsEl.textContent = 'No income recorded yet';
+    }
+  }
+
+  // Stat footer for Total Income
+  if (incomeFooterEl) {
+    if (totalIncome > 0) {
+      incomeFooterEl.innerHTML = `<span><span style="color: #34d399; font-weight: 600;">${formatCurrency(curMonthIncome)}</span> this month · ${incomeTxCount} deposit${incomeTxCount === 1 ? '' : 's'}</span>`;
+    } else {
+      incomeFooterEl.textContent = '0 deposits recorded';
+    }
+  }
+
+  // Stat footer for Total Expenses
+  if (expenseFooterEl) {
+    if (totalExpense > 0) {
+      expenseFooterEl.innerHTML = `<span><span style="color: #fb7185; font-weight: 600;">${formatCurrency(curMonthExpense)}</span> this month · ${expenseTxCount} outflow${expenseTxCount === 1 ? '' : 's'}</span>`;
+    } else {
+      expenseFooterEl.textContent = '0 expenses recorded';
     }
   }
 }
