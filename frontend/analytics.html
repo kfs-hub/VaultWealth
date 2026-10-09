@@ -10,8 +10,11 @@
   <link rel="stylesheet" href="css/app-theme.css">
   <link rel="stylesheet" href="css/pattern-waves.css">
   <link rel="stylesheet" href="css/modern-charts.css">
+  <link rel="stylesheet" href="css/smart-insights.css">
   <link rel="stylesheet" href="css/upload.css">
   <link rel="stylesheet" href="css/chatbot.css">
+  <link rel="stylesheet" href="css/skeletons.css">
+  <script src="js/loading-state.js"></script>
   <!-- Chart.js CDN (Used for AI Forecast Multi-Series Canvas) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -101,9 +104,9 @@
                 </svg>
               </div>
             </div>
-            <div id="analyticMomValue" class="stat-value">0.0%</div>
+            <div id="analyticMomValue" class="stat-value"><span class="skeleton skeleton-metric" style="width: 90px;"></span></div>
             <div id="analyticMomFooter" class="stat-footer">
-              <span>Calculating variance against prior month...</span>
+              <span class="skeleton skeleton-text-sm" style="width: 140px;"></span>
             </div>
           </div>
 
@@ -117,9 +120,9 @@
                 </svg>
               </div>
             </div>
-            <div id="analyticTopCategory" class="stat-value" style="font-size: 1.55rem; color: #f59e0b;">None</div>
+            <div id="analyticTopCategory" class="stat-value" style="font-size: 1.55rem; color: #f59e0b;"><span class="skeleton skeleton-metric" style="width: 120px;"></span></div>
             <div id="analyticTopCatFooter" class="stat-footer">
-              <span>No expenses recorded yet</span>
+              <span class="skeleton skeleton-text-sm" style="width: 130px;"></span>
             </div>
           </div>
 
@@ -133,9 +136,9 @@
                 </svg>
               </div>
             </div>
-            <div id="analyticDailyAvg" class="stat-value">₹0.00 / day</div>
+            <div id="analyticDailyAvg" class="stat-value"><span class="skeleton skeleton-metric" style="width: 110px;"></span></div>
             <div id="analyticDailyAvgFooter" class="stat-footer">
-              <span>Averaged across active days</span>
+              <span class="skeleton skeleton-text-sm" style="width: 135px;"></span>
             </div>
           </div>
 
@@ -149,9 +152,9 @@
                 </svg>
               </div>
             </div>
-            <div id="analyticForecastValue" class="stat-value" style="color: #38bdf8;">₹0.00</div>
+            <div id="analyticForecastValue" class="stat-value" style="color: #38bdf8;"><span class="skeleton skeleton-metric" style="width: 100px;"></span></div>
             <div id="analyticForecastFooter" class="stat-footer">
-              <span>Ordinary Least Squares Model</span>
+              <span class="skeleton skeleton-text-sm" style="width: 145px;"></span>
             </div>
           </div>
 
@@ -167,9 +170,9 @@
                 </svg>
               </div>
             </div>
-            <div id="analyticSubscriptionSpend" class="stat-value" style="color: #a5b4fc;">₹0.00 / mo</div>
+            <div id="analyticSubscriptionSpend" class="stat-value" style="color: #a5b4fc;"><span class="skeleton skeleton-metric" style="width: 110px;"></span></div>
             <div id="analyticSubscriptionFooter" class="stat-footer">
-              <span>0% of monthly average expenses</span>
+              <span class="skeleton skeleton-text-sm" style="width: 155px;"></span>
             </div>
           </div>
         </section>
@@ -187,7 +190,19 @@
               </h2>
               <span class="badge badge-category">Volume Breakdown</span>
             </div>
-            <div class="chart-container" id="categoryBarChartContainer"></div>
+            <div class="chart-container" id="categoryBarChartContainer">
+              <div class="skeleton-chart-wrapper">
+                <div class="skeleton-chart-bars">
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 45%;"></div>
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 80%;"></div>
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 55%;"></div>
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 95%;"></div>
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 35%;"></div>
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 65%;"></div>
+                </div>
+                <div class="skeleton skeleton-text" style="width: 60%; height: 10px;"></div>
+              </div>
+            </div>
           </div>
 
           <!-- Cash Flow Proportions Chart -->
@@ -201,7 +216,15 @@
               </h2>
               <span class="badge badge-income" id="cashflowBadge">Net Savings</span>
             </div>
-            <div class="chart-container" id="cashflowChartContainer"></div>
+            <div class="chart-container" id="cashflowChartContainer">
+              <div class="skeleton-chart-wrapper">
+                <div class="skeleton-chart-radial"></div>
+                <div style="display: flex; gap: 0.75rem; justify-content: center; width: 100%;">
+                  <span class="skeleton skeleton-badge" style="width: 70px;"></span>
+                  <span class="skeleton skeleton-badge" style="width: 80px;"></span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -241,9 +264,9 @@
                   </svg>
                 </span>
               </div>
-              <div id="mlPredictedAmount" class="stat-value" style="color: #38bdf8;">₹0.00</div>
+              <div id="mlPredictedAmount" class="stat-value" style="color: #38bdf8;"><span class="skeleton skeleton-metric" style="width: 100px;"></span></div>
               <div id="mlConfidenceRange" class="stat-footer">
-                <span>95% CI: ₹0.00 - ₹0.00</span>
+                <span class="skeleton skeleton-text-sm" style="width: 150px;"></span>
               </div>
             </div>
 
@@ -256,9 +279,9 @@
                   </svg>
                 </span>
               </div>
-              <div id="mlTrendSlope" class="stat-value">+₹0.00</div>
+              <div id="mlTrendSlope" class="stat-value"><span class="skeleton skeleton-metric" style="width: 85px;"></span></div>
               <div id="mlTrendDirection" class="stat-footer">
-                <span>Spending Velocity: Stable</span>
+                <span class="skeleton skeleton-text-sm" style="width: 130px;"></span>
               </div>
             </div>
 
@@ -271,9 +294,9 @@
                   </svg>
                 </span>
               </div>
-              <div id="mlR2Score" class="stat-value" style="color: #a855f7;">0.000</div>
+              <div id="mlR2Score" class="stat-value" style="color: #a855f7;"><span class="skeleton skeleton-metric" style="width: 70px;"></span></div>
               <div id="mlMaeScore" class="stat-footer">
-                <span>Mean Abs Error: ₹0.00</span>
+                <span class="skeleton skeleton-text-sm" style="width: 125px;"></span>
               </div>
             </div>
 
@@ -286,9 +309,9 @@
                   </svg>
                 </span>
               </div>
-              <div id="mlMonthsCount" class="stat-value">0 Months</div>
+              <div id="mlMonthsCount" class="stat-value"><span class="skeleton skeleton-metric" style="width: 85px;"></span></div>
               <div id="mlEquationSnippet" class="stat-footer" style="font-family: var(--font-mono); font-size: 0.72rem;">
-                ŷ = β₀ + β₁X
+                <span class="skeleton skeleton-text-sm" style="width: 100px;"></span>
               </div>
             </div>
           </div>
@@ -343,17 +366,33 @@
           </div>
 
           <div id="analyticsInsightsContainer" style="display: flex; flex-direction: column; gap: 0.85rem;">
-            <div class="insight-card">
-              <div class="insight-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="9" y1="18" x2="15" y2="18"></line><line x1="10" y1="22" x2="14" y2="22"></line>
-                  <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path>
-                </svg>
+            <div class="skeleton-insight-item">
+              <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <span class="skeleton skeleton-circle" style="width: 38px; height: 38px; border-radius: 11px;"></span>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span class="skeleton skeleton-text" style="width: 120px; height: 14px;"></span>
+                    <span class="skeleton skeleton-text-sm" style="width: 70px;"></span>
+                  </div>
+                </div>
+                <span class="skeleton skeleton-badge" style="width: 65px; height: 18px;"></span>
               </div>
-              <div class="insight-content">
-                <h4>Insights Engine</h4>
-                <p>Analyzing budget velocity and category concentration...</p>
+              <span class="skeleton skeleton-text" style="width: 95%;"></span>
+              <span class="skeleton skeleton-text-sm" style="width: 70%;"></span>
+            </div>
+            <div class="skeleton-insight-item">
+              <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <span class="skeleton skeleton-circle" style="width: 38px; height: 38px; border-radius: 11px;"></span>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span class="skeleton skeleton-text" style="width: 130px; height: 14px;"></span>
+                    <span class="skeleton skeleton-text-sm" style="width: 80px;"></span>
+                  </div>
+                </div>
+                <span class="skeleton skeleton-badge" style="width: 65px; height: 18px;"></span>
               </div>
+              <span class="skeleton skeleton-text" style="width: 90%;"></span>
+              <span class="skeleton skeleton-text-sm" style="width: 60%;"></span>
             </div>
           </div>
         </section>
@@ -509,6 +548,7 @@
   <script src="js/statement-parser.js"></script>
   <script src="js/statement-upload.js"></script>
   <script src="js/glass-surface.js"></script>
+  <script src="js/smart-insights.js"></script>
   <script type="module" src="js/analytics.js"></script>
   <script src="js/chatbot.js"></script>
   <script type="module">

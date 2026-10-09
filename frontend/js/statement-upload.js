@@ -82,7 +82,7 @@
             <span class="upload-sample-label">Want to test without a real statement?</span>
             <div class="upload-sample-actions">
               <button type="button" class="btn btn-secondary btn-sm upload-demo-btn" id="loadSampleDemoBtn">
-                ${typeof getSvgIcon === 'function' ? getSvgIcon('lightning', '', { width: 14, height: 14 }) : '⚡'}
+                ${typeof getSvgIcon === 'function' ? getSvgIcon('lightning', '', { width: 14, height: 14 }) : ''}
                 Load Demo Statement
               </button>
               <a href="assets/sample-statement.csv" download="sample-statement.csv" id="downloadSampleLink" class="upload-sample-link">
@@ -1119,8 +1119,9 @@
       return candidates.map((cand, idx) => {
         const isSelected = selectedIndices.has(idx);
         const cycleLabel = cand.billing_cycle || 'monthly';
-        const color = cand.brand_color || '#6366f1';
-        const initial = (cand.name || 'S').charAt(0).toUpperCase();
+        const logoUrl = typeof getSubscriptionLogo === 'function' 
+          ? getSubscriptionLogo(cand) 
+          : '/assets/subscriptions/default-subscription.svg';
         const formattedAmount = Number(cand.amount).toLocaleString('en-IN', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2
@@ -1130,8 +1131,8 @@
         return `
           <div class="sub-detect-card ${isSelected ? 'selected' : ''}" data-idx="${idx}">
             <input type="checkbox" class="sub-detect-checkbox" data-idx="${idx}" ${isSelected ? 'checked' : ''}>
-            <div class="sub-detect-badge-circle" style="background: ${color};">
-              ${escapeHtml(initial)}
+            <div class="sub-detect-badge-circle" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); padding: 5px;">
+              <img src="${logoUrl}" alt="${escapeHtml(cand.name)}" style="width: 100%; height: 100%; object-fit: contain; ${logoUrl.includes('apple.svg') ? 'filter: brightness(0) invert(1);' : ''}" loading="lazy" onerror="this.src='/assets/subscriptions/default-subscription.svg'">
             </div>
             <div class="sub-detect-info">
               <div class="sub-detect-name">

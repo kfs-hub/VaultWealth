@@ -398,6 +398,15 @@
     else render();
   }
 
+  window.openVaultAssistant = function(promptText) {
+    if (els.panel) {
+      toggle(true);
+      if (promptText && typeof submit === 'function') {
+        setTimeout(() => submit(promptText), 120);
+      }
+    }
+  };
+
   // ── Boot ─────────────────────────────────────────────────────────────────
   function init() {
     if (typeof getSupabaseClient !== 'function') return; // only on app pages

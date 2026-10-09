@@ -6,6 +6,9 @@
 
 import { renderModernCategoryBreakdown, renderModernMonthlyTrajectory } from './modern-visuals.js';
 
+let currentDashboardTx = [];
+let currentDashboardSubs = [];
+
 function onReady(fn) {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', fn);
@@ -15,6 +18,7 @@ function onReady(fn) {
 }
 
 onReady(async () => {
+  renderDashboardSkeletons();
   const user = await requireAuth();
   if (!user) return;
 
@@ -22,14 +26,50 @@ onReady(async () => {
 
   // Listen for refresh events (e.g. when user adds transaction via modal)
   window.addEventListener('vaultwealth:refresh', async () => {
+    renderDashboardSkeletons();
     await loadDashboardData();
   });
 });
 
 /**
+ * Injects skeleton placeholders across all dashboard widgets while fetching
+ */
+function renderDashboardSkeletons() {
+  const balanceEl = document.getElementById('dashNetBalance');
+  const incomeEl = document.getElementById('dashTotalIncome');
+  const expenseEl = document.getElementById('dashTotalExpense');
+  const savingsEl = document.getElementById('dashSavingsRate');
+  const burnEl = document.getElementById('dashMonthlySubBurn');
+  const countEl = document.getElementById('dashActiveSubsCount');
+  const tbody = document.getElementById('recentTransactionsTableBody');
+  const renewals = document.getElementById('dashboardUpcomingSubsList');
+  const insights = document.getElementById('dashboardInsightsContainer');
+
+  if (balanceEl) balanceEl.innerHTML = '<span class="skeleton skeleton-metric" style="width: 120px;"></span>';
+  if (incomeEl) incomeEl.innerHTML = '<span class="skeleton skeleton-metric" style="width: 110px;"></span>';
+  if (expenseEl) expenseEl.innerHTML = '<span class="skeleton skeleton-metric" style="width: 110px;"></span>';
+  if (savingsEl) savingsEl.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 140px;"></span>';
+  if (burnEl) burnEl.innerHTML = '<span class="skeleton skeleton-metric" style="width: 100px;"></span>';
+  if (countEl) countEl.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 140px;"></span>';
+
+  if (tbody && window.SkeletonTemplates) {
+    tbody.innerHTML = window.SkeletonTemplates.tableRows(4, 4);
+  }
+  if (renewals && window.SkeletonTemplates) {
+    renewals.innerHTML = window.SkeletonTemplates.renewalItems(2);
+  }
+  if (insights && window.SkeletonTemplates) {
+    insights.innerHTML = window.SkeletonTemplates.insightCards(2);
+  }
+}
+
+/**
  * Loads real transaction data from Supabase and updates all dashboard modules
  */
 async function loadDashboardData() {
+  window.VaultLoader?.start();
+  renderDashboardSkeletons();
+
   const client = getSupabaseClient();
   if (!client) {
     updateMetricCards([]);
@@ -37,6 +77,7 @@ async function loadDashboardData() {
     renderCategoryDoughnutChart([]);
     renderMonthlyTrendChart([]);
     renderDashboardInsights([]);
+    window.VaultLoader?.done();
     return;
   }
 
@@ -47,6 +88,7 @@ async function loadDashboardData() {
     renderCategoryDoughnutChart([]);
     renderMonthlyTrendChart([]);
     renderDashboardInsights([]);
+    window.VaultLoader?.done();
     return;
   }
 
@@ -68,11 +110,12 @@ async function loadDashboardData() {
     }
 
     const txList = transactions || [];
+    currentDashboardTx = txList;
     updateMetricCards(txList);
     renderRecentTransactions(txList.slice(0, 5));
     renderCategoryDoughnutChart(txList);
     renderMonthlyTrendChart(txList);
-    renderDashboardInsights(txList);
+    renderDashboardInsights(txList, currentDashboardSubs);
 
     // Load and update subscription metrics and renewals widget
     await loadDashboardSubscriptions(client, user);
@@ -85,6 +128,8 @@ async function loadDashboardData() {
     renderMonthlyTrendChart([]);
     renderDashboardInsights([]);
     await loadDashboardSubscriptions(null, null);
+  } finally {
+    window.VaultLoader?.done();
   }
 }
 
@@ -192,91 +237,23 @@ function renderMonthlyTrendChart(transactions) {
 /**
  * Dynamically computes Smart Insights from user's actual transactions
  */
-function renderDashboardInsights(transactions) {
+function renderDashboardInsights(transactions, subscriptions = currentDashboardSubs) {
   const container = document.getElementById('dashboardInsightsContainer');
   if (!container) return;
 
-  const expenses = transactions.filter(tx => tx.type === 'expense');
-  const incomes = transactions.filter(tx => tx.type === 'income');
-
-  if (transactions.length === 0) {
+  if (window.SmartInsightsEngine) {
+    window.SmartInsightsEngine.renderDashboardWidget(transactions, subscriptions);
+  } else {
     container.innerHTML = `
-      <div class="insight-card" style="margin-top: 0; padding: 1rem; border-left-color: var(--color-accent);">
+      <div class="insight-card">
         <div class="insight-icon">${typeof getSvgIcon === 'function' ? getSvgIcon('lightbulb') : ''}</div>
         <div class="insight-content">
           <h4>Smart Insights Engine</h4>
-          <p>Add your income and expense transactions to see automated spending patterns and savings alerts.</p>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  // 1. Calculate top spending category
-  const catSums = {};
-  let totalExpense = 0;
-  expenses.forEach(tx => {
-    const amt = parseFloat(tx.amount) || 0;
-    catSums[tx.category] = (catSums[tx.category] || 0) + amt;
-    totalExpense += amt;
-  });
-
-  let topCategory = null;
-  let topAmount = 0;
-  for (const [cat, amt] of Object.entries(catSums)) {
-    if (amt > topAmount) {
-      topAmount = amt;
-      topCategory = cat;
-    }
-  }
-
-  let insightsHtml = '';
-
-  if (topCategory && totalExpense > 0) {
-    const catPercent = ((topAmount / totalExpense) * 100).toFixed(1);
-    insightsHtml += `
-      <div class="insight-card warning" style="margin-top: 0; padding: 1rem;">
-        <div class="insight-icon">${typeof getSvgIcon === 'function' ? getSvgIcon('food') : ''}</div>
-        <div class="insight-content">
-          <h4>Top Spending Category</h4>
-          <p><strong>${escapeHtml(topCategory)}</strong> accounts for <strong>${catPercent}%</strong> (${formatCurrency(topAmount)}) of your total expenses.</p>
+          <p>Analyzing transaction velocity, budget pacing, and subscription renewals...</p>
         </div>
       </div>
     `;
   }
-
-  // 2. Savings Ratio Insight
-  let totalIncome = 0;
-  incomes.forEach(tx => totalIncome += (parseFloat(tx.amount) || 0));
-
-  if (totalIncome > 0) {
-    const netBalance = totalIncome - totalExpense;
-    const savingsPercent = ((netBalance / totalIncome) * 100).toFixed(1);
-
-    if (netBalance >= 0) {
-      insightsHtml += `
-        <div class="insight-card success" style="margin-top: 0; padding: 1rem;">
-          <div class="insight-icon">${typeof getSvgIcon === 'function' ? getSvgIcon('target') : ''}</div>
-          <div class="insight-content">
-            <h4>Positive Savings Rate</h4>
-            <p>You have saved <strong>${savingsPercent}%</strong> of your income so far. Keep it up!</p>
-          </div>
-        </div>
-      `;
-    } else {
-      insightsHtml += `
-        <div class="insight-card danger" style="margin-top: 0; padding: 1rem;">
-          <div class="insight-icon">${typeof getSvgIcon === 'function' ? getSvgIcon('warning') : ''}</div>
-          <div class="insight-content">
-            <h4>Deficit Warning</h4>
-            <p>Your expenses currently exceed your recorded income by <strong>${formatCurrency(Math.abs(netBalance))}</strong>.</p>
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  container.innerHTML = insightsHtml;
 }
 
 /**
@@ -322,8 +299,10 @@ async function loadDashboardSubscriptions(client, user) {
     }
   }
 
+  currentDashboardSubs = subs;
   updateSubscriptionMetrics(subs);
   renderDashboardUpcomingRenewals(subs);
+  renderDashboardInsights(currentDashboardTx, subs);
 }
 
 function updateSubscriptionMetrics(subs) {
@@ -376,14 +355,15 @@ function renderDashboardUpcomingRenewals(subs) {
     const target = new Date(s.next_billing_date + 'T00:00:00');
     const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
     const dayLabel = diffDays <= 0 ? 'Due Today' : diffDays === 1 ? 'Due Tomorrow' : `In ${diffDays} days`;
-    const brand = typeof detectBrandInfo === 'function' ? detectBrandInfo(s.name) : { color: '#6366f1', letter: s.name[0] };
-    const brandColor = s.brand_color || brand.color;
+    const logoUrl = typeof getSubscriptionLogo === 'function' 
+      ? getSubscriptionLogo(s) 
+      : '/assets/subscriptions/default-subscription.svg';
 
     return `
       <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 1rem 1.15rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; cursor: pointer; transition: all 0.2s ease;" onclick="window.location.href='/subscriptions'">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <div style="width: 36px; height: 36px; border-radius: 10px; background: ${brandColor}; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0;">
-            ${escapeHtml(brand.letter)}
+          <div style="width: 38px; height: 38px; border-radius: 11px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 6px; overflow: hidden;">
+            <img src="${logoUrl}" alt="${escapeHtml(s.name)}" style="width: 100%; height: 100%; object-fit: contain; ${logoUrl.includes('apple.svg') ? 'filter: brightness(0) invert(1);' : ''}" loading="lazy" onerror="this.src='/assets/subscriptions/default-subscription.svg'">
           </div>
           <div>
             <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">${escapeHtml(s.name)}</div>

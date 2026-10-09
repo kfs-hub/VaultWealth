@@ -51,6 +51,7 @@ onReady(async () => {
  * 1. Fetches all transactions for the authenticated user from Supabase
  */
 async function loadTransactions() {
+  window.VaultLoader?.start();
   const client = getSupabaseClient();
   const tableBody = document.getElementById('transactionsTableBody');
   const countEl = document.getElementById('txCountSpan') || document.querySelector('.table-container + div span');
@@ -59,23 +60,26 @@ async function loadTransactions() {
     console.warn('[VaultWealth] Supabase client not available.');
     allTransactions = [];
     renderTransactionsTable([]);
+    window.VaultLoader?.done();
     return;
   }
 
   if (tableBody) {
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-          <span style="display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center;">
-            ${typeof getSvgIcon === 'function' ? getSvgIcon('spinner', 'icon-spin', { width: 18, height: 18 }) : ''}
-            Loading transactions from your Vault...
-          </span>
-        </td>
-      </tr>
-    `;
+    tableBody.innerHTML = window.SkeletonTemplates
+      ? window.SkeletonTemplates.tableRows(6, 6)
+      : `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+            <span style="display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center;">
+              ${typeof getSvgIcon === 'function' ? getSvgIcon('spinner', 'icon-spin', { width: 18, height: 18 }) : ''}
+              Loading transactions from your Vault...
+            </span>
+          </td>
+        </tr>
+      `;
   }
   if (countEl) {
-    countEl.textContent = 'Loading transactions...';
+    countEl.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 140px; display: inline-block;"></span>';
   }
 
   try {
@@ -130,6 +134,8 @@ async function loadTransactions() {
         </tr>
       `;
     }
+  } finally {
+    window.VaultLoader?.done();
   }
 }
 

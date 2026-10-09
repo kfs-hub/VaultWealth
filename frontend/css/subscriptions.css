@@ -181,11 +181,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  padding: 5px;
+  overflow: hidden;
+}
+
+.brand-badge-circle img,
+.brand-badge-circle .sub-brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .timeline-sub-name {
@@ -378,209 +387,246 @@
 .sub-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: 18px;
-  padding: 1.35rem;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  border-radius: 14px;
+  padding: 1.05rem 1.2rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 1.15rem;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  gap: 0.85rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  box-shadow: var(--glass-shadow);
 }
 
 .sub-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   border-color: var(--border-medium);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  background: var(--bg-card-hover);
 }
 
-.sub-card-header {
+.sub-card-top-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
-.sub-card-brand-wrapper {
+.sub-card-brand-box {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
 .sub-card-brand-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   flex-shrink: 0;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  padding: 6px;
+  overflow: hidden;
+  transition: all 0.2s ease;
 }
 
-.sub-card-identity {
+.sub-card:hover .sub-card-brand-icon {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.sub-brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+}
+
+.sub-card-identity-box {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .sub-card-title {
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
 }
 
 .sub-card-cat-badge {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-/* Status Badge Styles */
-.sub-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.sub-card-date-line {
   font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.sub-status-badge.active {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.sub-status-badge.paused {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.sub-status-badge.cancelled {
-  background: rgba(244, 63, 94, 0.15);
-  color: #fb7185;
-  border: 1px solid rgba(244, 63, 94, 0.3);
-}
-
-.sub-status-badge.expired {
-  background: rgba(148, 163, 184, 0.15);
-  color: #94a3b8;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-}
-
-/* Pricing Breakdown */
-.sub-card-price-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.sub-card-price-amount {
-  font-size: 1.45rem;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--text-primary);
-}
-
-.sub-card-cycle-tag {
-  font-size: 0.75rem;
   color: var(--text-muted);
-  margin-left: 0.2rem;
+  margin-top: 2px;
 }
 
-.sub-card-norm-monthly {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* Card Details Meta */
-.sub-card-meta-list {
+.sub-card-price-box {
+  text-align: right;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  font-size: 0.78rem;
+  align-items: flex-end;
+  gap: 3px;
 }
 
-.sub-card-meta-item {
+.sub-card-amount {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.98rem;
+}
+
+/* Due & Status Pills matching Dashboard */
+.sub-due-pill {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.sub-due-pill.pill-amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+}
+
+.sub-due-pill.pill-rose {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.28);
+}
+
+.sub-due-pill.pill-indigo {
+  background: rgba(99, 102, 241, 0.12);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+}
+
+.sub-due-pill.pill-emerald {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.sub-due-pill.pill-muted {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+/* Bottom Meta & Actions Row */
+.sub-card-bottom-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sub-card-meta-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.sub-meta-pill {
+  font-size: 0.69rem;
   color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 
-.sub-card-meta-value {
-  color: var(--text-secondary);
-  font-weight: 500;
+.sub-meta-pill.auto-tag {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
-/* Card Action Buttons */
 .sub-card-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-subtle);
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
 .btn-sub-action {
-  flex: 1;
-  padding: 0.45rem 0.7rem;
-  border-radius: 9px;
-  font-size: 0.78rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 7px;
+  font-size: 0.72rem;
   font-weight: 500;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   cursor: pointer;
   transition: all 0.15s ease;
-}
-
-.btn-log-now {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(99, 102, 241, 0.14);
   color: #a5b4fc;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(99, 102, 241, 0.25);
 }
 
-.btn-log-now:hover {
+.btn-sub-action:hover {
   background: var(--brand-primary);
   color: #fff;
   border-color: var(--brand-primary);
 }
 
-.btn-sub-menu {
-  width: 32px;
-  height: 32px;
+.btn-sub-icon-action {
+  width: 26px;
+  height: 26px;
   padding: 0;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid var(--border-subtle);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-muted);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.btn-sub-menu:hover {
+.btn-sub-icon-action:hover {
   color: var(--text-primary);
-  border-color: var(--border-bright);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-medium);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-sub-icon-action.btn-sub-delete:hover {
+  color: #fb7185;
+  border-color: rgba(244, 63, 94, 0.35);
+  background: rgba(244, 63, 94, 0.12);
 }
 
 /* ==========================================================================
@@ -1122,20 +1168,70 @@
   border-radius: var(--radius-md);
 }
 
-/* Modern Swatch Color Picker */
-.sub-color-picker-container {
+/* Modern Brand Logo Picker */
+.sub-color-picker-container,
+.sub-logo-picker-container {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
 }
 
-.sub-swatches-row {
+.sub-swatches-row,
+.sub-logo-swatches-row {
   display: flex;
   align-items: center;
   gap: 0.55rem;
   flex-wrap: wrap;
 }
 
+.sub-logo-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  outline: none;
+  flex-shrink: 0;
+  padding: 6px;
+  overflow: hidden;
+}
+
+.sub-logo-swatch:hover {
+  transform: scale(1.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.sub-logo-swatch.active {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 0 0 2px #6366f1, 0 6px 16px rgba(99, 102, 241, 0.45);
+  transform: scale(1.12);
+}
+
+.swatch-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+/* Invert black Apple logo on dark backgrounds */
+.sub-brand-logo-img[src*="apple.svg"],
+.swatch-logo-img[src*="apple.svg"],
+.brand-badge-circle img[src*="apple.svg"] {
+  filter: brightness(0) invert(1);
+}
+
+/* Fallback color swatches for backward compatibility */
 .sub-color-swatch {
   width: 32px;
   height: 32px;

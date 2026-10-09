@@ -12,8 +12,11 @@
   <link rel="stylesheet" href="css/app-theme.css">
   <link rel="stylesheet" href="css/pattern-waves.css">
   <link rel="stylesheet" href="css/modern-charts.css">
+  <link rel="stylesheet" href="css/smart-insights.css">
   <link rel="stylesheet" href="css/upload.css">
   <link rel="stylesheet" href="css/chatbot.css">
+  <link rel="stylesheet" href="css/skeletons.css">
+  <script src="js/loading-state.js"></script>
 </head>
 
 <body>
@@ -111,9 +114,9 @@
                 </svg>
               </div>
             </div>
-            <div id="dashNetBalance" class="stat-value">₹0.00</div>
+            <div id="dashNetBalance" class="stat-value"><span class="skeleton skeleton-metric" style="width: 120px;"></span></div>
             <div id="dashSavingsRate" class="stat-footer">
-              <span class="stat-trend-up">0%</span> Savings Rate
+              <span class="skeleton skeleton-text-sm" style="width: 140px;"></span>
             </div>
           </div>
 
@@ -133,9 +136,9 @@
                 </svg>
               </div>
             </div>
-            <div id="dashTotalIncome" class="stat-value amount-income">₹0.00</div>
+            <div id="dashTotalIncome" class="stat-value amount-income"><span class="skeleton skeleton-metric" style="width: 110px;"></span></div>
             <div class="stat-footer">
-              <span>Lifetime Income Recorded</span>
+              <span class="skeleton skeleton-text-sm" style="width: 150px;"></span>
             </div>
           </div>
 
@@ -155,9 +158,9 @@
                 </svg>
               </div>
             </div>
-            <div id="dashTotalExpense" class="stat-value amount-expense">₹0.00</div>
+            <div id="dashTotalExpense" class="stat-value amount-expense"><span class="skeleton skeleton-metric" style="width: 110px;"></span></div>
             <div class="stat-footer">
-              <span>Lifetime Expenses Recorded</span>
+              <span class="skeleton skeleton-text-sm" style="width: 150px;"></span>
             </div>
           </div>
 
@@ -174,9 +177,9 @@
                 </svg>
               </div>
             </div>
-            <div id="dashMonthlySubBurn" class="stat-value">₹0.00</div>
+            <div id="dashMonthlySubBurn" class="stat-value"><span class="skeleton skeleton-metric" style="width: 100px;"></span></div>
             <div id="dashActiveSubsCount" class="stat-footer">
-              <span style="color: #a5b4fc;">0 Active</span> Recurring Services
+              <span class="skeleton skeleton-text-sm" style="width: 140px;"></span>
             </div>
           </div>
         </section>
@@ -196,7 +199,11 @@
               </h2>
               <span class="badge badge-category">Distribution</span>
             </div>
-            <div class="chart-container" id="categoryChartContainer"></div>
+            <div class="chart-container" id="categoryChartContainer">
+              <div class="skeleton-chart-wrapper">
+                <div class="skeleton-chart-radial"></div>
+              </div>
+            </div>
           </div>
 
           <!-- Monthly Spending Trend (Line) -->
@@ -212,7 +219,18 @@
               </h2>
               <span class="badge badge-category">Live Trajectory</span>
             </div>
-            <div class="chart-container" id="monthlyTrendContainer"></div>
+            <div class="chart-container" id="monthlyTrendContainer">
+              <div class="skeleton-chart-wrapper">
+                <div class="skeleton-chart-bars">
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 45%;"></div>
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 75%;"></div>
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 35%;"></div>
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 90%;"></div>
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 60%;"></div>
+                  <div class="skeleton skeleton-chart-bar-item" style="height: 80%;"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -244,16 +262,29 @@
                   </tr>
                 </thead>
                 <tbody id="recentTransactionsTableBody">
-                  <tr>
-                    <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                      <span style="display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center;">
-                        <svg class="icon-spin" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
-                        </svg>
-                        Loading transactions...
-                      </span>
-                    </td>
+                  <tr class="skeleton-table-row">
+                    <td><div class="skeleton-table-cell"><span class="skeleton skeleton-circle" style="width: 24px; height: 24px;"></span><span class="skeleton skeleton-text" style="width: 75px;"></span></div></td>
+                    <td><span class="skeleton skeleton-text" style="width: 140px;"></span></td>
+                    <td><span class="skeleton skeleton-text" style="width: 80px;"></span></td>
+                    <td style="text-align: right;"><span class="skeleton skeleton-text" style="width: 70px; display: inline-block;"></span></td>
+                  </tr>
+                  <tr class="skeleton-table-row">
+                    <td><div class="skeleton-table-cell"><span class="skeleton skeleton-circle" style="width: 24px; height: 24px;"></span><span class="skeleton skeleton-text" style="width: 75px;"></span></div></td>
+                    <td><span class="skeleton skeleton-text" style="width: 120px;"></span></td>
+                    <td><span class="skeleton skeleton-text" style="width: 80px;"></span></td>
+                    <td style="text-align: right;"><span class="skeleton skeleton-text" style="width: 70px; display: inline-block;"></span></td>
+                  </tr>
+                  <tr class="skeleton-table-row">
+                    <td><div class="skeleton-table-cell"><span class="skeleton skeleton-circle" style="width: 24px; height: 24px;"></span><span class="skeleton skeleton-text" style="width: 75px;"></span></div></td>
+                    <td><span class="skeleton skeleton-text" style="width: 160px;"></span></td>
+                    <td><span class="skeleton skeleton-text" style="width: 80px;"></span></td>
+                    <td style="text-align: right;"><span class="skeleton skeleton-text" style="width: 70px; display: inline-block;"></span></td>
+                  </tr>
+                  <tr class="skeleton-table-row">
+                    <td><div class="skeleton-table-cell"><span class="skeleton skeleton-circle" style="width: 24px; height: 24px;"></span><span class="skeleton skeleton-text" style="width: 75px;"></span></div></td>
+                    <td><span class="skeleton skeleton-text" style="width: 110px;"></span></td>
+                    <td><span class="skeleton skeleton-text" style="width: 80px;"></span></td>
+                    <td style="text-align: right;"><span class="skeleton skeleton-text" style="width: 70px; display: inline-block;"></span></td>
                   </tr>
                 </tbody>
               </table>
@@ -278,21 +309,33 @@
             </div>
 
             <div id="dashboardInsightsContainer" style="display: flex; flex-direction: column; gap: 0.85rem;">
-              <div class="insight-card">
-                <div class="insight-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="9" y1="18" x2="15" y2="18"></line>
-                    <line x1="10" y1="22" x2="14" y2="22"></line>
-                    <path
-                      d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14">
-                    </path>
-                  </svg>
+              <div class="skeleton-insight-item">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                  <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span class="skeleton skeleton-circle" style="width: 38px; height: 38px; border-radius: 11px;"></span>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <span class="skeleton skeleton-text" style="width: 120px; height: 14px;"></span>
+                      <span class="skeleton skeleton-text-sm" style="width: 70px;"></span>
+                    </div>
+                  </div>
+                  <span class="skeleton skeleton-badge" style="width: 65px; height: 18px;"></span>
                 </div>
-                <div class="insight-content">
-                  <h4>Pattern Detector</h4>
-                  <p>Analyzing your spending cadence and budget distributions...</p>
+                <span class="skeleton skeleton-text" style="width: 95%;"></span>
+                <span class="skeleton skeleton-text-sm" style="width: 70%;"></span>
+              </div>
+              <div class="skeleton-insight-item">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                  <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span class="skeleton skeleton-circle" style="width: 38px; height: 38px; border-radius: 11px;"></span>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <span class="skeleton skeleton-text" style="width: 130px; height: 14px;"></span>
+                      <span class="skeleton skeleton-text-sm" style="width: 80px;"></span>
+                    </div>
+                  </div>
+                  <span class="skeleton skeleton-badge" style="width: 65px; height: 18px;"></span>
                 </div>
+                <span class="skeleton skeleton-text" style="width: 90%;"></span>
+                <span class="skeleton skeleton-text-sm" style="width: 60%;"></span>
               </div>
             </div>
           </div>
@@ -315,9 +358,31 @@
               <a href="/subscriptions" class="btn btn-secondary btn-sm">Manage Subscriptions &rarr;</a>
             </div>
             <div id="dashboardUpcomingSubsList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1rem;">
-              <!-- Populated by dashboard.js -->
-              <div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; grid-column: 1 / -1;">
-                Loading upcoming renewals...
+              <div class="skeleton-renewal-item">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <span class="skeleton skeleton-circle" style="width: 38px; height: 38px; border-radius: 11px;"></span>
+                  <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span class="skeleton skeleton-text" style="width: 100px; height: 14px;"></span>
+                    <span class="skeleton skeleton-text-sm" style="width: 75px;"></span>
+                  </div>
+                </div>
+                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                  <span class="skeleton skeleton-text" style="width: 65px; height: 16px;"></span>
+                  <span class="skeleton skeleton-badge" style="width: 55px; height: 18px;"></span>
+                </div>
+              </div>
+              <div class="skeleton-renewal-item">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <span class="skeleton skeleton-circle" style="width: 38px; height: 38px; border-radius: 11px;"></span>
+                  <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span class="skeleton skeleton-text" style="width: 120px; height: 14px;"></span>
+                    <span class="skeleton skeleton-text-sm" style="width: 80px;"></span>
+                  </div>
+                </div>
+                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                  <span class="skeleton skeleton-text" style="width: 65px; height: 16px;"></span>
+                  <span class="skeleton skeleton-badge" style="width: 55px; height: 18px;"></span>
+                </div>
               </div>
             </div>
           </div>
@@ -490,10 +555,12 @@
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/mock-data.js"></script>
+  <script src="js/loading-state.js"></script>
   <script src="js/app.js"></script>
   <script src="js/statement-parser.js"></script>
   <script src="js/statement-upload.js"></script>
   <script src="js/glass-surface.js"></script>
+  <script src="js/smart-insights.js"></script>
   <script type="module" src="js/dashboard.js"></script>
   <script src="js/chatbot.js"></script>
   <script type="module">

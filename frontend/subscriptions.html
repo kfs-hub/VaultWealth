@@ -15,6 +15,8 @@
   <link rel="stylesheet" href="css/upload.css">
   <link rel="stylesheet" href="css/subscriptions.css">
   <link rel="stylesheet" href="css/chatbot.css">
+  <link rel="stylesheet" href="css/skeletons.css">
+  <script src="js/loading-state.js"></script>
 </head>
 
 <body>
@@ -130,60 +132,66 @@
         </div>
       </div>
 
-      <!-- Top Summary Metric Cards -->
-      <section class="sub-metrics-grid" aria-label="Subscription Summary Metrics">
+      <!-- Top Summary Metric Cards (Matching Dashboard stats-grid & stat-card) -->
+      <section class="stats-grid" aria-label="Subscription Summary Metrics">
         <!-- Monthly Burn -->
-        <div class="sub-metric-card sub-metric-burn">
-          <div class="sub-metric-label">
-            <span>Monthly Burn</span>
-            <div class="sub-metric-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Monthly Burn</span>
+            <div class="stat-icon stat-icon-expense">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="23 4 23 10 17 10"></polyline>
                 <polyline points="1 20 1 14 7 14"></polyline>
                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
               </svg>
             </div>
           </div>
-          <div class="sub-metric-value" id="metricMonthlyBurn">₹0.00</div>
-          <div class="sub-metric-subtext">Normalized monthly recurring total</div>
+          <div id="metricMonthlyBurn" class="stat-value amount-expense"><span class="skeleton skeleton-metric" style="width: 100px;"></span></div>
+          <div class="stat-footer">
+            <span>Normalized monthly recurring total</span>
+          </div>
         </div>
 
         <!-- Annual Run Rate -->
-        <div class="sub-metric-card sub-metric-annual">
-          <div class="sub-metric-label">
-            <span>Annual Run Rate</span>
-            <div class="sub-metric-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Annual Run Rate</span>
+            <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.2);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
             </div>
           </div>
-          <div class="sub-metric-value" id="metricAnnualRunRate">₹0.00</div>
-          <div class="sub-metric-subtext">Projected 12-month commitment</div>
+          <div id="metricAnnualRunRate" class="stat-value" style="color: #a5b4fc;"><span class="skeleton skeleton-metric" style="width: 100px;"></span></div>
+          <div class="stat-footer">
+            <span>Projected 12-month commitment</span>
+          </div>
         </div>
 
         <!-- Active Subscriptions -->
-        <div class="sub-metric-card sub-metric-active">
-          <div class="sub-metric-label">
-            <span>Active Services</span>
-            <div class="sub-metric-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Active Services</span>
+            <div class="stat-icon stat-icon-income">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
             </div>
           </div>
-          <div class="sub-metric-value" id="metricActiveCount">0 Active</div>
-          <div class="sub-metric-subtext" id="metricActiveSubtext">0 paused · 0 total</div>
+          <div id="metricActiveCount" class="stat-value amount-income"><span class="skeleton skeleton-metric" style="width: 90px;"></span></div>
+          <div id="metricActiveSubtext" class="stat-footer">
+            <span class="skeleton skeleton-text-sm" style="width: 120px;"></span>
+          </div>
         </div>
 
         <!-- Next Immediate Renewal -->
-        <div class="sub-metric-card sub-metric-next">
-          <div class="sub-metric-label">
-            <span>Imminent Renewal</span>
-            <div class="sub-metric-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Imminent Renewal</span>
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
                 <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -191,8 +199,10 @@
               </svg>
             </div>
           </div>
-          <div class="sub-metric-value" id="metricNextRenewal" style="font-size: 1.35rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">—</div>
-          <div class="sub-metric-subtext" id="metricNextSubtext">Next billing schedule</div>
+          <div id="metricNextRenewal" class="stat-value" style="font-size: 1.45rem; color: #f59e0b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><span class="skeleton skeleton-metric" style="width: 110px;"></span></div>
+          <div id="metricNextSubtext" class="stat-footer">
+            <span class="skeleton skeleton-text-sm" style="width: 130px;"></span>
+          </div>
         </div>
       </section>
 
@@ -211,7 +221,45 @@
           <span style="font-size: 0.78rem; color: var(--text-muted);">Horizontal scroll to preview</span>
         </div>
         <div class="sub-timeline-strip" id="upcomingTimelineStrip">
-          <!-- Dynamically populated -->
+          <div class="skeleton-timeline-pill">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <span class="skeleton skeleton-circle" style="width: 32px; height: 32px; border-radius: 10px;"></span>
+              <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                <span class="skeleton skeleton-text" style="width: 75px; height: 12px;"></span>
+                <span class="skeleton skeleton-text-sm" style="width: 50px;"></span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+              <span class="skeleton skeleton-badge" style="width: 55px; height: 16px;"></span>
+              <span class="skeleton skeleton-text-sm" style="width: 45px;"></span>
+            </div>
+          </div>
+          <div class="skeleton-timeline-pill">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <span class="skeleton skeleton-circle" style="width: 32px; height: 32px; border-radius: 10px;"></span>
+              <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                <span class="skeleton skeleton-text" style="width: 85px; height: 12px;"></span>
+                <span class="skeleton skeleton-text-sm" style="width: 60px;"></span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+              <span class="skeleton skeleton-badge" style="width: 55px; height: 16px;"></span>
+              <span class="skeleton skeleton-text-sm" style="width: 45px;"></span>
+            </div>
+          </div>
+          <div class="skeleton-timeline-pill">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <span class="skeleton skeleton-circle" style="width: 32px; height: 32px; border-radius: 10px;"></span>
+              <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                <span class="skeleton skeleton-text" style="width: 70px; height: 12px;"></span>
+                <span class="skeleton skeleton-text-sm" style="width: 45px;"></span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+              <span class="skeleton skeleton-badge" style="width: 55px; height: 16px;"></span>
+              <span class="skeleton skeleton-text-sm" style="width: 45px;"></span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -277,7 +325,72 @@
 
       <!-- Subscriptions Grid Container -->
       <section class="sub-cards-grid" id="subscriptionsGrid">
-        <!-- Rendered by subscriptions.js -->
+        <div class="skeleton-sub-card">
+          <div class="skeleton-sub-card-header">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="skeleton skeleton-circle" style="width: 38px; height: 38px; border-radius: 11px;"></span>
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                <span class="skeleton skeleton-text" style="width: 110px; height: 15px;"></span>
+                <span class="skeleton skeleton-text-sm" style="width: 85px;"></span>
+              </div>
+            </div>
+            <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+              <span class="skeleton skeleton-text" style="width: 75px; height: 16px;"></span>
+              <span class="skeleton skeleton-badge" style="width: 55px; height: 18px;"></span>
+            </div>
+          </div>
+          <div class="skeleton-sub-card-footer">
+            <span class="skeleton skeleton-text-sm" style="width: 100px;"></span>
+            <div style="display: flex; gap: 6px;">
+              <span class="skeleton skeleton-circle" style="width: 24px; height: 24px; border-radius: 6px;"></span>
+              <span class="skeleton skeleton-circle" style="width: 24px; height: 24px; border-radius: 6px;"></span>
+            </div>
+          </div>
+        </div>
+        <div class="skeleton-sub-card">
+          <div class="skeleton-sub-card-header">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="skeleton skeleton-circle" style="width: 38px; height: 38px; border-radius: 11px;"></span>
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                <span class="skeleton skeleton-text" style="width: 130px; height: 15px;"></span>
+                <span class="skeleton skeleton-text-sm" style="width: 90px;"></span>
+              </div>
+            </div>
+            <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+              <span class="skeleton skeleton-text" style="width: 70px; height: 16px;"></span>
+              <span class="skeleton skeleton-badge" style="width: 55px; height: 18px;"></span>
+            </div>
+          </div>
+          <div class="skeleton-sub-card-footer">
+            <span class="skeleton skeleton-text-sm" style="width: 110px;"></span>
+            <div style="display: flex; gap: 6px;">
+              <span class="skeleton skeleton-circle" style="width: 24px; height: 24px; border-radius: 6px;"></span>
+              <span class="skeleton skeleton-circle" style="width: 24px; height: 24px; border-radius: 6px;"></span>
+            </div>
+          </div>
+        </div>
+        <div class="skeleton-sub-card">
+          <div class="skeleton-sub-card-header">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="skeleton skeleton-circle" style="width: 38px; height: 38px; border-radius: 11px;"></span>
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                <span class="skeleton skeleton-text" style="width: 100px; height: 15px;"></span>
+                <span class="skeleton skeleton-text-sm" style="width: 75px;"></span>
+              </div>
+            </div>
+            <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+              <span class="skeleton skeleton-text" style="width: 80px; height: 16px;"></span>
+              <span class="skeleton skeleton-badge" style="width: 55px; height: 18px;"></span>
+            </div>
+          </div>
+          <div class="skeleton-sub-card-footer">
+            <span class="skeleton skeleton-text-sm" style="width: 95px;"></span>
+            <div style="display: flex; gap: 6px;">
+              <span class="skeleton skeleton-circle" style="width: 24px; height: 24px; border-radius: 6px;"></span>
+              <span class="skeleton skeleton-circle" style="width: 24px; height: 24px; border-radius: 6px;"></span>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- Subscriptions Table View (Alternative) -->
@@ -294,7 +407,22 @@
             </tr>
           </thead>
           <tbody id="subscriptionsTableBody">
-            <!-- Rendered by subscriptions.js -->
+            <tr class="skeleton-table-row">
+              <td><div class="skeleton-table-cell"><span class="skeleton skeleton-circle" style="width: 28px; height: 28px;"></span><span class="skeleton skeleton-text" style="width: 100px;"></span></div></td>
+              <td><span class="skeleton skeleton-text" style="width: 75px;"></span></td>
+              <td><span class="skeleton skeleton-text" style="width: 65px;"></span></td>
+              <td><span class="skeleton skeleton-text" style="width: 85px;"></span></td>
+              <td><span class="skeleton skeleton-badge" style="width: 60px;"></span></td>
+              <td style="text-align: right;"><span class="skeleton skeleton-text" style="width: 50px; display: inline-block;"></span></td>
+            </tr>
+            <tr class="skeleton-table-row">
+              <td><div class="skeleton-table-cell"><span class="skeleton skeleton-circle" style="width: 28px; height: 28px;"></span><span class="skeleton skeleton-text" style="width: 120px;"></span></div></td>
+              <td><span class="skeleton skeleton-text" style="width: 75px;"></span></td>
+              <td><span class="skeleton skeleton-text" style="width: 65px;"></span></td>
+              <td><span class="skeleton skeleton-text" style="width: 85px;"></span></td>
+              <td><span class="skeleton skeleton-badge" style="width: 60px;"></span></td>
+              <td style="text-align: right;"><span class="skeleton skeleton-text" style="width: 50px; display: inline-block;"></span></td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -642,43 +770,48 @@
             </div>
           </div>
 
-          <!-- Brand Accent Color Picker -->
-          <div class="sub-color-picker-container">
+          <!-- Brand Logo Selector -->
+          <div class="sub-color-picker-container sub-logo-picker-container">
             <label class="sub-form-label">
-              <span>Brand Accent Color</span>
-              <span class="sub-form-optional">Card Theme</span>
+              <span>Brand Logo</span>
+              <span class="sub-form-optional">Card Icon</span>
             </label>
-            <div class="sub-swatches-row" id="subColorSwatchesRow">
-              <button type="button" class="sub-color-swatch active" data-color="#10b981" style="--swatch-color: #10b981; background: #10b981;" title="Emerald / Spotify">
-                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <div class="sub-swatches-row sub-logo-swatches-row" id="subLogoSwatchesRow">
+              <button type="button" class="sub-logo-swatch active" data-logo="default-subscription.svg" title="Default Icon">
+                <img src="/assets/subscriptions/default-subscription.svg" alt="Default" class="swatch-logo-img">
               </button>
-              <button type="button" class="sub-color-swatch" data-color="#f43f5e" style="--swatch-color: #f43f5e; background: #f43f5e;" title="Rose / Netflix">
-                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <button type="button" class="sub-logo-swatch" data-logo="spotify.svg" title="Spotify">
+                <img src="/assets/subscriptions/spotify.svg" alt="Spotify" class="swatch-logo-img">
               </button>
-              <button type="button" class="sub-color-swatch" data-color="#6366f1" style="--swatch-color: #6366f1; background: #6366f1;" title="Indigo / Prime">
-                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <button type="button" class="sub-logo-swatch" data-logo="netflix.svg" title="Netflix">
+                <img src="/assets/subscriptions/netflix.svg" alt="Netflix" class="swatch-logo-img">
               </button>
-              <button type="button" class="sub-color-swatch" data-color="#8b5cf6" style="--swatch-color: #8b5cf6; background: #8b5cf6;" title="Purple / Discord">
-                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <button type="button" class="sub-logo-swatch" data-logo="amazon-prime.svg" title="Amazon Prime">
+                <img src="/assets/subscriptions/amazon-prime.svg" alt="Amazon Prime" class="swatch-logo-img">
               </button>
-              <button type="button" class="sub-color-swatch" data-color="#06b6d4" style="--swatch-color: #06b6d4; background: #06b6d4;" title="Cyan / Tech">
-                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <button type="button" class="sub-logo-swatch" data-logo="youtube.svg" title="YouTube">
+                <img src="/assets/subscriptions/youtube.svg" alt="YouTube" class="swatch-logo-img">
               </button>
-              <button type="button" class="sub-color-swatch" data-color="#f59e0b" style="--swatch-color: #f59e0b; background: #f59e0b;" title="Amber / Amazon">
-                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <button type="button" class="sub-logo-swatch" data-logo="apple.svg" title="Apple">
+                <img src="/assets/subscriptions/apple.svg" alt="Apple" class="swatch-logo-img">
               </button>
-              <button type="button" class="sub-color-swatch" data-color="#3b82f6" style="--swatch-color: #3b82f6; background: #3b82f6;" title="Blue / Google">
-                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <button type="button" class="sub-logo-swatch" data-logo="google.svg" title="Google">
+                <img src="/assets/subscriptions/google.svg" alt="Google" class="swatch-logo-img">
               </button>
-              <button type="button" class="sub-color-swatch" data-color="#ec4899" style="--swatch-color: #ec4899; background: #ec4899;" title="Pink / Music">
-                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <button type="button" class="sub-logo-swatch" data-logo="google-gemini.svg" title="Google Gemini">
+                <img src="/assets/subscriptions/google-gemini.svg" alt="Google Gemini" class="swatch-logo-img">
               </button>
-
-              <!-- Custom Color Native Picker Hidden Inside Swatch Trigger -->
-              <div class="sub-custom-color-btn" title="Pick custom color">
-                <input type="color" id="subFormBrandColor" value="#10b981" aria-label="Brand accent color picker">
-              </div>
+              <button type="button" class="sub-logo-swatch" data-logo="google-pay.svg" title="Google Pay">
+                <img src="/assets/subscriptions/google-pay.svg" alt="Google Pay" class="swatch-logo-img">
+              </button>
+              <button type="button" class="sub-logo-swatch" data-logo="claude-code.svg" title="Claude Code">
+                <img src="/assets/subscriptions/claude-code.svg" alt="Claude Code" class="swatch-logo-img">
+              </button>
+              <button type="button" class="sub-logo-swatch" data-logo="meta.svg" title="Meta">
+                <img src="/assets/subscriptions/meta.svg" alt="Meta" class="swatch-logo-img">
+              </button>
             </div>
+            <input type="hidden" id="subFormBrandColor" value="default-subscription.svg">
           </div>
 
           <!-- Auto-Generate Ledger Expense Toggle Card -->
@@ -738,6 +871,7 @@
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/mock-data.js"></script>
+  <script src="js/loading-state.js"></script>
   <script src="js/app.js"></script>
   <script src="js/statement-parser.js"></script>
   <script src="js/statement-upload.js"></script>

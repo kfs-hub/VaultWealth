@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="css/pattern-waves.css">
   <link rel="stylesheet" href="css/upload.css">
   <link rel="stylesheet" href="css/chatbot.css">
+  <link rel="stylesheet" href="css/skeletons.css">
+  <script src="js/loading-state.js"></script>
 </head>
 <body>
   <div id="bg" aria-hidden="true"></div>
@@ -88,14 +90,16 @@
           <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.75rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle);">
             <div id="profileAvatarInitial"
               style="width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 1.65rem; font-weight: 700; color: #fff; box-shadow: 0 0 20px rgba(99, 102, 241, 0.35); flex-shrink: 0;">
-              U
+              <span class="skeleton skeleton-circle" style="width: 68px; height: 68px;"></span>
             </div>
             <div>
               <h3 id="profileDisplayName" style="font-size: 1.2rem; font-weight: 600; letter-spacing: -0.015em; color: #fff; margin-bottom: 0.2rem;">
-                User Account
+                <span class="skeleton skeleton-title" style="width: 140px; height: 18px; margin: 0; display: inline-block;"></span>
               </h3>
               <p style="color: var(--text-secondary); font-size: 0.8125rem;">Authenticated Vault Member</p>
-              <p id="profileJoinDate" style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Active Member</p>
+              <p id="profileJoinDate" style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">
+                <span class="skeleton skeleton-text-sm" style="width: 120px; display: inline-block;"></span>
+              </p>
             </div>
           </div>
 

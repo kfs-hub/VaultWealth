@@ -9,6 +9,8 @@ import {
 } from './modern-visuals.js';
 
 let mlForecastChartInstance = null;
+let cachedAnalyticsTx = [];
+let cachedAnalyticsSubs = [];
 
 function onReady(fn) {
   if (document.readyState === 'loading') {
@@ -19,17 +21,80 @@ function onReady(fn) {
 }
 
 onReady(async () => {
+  renderAnalyticsSkeletons();
   const user = await requireAuth();
   if (!user) return;
 
   await loadAnalyticsData();
 
   window.addEventListener('vaultwealth:refresh', async () => {
+    renderAnalyticsSkeletons();
     await loadAnalyticsData();
   });
 });
 
+/**
+ * Injects skeleton placeholders across all analytics widgets while fetching
+ */
+function renderAnalyticsSkeletons() {
+  const momVal = document.getElementById('analyticMomValue');
+  const momFoot = document.getElementById('analyticMomFooter');
+  const topCat = document.getElementById('analyticTopCategory');
+  const topFoot = document.getElementById('analyticTopCatFooter');
+  const dailyAvg = document.getElementById('analyticDailyAvg');
+  const dailyFoot = document.getElementById('analyticDailyAvgFooter');
+  const forecastVal = document.getElementById('analyticForecastValue');
+  const forecastFoot = document.getElementById('analyticForecastFooter');
+  const subSpend = document.getElementById('analyticSubscriptionSpend');
+  const subFoot = document.getElementById('analyticSubscriptionFooter');
+  const catBarContainer = document.getElementById('categoryBarChartContainer');
+  const cashflowContainer = document.getElementById('cashflowChartContainer');
+  const mlPred = document.getElementById('mlPredictedAmount');
+  const mlCi = document.getElementById('mlConfidenceRange');
+  const mlSlope = document.getElementById('mlTrendSlope');
+  const mlDir = document.getElementById('mlTrendDirection');
+  const mlR2 = document.getElementById('mlR2Score');
+  const mlMae = document.getElementById('mlMaeScore');
+  const mlMonths = document.getElementById('mlMonthsCount');
+  const mlSnippet = document.getElementById('mlEquationSnippet');
+  const insightsContainer = document.getElementById('analyticsInsightsContainer');
+
+  if (momVal) momVal.innerHTML = '<span class="skeleton skeleton-metric" style="width: 90px;"></span>';
+  if (momFoot) momFoot.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 140px;"></span>';
+  if (topCat) topCat.innerHTML = '<span class="skeleton skeleton-metric" style="width: 120px;"></span>';
+  if (topFoot) topFoot.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 130px;"></span>';
+  if (dailyAvg) dailyAvg.innerHTML = '<span class="skeleton skeleton-metric" style="width: 110px;"></span>';
+  if (dailyFoot) dailyFoot.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 135px;"></span>';
+  if (forecastVal) forecastVal.innerHTML = '<span class="skeleton skeleton-metric" style="width: 100px;"></span>';
+  if (forecastFoot) forecastFoot.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 145px;"></span>';
+  if (subSpend) subSpend.innerHTML = '<span class="skeleton skeleton-metric" style="width: 110px;"></span>';
+  if (subFoot) subFoot.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 155px;"></span>';
+
+  if (catBarContainer && window.SkeletonTemplates) {
+    catBarContainer.innerHTML = window.SkeletonTemplates.chartBars();
+  }
+  if (cashflowContainer && window.SkeletonTemplates) {
+    cashflowContainer.innerHTML = window.SkeletonTemplates.chartRadial();
+  }
+
+  if (mlPred) mlPred.innerHTML = '<span class="skeleton skeleton-metric" style="width: 100px;"></span>';
+  if (mlCi) mlCi.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 150px;"></span>';
+  if (mlSlope) mlSlope.innerHTML = '<span class="skeleton skeleton-metric" style="width: 85px;"></span>';
+  if (mlDir) mlDir.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 130px;"></span>';
+  if (mlR2) mlR2.innerHTML = '<span class="skeleton skeleton-metric" style="width: 70px;"></span>';
+  if (mlMae) mlMae.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 125px;"></span>';
+  if (mlMonths) mlMonths.innerHTML = '<span class="skeleton skeleton-metric" style="width: 85px;"></span>';
+  if (mlSnippet) mlSnippet.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 100px;"></span>';
+
+  if (insightsContainer && window.SkeletonTemplates) {
+    insightsContainer.innerHTML = window.SkeletonTemplates.insightCards(2);
+  }
+}
+
 async function loadAnalyticsData() {
+  window.VaultLoader?.start();
+  renderAnalyticsSkeletons();
+
   const client = getSupabaseClient();
   if (!client) {
     computeAnalyticsMetrics([]);
@@ -37,6 +102,7 @@ async function loadAnalyticsData() {
     renderCashFlowPieChart([]);
     generateSmartInsightsFeed([]);
     runMLForecasting([]);
+    window.VaultLoader?.done();
     return;
   }
 
@@ -47,6 +113,7 @@ async function loadAnalyticsData() {
     renderCashFlowPieChart([]);
     generateSmartInsightsFeed([]);
     runMLForecasting([]);
+    window.VaultLoader?.done();
     return;
   }
 
@@ -68,10 +135,11 @@ async function loadAnalyticsData() {
     }
 
     const txList = transactions || [];
+    cachedAnalyticsTx = txList;
     computeAnalyticsMetrics(txList);
     renderCategoryBarChart(txList);
     renderCashFlowPieChart(txList);
-    generateSmartInsightsFeed(txList);
+    generateSmartInsightsFeed(txList, cachedAnalyticsSubs);
     runMLForecasting(txList);
 
     // Compute subscription commitments analytics
@@ -85,6 +153,8 @@ async function loadAnalyticsData() {
     generateSmartInsightsFeed([]);
     runMLForecasting([]);
     await computeSubscriptionAnalytics(null, null, []);
+  } finally {
+    window.VaultLoader?.done();
   }
 }
 
@@ -210,124 +280,23 @@ function renderCashFlowPieChart(transactions) {
 /**
  * Generates automated rule-based insights feed from live data
  */
-function generateSmartInsightsFeed(transactions) {
+function generateSmartInsightsFeed(transactions, subscriptions = cachedAnalyticsSubs) {
   const container = document.getElementById('analyticsInsightsContainer');
-  const countBadge = document.getElementById('analyticsInsightsCount');
   if (!container) return;
 
-  if (transactions.length === 0) {
+  if (window.SmartInsightsEngine) {
+    window.SmartInsightsEngine.renderAnalyticsFeed(transactions, subscriptions);
+  } else {
     container.innerHTML = `
-      <div class="insight-card" style="border-left-color: var(--color-accent);">
+      <div class="insight-card">
         <div class="insight-icon">${typeof getSvgIcon === 'function' ? getSvgIcon('lightbulb') : ''}</div>
         <div class="insight-content">
-          <h4>No Transactions Recorded Yet</h4>
-          <p>Once you begin logging income and expenses, the analytics rule engine will automatically detect spending habits, category concentration, and savings velocity.</p>
+          <h4>Smart Insights Engine</h4>
+          <p>Processing algorithmic models and financial pacing...</p>
         </div>
       </div>
     `;
-    if (countBadge) countBadge.textContent = '0 Insights';
-    return;
   }
-
-  const expenses = transactions.filter(t => t.type === 'expense');
-  const incomes = transactions.filter(t => t.type === 'income');
-
-  let totalIncome = 0;
-  let totalExpense = 0;
-  const categorySums = {};
-
-  incomes.forEach(t => totalIncome += (parseFloat(t.amount) || 0));
-  expenses.forEach(t => {
-    const amt = parseFloat(t.amount) || 0;
-    totalExpense += amt;
-    categorySums[t.category] = (categorySums[t.category] || 0) + amt;
-  });
-
-  const insights = [];
-
-  // Insight 1: Category Dominance Rule
-  let topCat = null;
-  let topAmt = 0;
-  for (const [cat, amt] of Object.entries(categorySums)) {
-    if (amt > topAmt) {
-      topAmt = amt;
-      topCat = cat;
-    }
-  }
-
-  if (topCat && totalExpense > 0) {
-    const pct = ((topAmt / totalExpense) * 100).toFixed(1);
-    if (pct >= 30) {
-      insights.push({
-        type: 'danger',
-        icon: typeof getSvgIcon === 'function' ? getSvgIcon('food') : '',
-        title: 'High Category Concentration',
-        body: `<strong>${escapeHtml(topCat)}</strong> makes up <strong>${pct}%</strong> (${formatCurrency(topAmt)}) of your total spending. Consider creating a sub-budget for this category.`
-      });
-    } else {
-      insights.push({
-        type: 'warning',
-        icon: typeof getSvgIcon === 'function' ? getSvgIcon('bar-chart') : '',
-        title: 'Primary Spending Category',
-        body: `Your largest expense area is <strong>${escapeHtml(topCat)}</strong> at <strong>${formatCurrency(topAmt)}</strong> (${pct}% of total expenses).`
-      });
-    }
-  }
-
-  // Insight 2: Savings Health Rule
-  if (totalIncome > 0) {
-    const net = totalIncome - totalExpense;
-    const rate = ((net / totalIncome) * 100).toFixed(1);
-
-    if (rate >= 20) {
-      insights.push({
-        type: 'success',
-        icon: typeof getSvgIcon === 'function' ? getSvgIcon('target') : '',
-        title: 'Healthy Savings Rate',
-        body: `You are currently saving <strong>${rate}%</strong> of your total earnings. Maintaining above 20% is ideal for long-term financial security.`
-      });
-    } else if (rate > 0) {
-      insights.push({
-        type: 'warning',
-        icon: typeof getSvgIcon === 'function' ? getSvgIcon('warning') : '',
-        title: 'Modest Savings Buffer',
-        body: `You are saving <strong>${rate}%</strong> of your earnings. Try aiming for at least 20% to build an emergency fund.`
-      });
-    } else {
-      insights.push({
-        type: 'danger',
-        icon: typeof getSvgIcon === 'function' ? getSvgIcon('siren') : '',
-        title: 'Deficit Warning',
-        body: `Your total expenses exceed your recorded income by <strong>${formatCurrency(Math.abs(net))}</strong>. Look for non-essential expenses to trim.`
-      });
-    }
-  }
-
-  // Insight 3: Transaction Count & Tracking Consistency
-  if (transactions.length >= 5) {
-    insights.push({
-      type: 'success',
-      icon: typeof getSvgIcon === 'function' ? getSvgIcon('trending-up') : '',
-      title: 'Active Financial Logging',
-      body: `You have logged <strong>${transactions.length}</strong> transactions in your Vault. Consistent tracking provides more accurate predictive models.`
-    });
-  }
-
-  let html = '';
-  insights.forEach(item => {
-    html += `
-      <div class="insight-card ${item.type}">
-        <div class="insight-icon">${item.icon}</div>
-        <div class="insight-content">
-          <h4>${item.title}</h4>
-          <p>${item.body}</p>
-        </div>
-      </div>
-    `;
-  });
-
-  container.innerHTML = html;
-  if (countBadge) countBadge.textContent = `${insights.length} Insights Generated`;
 }
 
 /**
@@ -407,32 +376,8 @@ async function computeSubscriptionAnalytics(client, user, transactions) {
     spendFooterEl.innerHTML = `<strong>${burnRatio}%</strong> of typical monthly outflow (${activeSubs.length} active)`;
   }
 
-  // Inject subscription insight if active subscriptions exist
-  const container = document.getElementById('analyticsInsightsContainer');
-  const countBadge = document.getElementById('analyticsInsightsCount');
-  if (container && activeSubs.length > 0 && topSub) {
-    const subCard = document.createElement('div');
-    subCard.className = 'insight-card info';
-    subCard.style.borderLeftColor = 'var(--brand-primary)';
-    subCard.innerHTML = `
-      <div class="insight-icon" style="color: #a5b4fc;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="23 4 23 10 17 10"></polyline>
-          <polyline points="1 20 1 14 7 14"></polyline>
-          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-        </svg>
-      </div>
-      <div class="insight-content">
-        <h4>Recurring Subscription Impact</h4>
-        <p>You have <strong>${activeSubs.length} active subscriptions</strong> totaling <strong>${formatCurrency(monthlyBurn)}/month</strong> (~${burnRatio}% of monthly spend). Your largest commitment is <strong>${escapeHtml(topSub.name)}</strong> at ${formatCurrency(topSub.amount)}/${escapeHtml(topSub.billing_cycle)}.</p>
-      </div>
-    `;
-    container.appendChild(subCard);
-    if (countBadge) {
-      const curCount = container.querySelectorAll('.insight-card').length;
-      countBadge.textContent = `${curCount} Insights Generated`;
-    }
-  }
+  cachedAnalyticsSubs = subs;
+  generateSmartInsightsFeed(cachedAnalyticsTx, subs);
 }
 
 /**

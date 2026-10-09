@@ -12,14 +12,22 @@ function onReady(fn) {
 }
 
 onReady(async () => {
+  window.VaultLoader?.start();
   const user = await requireAuth();
-  if (!user) return;
+  if (!user) {
+    window.VaultLoader?.done();
+    return;
+  }
 
-  await loadUserProfile();
-  initProfileForm();
-  initPreferences();
-  initExportCSV();
-  initClearData();
+  try {
+    await loadUserProfile();
+    initProfileForm();
+    initPreferences();
+    initExportCSV();
+    initClearData();
+  } finally {
+    window.VaultLoader?.done();
+  }
 });
 
 function initPreferences() {

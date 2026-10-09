@@ -14,6 +14,18 @@ let currentEditSubId = null;
 let subCategoryChart = null;
 let chartGroupMode = 'service';   // 'service' | 'category'
 let activeChartFilter = null;     // selected label to filter by
+let userManuallyPickedLogo = false;
+
+const categoryColorMap = {
+  'Subscriptions': '#6366f1',
+  'Entertainment': '#ec4899',
+  'Bills & Utilities': '#f59e0b',
+  'Healthcare': '#10b981',
+  'Education': '#06b6d4',
+  'Shopping': '#8b5cf6',
+  'Transport': '#3b82f6',
+  'Other': '#64748b'
+};
 
 function onReady(fn) {
   if (document.readyState === 'loading') {
@@ -24,6 +36,7 @@ function onReady(fn) {
 }
 
 onReady(async () => {
+  renderSubscriptionSkeletons();
   // 1. Enforce authentication guard
   const user = await requireAuth();
 
@@ -327,34 +340,69 @@ try {
 // 3. Data Fetching & Local Persistence
 // =============================================================================
 
+function renderSubscriptionSkeletons() {
+  const burnEl = document.getElementById('metricMonthlyBurn');
+  const annualEl = document.getElementById('metricAnnualRunRate');
+  const activeEl = document.getElementById('metricActiveCount');
+  const activeSubtext = document.getElementById('metricActiveSubtext');
+  const nextEl = document.getElementById('metricNextRenewal');
+  const nextSubtext = document.getElementById('metricNextSubtext');
+  const strip = document.getElementById('upcomingTimelineStrip');
+  const grid = document.getElementById('subscriptionsGrid');
+  const tbody = document.getElementById('subscriptionsTableBody');
+
+  if (burnEl) burnEl.innerHTML = '<span class="skeleton skeleton-metric" style="width: 100px;"></span>';
+  if (annualEl) annualEl.innerHTML = '<span class="skeleton skeleton-metric" style="width: 100px;"></span>';
+  if (activeEl) activeEl.innerHTML = '<span class="skeleton skeleton-metric" style="width: 90px;"></span>';
+  if (activeSubtext) activeSubtext.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 120px;"></span>';
+  if (nextEl) nextEl.innerHTML = '<span class="skeleton skeleton-metric" style="width: 110px;"></span>';
+  if (nextSubtext) nextSubtext.innerHTML = '<span class="skeleton skeleton-text-sm" style="width: 130px;"></span>';
+
+  if (strip && window.SkeletonTemplates) {
+    strip.innerHTML = window.SkeletonTemplates.timelinePills(4);
+  }
+  if (grid && window.SkeletonTemplates) {
+    grid.innerHTML = window.SkeletonTemplates.subCards(6);
+  }
+  if (tbody && window.SkeletonTemplates) {
+    tbody.innerHTML = window.SkeletonTemplates.tableRows(4, 6);
+  }
+}
+
 async function loadSubscriptions() {
+  window.VaultLoader?.start();
+  renderSubscriptionSkeletons();
   const client = getSupabaseClient();
   const user = await getCurrentUser();
 
-  if (client && user) {
-    try {
-      const { data, error } = await client
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('next_billing_date', { ascending: true });
+  try {
+    if (client && user) {
+      try {
+        const { data, error } = await client
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('next_billing_date', { ascending: true });
 
-      if (error) {
-        console.warn('[VaultWealth] Supabase query error, fallback to local storage:', error);
+        if (error) {
+          console.warn('[VaultWealth] Supabase query error, fallback to local storage:', error);
+          loadLocalSubscriptions();
+        } else {
+          subscriptionsList = (data || []).filter(s => !(s.name || '').toLowerCase().includes('(recurring renewal)'));
+        }
+      } catch (err) {
+        console.warn('[VaultWealth] Error fetching subscriptions:', err);
         loadLocalSubscriptions();
-      } else {
-        subscriptionsList = (data || []).filter(s => !(s.name || '').toLowerCase().includes('(recurring renewal)'));
       }
-    } catch (err) {
-      console.warn('[VaultWealth] Error fetching subscriptions:', err);
+    } else {
       loadLocalSubscriptions();
     }
-  } else {
-    loadLocalSubscriptions();
-  }
 
-  // Render all UI views
-  renderAllViews();
+    // Render all UI views
+    renderAllViews();
+  } finally {
+    window.VaultLoader?.done();
+  }
 }
 
 function loadLocalSubscriptions() {
@@ -484,16 +532,16 @@ function renderUpcomingTimeline() {
       chipText = days === 1 ? 'Tomorrow' : `in ${days} days`;
     }
 
-    const brand = detectBrandInfo(sub.name);
-    const brandColor = sub.brand_color || brand.color;
-    const brandLetter = brand.letter;
+    const logoUrl = typeof getSubscriptionLogo === 'function' 
+      ? getSubscriptionLogo(sub) 
+      : '/assets/subscriptions/default-subscription.svg';
 
     return `
       <div class="timeline-pill-card ${days <= 3 ? 'imminent' : ''}" onclick="openEditSubscription('${sub.id}')">
         <div class="timeline-pill-top">
           <div class="timeline-brand-box">
-            <div class="brand-badge-circle" style="background: ${brandColor};">
-              ${escapeHtml(brandLetter)}
+            <div class="brand-badge-circle">
+              <img src="${logoUrl}" alt="${escapeHtml(sub.name)}" class="sub-brand-logo-img" loading="lazy" onerror="this.src='/assets/subscriptions/default-subscription.svg'">
             </div>
             <div>
               <div class="timeline-sub-name" title="${escapeHtml(sub.name)}">${escapeHtml(sub.name)}</div>
@@ -615,9 +663,10 @@ function renderSubscriptionsList() {
   // Render Grid
   if (gridEl) {
     gridEl.innerHTML = filtered.map(sub => {
-      const brand = detectBrandInfo(sub.name);
-      const brandColor = sub.brand_color || brand.color;
-      const brandLetter = brand.letter;
+      const logoUrl = typeof getSubscriptionLogo === 'function' 
+        ? getSubscriptionLogo(sub) 
+        : '/assets/subscriptions/default-subscription.svg';
+      const catDotColor = categoryColorMap[sub.category] || '#6366f1';
       const normMonthly = normalizeToMonthly(sub.amount, sub.billing_cycle, sub.custom_cycle_days);
       const days = getDaysUntil(sub.next_billing_date);
 
@@ -626,74 +675,96 @@ function renderSubscriptionsList() {
         cycleLabel = `Every ${sub.custom_cycle_days || 30}d`;
       }
 
+      // Compute due status pill matching dashboard
+      let duePillClass = 'pill-indigo';
+      let dayLabel = '';
+
+      if (sub.status === 'paused') {
+        dayLabel = 'Paused';
+        duePillClass = 'pill-amber';
+      } else if (sub.status === 'cancelled') {
+        dayLabel = 'Cancelled';
+        duePillClass = 'pill-rose';
+      } else if (sub.status === 'expired') {
+        dayLabel = 'Expired';
+        duePillClass = 'pill-muted';
+      } else {
+        if (days < 0) {
+          dayLabel = `${Math.abs(days)}d Overdue`;
+          duePillClass = 'pill-rose';
+        } else if (days === 0) {
+          dayLabel = 'Due Today';
+          duePillClass = 'pill-rose';
+        } else if (days === 1) {
+          dayLabel = 'Due Tomorrow';
+          duePillClass = 'pill-amber';
+        } else if (days <= 3) {
+          dayLabel = `In ${days} days`;
+          duePillClass = 'pill-amber';
+        } else {
+          dayLabel = `In ${days} days`;
+          duePillClass = 'pill-indigo';
+        }
+      }
+
       return `
         <div class="sub-card" data-sub-id="${sub.id}">
-          <div class="sub-card-header">
-            <div class="sub-card-brand-wrapper">
-              <div class="sub-card-brand-icon" style="background: ${brandColor};">
-                ${escapeHtml(brandLetter)}
+          <div class="sub-card-top-row">
+            <div class="sub-card-brand-box">
+              <div class="sub-card-brand-icon">
+                <img src="${logoUrl}" alt="${escapeHtml(sub.name)}" class="sub-brand-logo-img" style="${logoUrl.includes('apple.svg') ? 'filter: brightness(0) invert(1);' : ''}" loading="lazy" onerror="this.src='/assets/subscriptions/default-subscription.svg'">
               </div>
-              <div class="sub-card-identity">
-                <span class="sub-card-title">${escapeHtml(sub.name)}</span>
-                <span class="sub-card-cat-badge">
-                  <span style="width: 6px; height: 6px; border-radius: 50%; background: ${brandColor};"></span>
-                  ${escapeHtml(sub.category || 'Subscriptions')}
-                </span>
+              <div class="sub-card-identity-box">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                  <span class="sub-card-title">${escapeHtml(sub.name)}</span>
+                  <span class="sub-card-cat-badge">
+                    <span style="width: 6px; height: 6px; border-radius: 50%; background: ${catDotColor}; flex-shrink: 0;"></span>
+                    ${escapeHtml(sub.category || 'Subscriptions')}
+                  </span>
+                </div>
+                <div class="sub-card-date-line">
+                  ${formatDisplayDate(sub.next_billing_date)} · ${escapeHtml(cycleLabel)}
+                </div>
               </div>
             </div>
-            <span class="sub-status-badge ${sub.status}">
-              ${escapeHtml(sub.status)}
-            </span>
-          </div>
-
-          <div class="sub-card-price-row">
-            <div>
-              <span class="sub-card-price-amount">${formatCurrency(sub.amount)}</span>
-              <span class="sub-card-cycle-tag">/ ${escapeHtml(cycleLabel)}</span>
-            </div>
-            <div class="sub-card-norm-monthly" title="Normalized monthly cost">
-              ≈ ${formatCurrency(normMonthly)}/mo
+            <div class="sub-card-price-box">
+              <div class="sub-card-amount">${formatCurrency(sub.amount)}</div>
+              <span class="sub-due-pill ${duePillClass}">
+                ${dayLabel}
+              </span>
             </div>
           </div>
 
-          <div class="sub-card-meta-list">
-            <div class="sub-card-meta-item">
-              <span>Next Renewal</span>
-              <span class="sub-card-meta-value">${formatDisplayDate(sub.next_billing_date)} (${days < 0 ? `${Math.abs(days)}d overdue` : (days === 0 ? 'Today' : `in ${days}d`)})</span>
+          <div class="sub-card-bottom-row">
+            <div class="sub-card-meta-pills">
+              <span class="sub-meta-pill" title="Normalized monthly cost">≈ ${formatCurrency(normMonthly)}/mo</span>
+              <span class="sub-meta-pill" title="Payment method">${escapeHtml(sub.payment_method || 'Card')}</span>
+              ${sub.auto_create_transaction ? '<span class="sub-meta-pill auto-tag" title="Auto-Log Ledger Expense"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>Auto</span>' : ''}
             </div>
-            <div class="sub-card-meta-item">
-              <span>Payment Via</span>
-              <span class="sub-card-meta-value">${escapeHtml(sub.payment_method || 'Card')}</span>
+            <div class="sub-card-actions">
+              <button class="btn-sub-action btn-log-now" onclick="logExpenseNow('${sub.id}')" title="Log expense right now & advance cycle">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Log</span>
+              </button>
+              <button class="btn-sub-icon-action" onclick="toggleSubStatus('${sub.id}')" title="${sub.status === 'active' ? 'Pause' : 'Activate'} subscription">
+                ${sub.status === 'active'
+                  ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
+                  : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'}
+              </button>
+              <button class="btn-sub-icon-action" onclick="openEditSubscription('${sub.id}')" title="Edit subscription">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                </svg>
+              </button>
+              <button class="btn-sub-icon-action btn-sub-delete" onclick="deleteSubscriptionConfirm('${sub.id}')" title="Delete subscription">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
             </div>
-            <div class="sub-card-meta-item">
-              <span>Auto-Log Transaction</span>
-              <span class="sub-card-meta-value">${sub.auto_create_transaction ? '<span style="display:inline-flex;align-items:center;gap:3px;color:#34d399;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Enabled</span>' : 'Off'}</span>
-            </div>
-          </div>
-
-          <div class="sub-card-actions">
-            <button class="btn-sub-action btn-log-now" onclick="logExpenseNow('${sub.id}')" title="Record expense right now & advance cycle">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              Log Expense
-            </button>
-            <button class="btn-sub-menu" onclick="toggleSubStatus('${sub.id}')" title="${sub.status === 'active' ? 'Pause' : 'Activate'} subscription">
-              ${sub.status === 'active'
-                ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
-                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>'}
-            </button>
-            <button class="btn-sub-menu" onclick="openEditSubscription('${sub.id}')" title="Edit subscription">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-              </svg>
-            </button>
-            <button class="btn-sub-menu" onclick="deleteSubscriptionConfirm('${sub.id}')" title="Delete subscription">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
-            </button>
           </div>
         </div>
       `;
@@ -703,8 +774,9 @@ function renderSubscriptionsList() {
   // Render Table View
   if (tableBody) {
     tableBody.innerHTML = filtered.map(sub => {
-      const brand = detectBrandInfo(sub.name);
-      const brandColor = sub.brand_color || brand.color;
+      const logoUrl = typeof getSubscriptionLogo === 'function' 
+        ? getSubscriptionLogo(sub) 
+        : '/assets/subscriptions/default-subscription.svg';
       const normMonthly = normalizeToMonthly(sub.amount, sub.billing_cycle, sub.custom_cycle_days);
       const days = getDaysUntil(sub.next_billing_date);
 
@@ -712,8 +784,8 @@ function renderSubscriptionsList() {
         <tr>
           <td>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <span class="brand-badge-circle" style="width: 28px; height: 28px; font-size: 0.75rem; background: ${brandColor};">
-                ${escapeHtml(brand.letter)}
+              <span class="brand-badge-circle" style="width: 28px; height: 28px;">
+                <img src="${logoUrl}" alt="${escapeHtml(sub.name)}" class="sub-brand-logo-img" loading="lazy" onerror="this.src='/assets/subscriptions/default-subscription.svg'">
               </span>
               <div>
                 <strong style="color: var(--text-primary);">${escapeHtml(sub.name)}</strong>
@@ -782,20 +854,27 @@ function renderCategoryDonut() {
   const groupTotals = {};
   const groupColors = {};
 
-  const defaultPalette = [
-    '#6366f1', '#06b6d4', '#10b981', '#f59e0b',
-    '#ec4899', '#8b5cf6', '#3b82f6', '#f43f5e',
-    '#14b8a6', '#f97316', '#a855f7', '#0ea5e9'
+  const referencePalette = [
+    '#fa5c38', // Coral Red-Orange
+    '#fdb827', // Warm Amber Gold
+    '#88c057', // Fresh Spring Green
+    '#29b6f6', // Vivid Sky Blue
+    '#0288d1', // Deep Cerulean Blue
+    '#a855f7', // Purple
+    '#ec4899', // Pink
+    '#10b981', // Emerald
+    '#6366f1', // Indigo
+    '#f97316'  // Orange
   ];
 
   const categoryColorMap = {
-    'Subscriptions': '#6366f1',
-    'Entertainment': '#ec4899',
-    'Bills & Utilities': '#f59e0b',
-    'Healthcare': '#10b981',
-    'Education': '#06b6d4',
-    'Shopping': '#8b5cf6',
-    'Transport': '#3b82f6',
+    'Subscriptions': '#fa5c38',
+    'Entertainment': '#fdb827',
+    'Bills & Utilities': '#88c057',
+    'Healthcare': '#29b6f6',
+    'Education': '#0288d1',
+    'Shopping': '#a855f7',
+    'Transport': '#ec4899',
     'Other': '#64748b'
   };
 
@@ -806,10 +885,8 @@ function renderCategoryDonut() {
       const name = sub.name || 'Unnamed';
       const monthlyVal = normalizeToMonthly(sub.amount, sub.billing_cycle, sub.custom_cycle_days);
       groupTotals[name] = (groupTotals[name] || 0) + monthlyVal;
-
       if (!groupColors[name]) {
-        const brand = typeof detectBrandInfo === 'function' ? detectBrandInfo(name) : { color: defaultPalette[i % defaultPalette.length] };
-        groupColors[name] = sub.brand_color && sub.brand_color !== '#6366f1' ? sub.brand_color : (brand.color || defaultPalette[i % defaultPalette.length]);
+        groupColors[name] = referencePalette[i % referencePalette.length];
       }
     });
   } else {
@@ -818,14 +895,14 @@ function renderCategoryDonut() {
       const monthlyVal = normalizeToMonthly(sub.amount, sub.billing_cycle, sub.custom_cycle_days);
       groupTotals[cat] = (groupTotals[cat] || 0) + monthlyVal;
       if (!groupColors[cat]) {
-        groupColors[cat] = categoryColorMap[cat] || defaultPalette[i % defaultPalette.length];
+        groupColors[cat] = categoryColorMap[cat] || referencePalette[i % referencePalette.length];
       }
     });
   }
 
   let labels = Object.keys(groupTotals);
   let data = Object.values(groupTotals);
-  let sliceColors = labels.map(l => groupColors[l] || '#6366f1');
+  let sliceColors = labels.map((l, i) => groupColors[l] || referencePalette[i % referencePalette.length]);
 
   const totalBurn = data.reduce((acc, val) => acc + val, 0);
 
@@ -856,7 +933,7 @@ function renderCategoryDonut() {
       const subText = chart.config._hoverLabel || (activeChartFilter ? `Filtered: ${activeChartFilter}` : 'Monthly Burn');
 
       // Amount text
-      ctx.font = '700 1.15rem "JetBrains Mono", monospace';
+      ctx.font = '700 1.25rem "JetBrains Mono", monospace';
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -864,7 +941,7 @@ function renderCategoryDonut() {
 
       // Subtitle text
       ctx.font = '500 0.72rem "Inter", sans-serif';
-      ctx.fillStyle = activeChartFilter || chart.config._hoverLabel ? '#34d399' : '#94a3b8';
+      ctx.fillStyle = activeChartFilter || chart.config._hoverLabel ? '#38bdf8' : 'rgba(255, 255, 255, 0.45)';
       ctx.fillText(subText, centerX, centerY + 14);
 
       ctx.restore();
@@ -879,16 +956,22 @@ function renderCategoryDonut() {
       datasets: [{
         data: data,
         backgroundColor: sliceColors,
-        borderColor: '#09080e',
-        borderWidth: 2,
-        hoverOffset: isEmpty ? 0 : 8
+        borderColor: 'transparent',
+        borderWidth: 0,
+        hoverOffset: isEmpty ? 0 : 6
       }]
     },
     plugins: [centerTextPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '72%',
+      cutout: '85%',
+      animation: {
+        animateRotate: true,
+        animateScale: true,
+        duration: 750,
+        easing: 'easeOutQuart'
+      },
       onClick: (event, elements) => {
         if (isEmpty) return;
         if (elements && elements.length > 0) {
@@ -923,11 +1006,13 @@ function renderCategoryDonut() {
             toggleChartFilter(clickedLabel);
           },
           labels: {
-            boxWidth: 12,
-            boxHeight: 12,
-            borderRadius: 3,
-            color: '#f4f3f7',
-            font: { family: 'Inter', size: 12 },
+            boxWidth: 8,
+            boxHeight: 8,
+            borderRadius: 4,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            color: 'rgba(255, 255, 255, 0.82)',
+            font: { family: 'Inter', size: 12, weight: 500 },
             padding: 12,
             generateLabels: function(chart) {
               const dataset = chart.data.datasets[0];
@@ -938,8 +1023,8 @@ function renderCategoryDonut() {
                 return {
                   text: `${lbl}${pct}`,
                   fillStyle: dataset.backgroundColor[i],
-                  strokeStyle: isSelected ? '#ffffff' : '#09080e',
-                  lineWidth: isSelected ? 2 : 1,
+                  strokeStyle: isSelected ? '#ffffff' : 'transparent',
+                  lineWidth: isSelected ? 2 : 0,
                   hidden: false,
                   index: i
                 };
@@ -1165,10 +1250,12 @@ async function handleSubscriptionFormSubmit(e) {
   const reminderDays = parseInt(reminderDaysInput.value, 10) || 3;
   const descriptionText = notesInput ? notesInput.value.trim() : '';
   
-  // Brand color logic
+  // Brand logo identifier logic
   let brandColor = brandColorInput ? brandColorInput.value : '';
-  if (!brandColor || brandColor === '#6366f1') {
-    brandColor = typeof detectBrandInfo === 'function' ? detectBrandInfo(name).color : '#6366f1';
+  if (!brandColor || !brandColor.endsWith('.svg')) {
+    brandColor = typeof getSubscriptionLogoFile === 'function'
+      ? getSubscriptionLogoFile(name, brandColor)
+      : 'default-subscription.svg';
   }
 
   if (!name || isNaN(amount) || amount <= 0 || !nextDate) {
@@ -1373,20 +1460,49 @@ async function logExpenseNow(subId) {
 // 6. Modal Interactions & Event Binding
 // =============================================================================
 
-function syncSubColorSwatches(activeColor) {
-  const brandColorInput = document.getElementById('subFormBrandColor');
-  if (brandColorInput && activeColor) {
-    brandColorInput.value = activeColor;
+function syncSubLogoSwatches(activeLogo, isManual = false) {
+  if (isManual) {
+    userManuallyPickedLogo = true;
   }
-  const swatches = document.querySelectorAll('.sub-color-swatch');
-  swatches.forEach(swatch => {
-    const swatchColor = swatch.getAttribute('data-color');
-    if (swatchColor && activeColor && swatchColor.toLowerCase() === activeColor.toLowerCase()) {
+  const brandColorInput = document.getElementById('subFormBrandColor');
+  let cleanLogo = activeLogo || 'default-subscription.svg';
+  if (cleanLogo.startsWith('/')) {
+    const parts = cleanLogo.split('/');
+    cleanLogo = parts[parts.length - 1];
+  }
+  if (!cleanLogo.endsWith('.svg')) {
+    cleanLogo = typeof getSubscriptionLogoFile === 'function'
+      ? getSubscriptionLogoFile('', cleanLogo)
+      : 'default-subscription.svg';
+  }
+
+  if (brandColorInput) {
+    brandColorInput.value = cleanLogo;
+  }
+
+  const logoSwatches = document.querySelectorAll('.sub-logo-swatch');
+  logoSwatches.forEach(swatch => {
+    const swatchLogo = swatch.getAttribute('data-logo');
+    if (swatchLogo && (swatchLogo.toLowerCase() === cleanLogo.toLowerCase() || (cleanLogo === 'default.svg' && swatchLogo === 'default-subscription.svg'))) {
       swatch.classList.add('active');
     } else {
       swatch.classList.remove('active');
     }
   });
+
+  const colorSwatches = document.querySelectorAll('.sub-color-swatch');
+  colorSwatches.forEach(swatch => {
+    const swatchColor = swatch.getAttribute('data-color');
+    if (swatchColor && cleanLogo && swatchColor.toLowerCase() === cleanLogo.toLowerCase()) {
+      swatch.classList.add('active');
+    } else {
+      swatch.classList.remove('active');
+    }
+  });
+}
+
+function syncSubColorSwatches(activeColor) {
+  syncSubLogoSwatches(activeColor, false);
 }
 
 function openAddSubscription() {
@@ -1411,7 +1527,8 @@ function openAddSubscription() {
   const customDaysGroup = document.getElementById('customCycleDaysGroup');
   if (customDaysGroup) customDaysGroup.style.display = 'none';
 
-  syncSubColorSwatches('#10b981');
+  userManuallyPickedLogo = false;
+  syncSubLogoSwatches('default-subscription.svg', false);
 
   if (modal) {
     modal.classList.add('active');
@@ -1480,8 +1597,11 @@ function openEditSubscription(subId) {
   const notes = document.getElementById('subFormNotes');
   if (notes) notes.value = sub.description || sub.notes || '';
 
-  const targetColor = sub.brand_color || '#10b981';
-  syncSubColorSwatches(targetColor);
+  userManuallyPickedLogo = true;
+  const targetLogo = typeof getSubscriptionLogoFile === 'function'
+    ? getSubscriptionLogoFile(sub, sub.brand_color)
+    : (sub.brand_color || 'default-subscription.svg');
+  syncSubLogoSwatches(targetLogo, false);
 
   const customDaysGroup = document.getElementById('customCycleDaysGroup');
   const customDaysInput = document.getElementById('subFormCustomDays');
@@ -1595,21 +1715,45 @@ function initSubEventListeners() {
     if (e.key === 'Escape') closeSubscriptionModal();
   });
 
-  // Color swatch listeners
-  const swatches = document.querySelectorAll('.sub-color-swatch');
+  // Brand logo swatch listeners
+  const logoSwatches = document.querySelectorAll('.sub-logo-swatch');
+  logoSwatches.forEach(swatch => {
+    swatch.addEventListener('click', () => {
+      const logo = swatch.getAttribute('data-logo');
+      if (logo) {
+        syncSubLogoSwatches(logo, true);
+      }
+    });
+  });
+
+  // Backward compatible color swatches
+  const colorSwatches = document.querySelectorAll('.sub-color-swatch');
   const brandColorInput = document.getElementById('subFormBrandColor');
-  swatches.forEach(swatch => {
+  colorSwatches.forEach(swatch => {
     swatch.addEventListener('click', () => {
       const color = swatch.getAttribute('data-color');
       if (color) {
-        syncSubColorSwatches(color);
+        syncSubLogoSwatches(color, true);
       }
     });
   });
 
   if (brandColorInput) {
     brandColorInput.addEventListener('input', (e) => {
-      syncSubColorSwatches(e.target.value);
+      syncSubLogoSwatches(e.target.value, true);
+    });
+  }
+
+  // Auto-detect brand logo when typing subscription name
+  const subNameInput = document.getElementById('subFormName');
+  if (subNameInput) {
+    subNameInput.addEventListener('input', (e) => {
+      if (!userManuallyPickedLogo) {
+        const detected = typeof getSubscriptionLogoFile === 'function'
+          ? getSubscriptionLogoFile(e.target.value)
+          : 'default-subscription.svg';
+        syncSubLogoSwatches(detected, false);
+      }
     });
   }
 }
