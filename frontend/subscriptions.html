@@ -308,12 +308,23 @@
                 <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
                 <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
               </svg>
-              Spend by Category (Monthly Burn)
+              <span id="chartTitleText">Spend Breakdown (Monthly Burn)</span>
             </h3>
-            <span style="font-size: 0.75rem; color: var(--text-muted);">Active Subscriptions</span>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <div class="chart-view-toggle">
+                <button type="button" id="btnChartByService" class="btn-chart-toggle active" onclick="setChartGroupMode('service')">By Service</button>
+                <button type="button" id="btnChartByCategory" class="btn-chart-toggle" onclick="setChartGroupMode('category')">By Category</button>
+              </div>
+            </div>
           </div>
-          <div class="sub-chart-canvas-wrapper">
+          <div class="sub-chart-canvas-wrapper" style="position: relative;">
             <canvas id="subCategoryDonutCanvas"></canvas>
+          </div>
+          <div id="chartActiveFilterPill" style="display: none; margin-top: 0.65rem; text-align: center;">
+            <span class="active-chart-filter-tag">
+              <span id="chartActiveFilterText">Filtered: Gym</span>
+              <button type="button" onclick="clearChartFilter()" class="btn-clear-chart-filter" title="Clear filter">&times;</button>
+            </span>
           </div>
         </div>
 
@@ -509,11 +520,23 @@
   </div>
 
   <!-- Add / Edit Subscription Modal -->
-  <div class="modal-overlay" id="subscriptionModal" role="dialog" aria-modal="true">
-    <div class="modal-box" style="max-width: 540px;">
-      <div class="modal-header">
-        <h3 class="modal-title" id="subModalTitle">Add New Subscription</h3>
-        <button type="button" class="modal-close" onclick="closeSubscriptionModal()" aria-label="Close modal">
+  <div class="modal-overlay" id="subscriptionModal" role="dialog" aria-modal="true" aria-labelledby="subModalTitle">
+    <div class="sub-modal-box">
+      <!-- Modal Header -->
+      <div class="sub-modal-header">
+        <div class="sub-modal-header-left">
+          <div class="sub-modal-icon-badge">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="sub-modal-title" id="subModalTitle">Add New Subscription</h3>
+            <div class="sub-modal-subtitle">Manage recurring cadence, cost & auto-logging settings</div>
+          </div>
+        </div>
+        <button type="button" class="sub-modal-close-btn" onclick="closeSubscriptionModal()" aria-label="Close modal">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -521,102 +544,176 @@
         </button>
       </div>
 
-      <form id="subscriptionForm" class="modal-form">
-        <div class="form-row">
-          <div class="form-group" style="flex: 2;">
-            <label class="form-label" for="subFormName">Service / Subscription Name *</label>
-            <input type="text" id="subFormName" class="form-control" placeholder="e.g. Netflix, Spotify, Gym, AWS" required>
+      <!-- Modal Form -->
+      <form id="subscriptionForm" class="sub-modal-form">
+        <div class="sub-modal-body">
+          <!-- Row 1: Name & Amount -->
+          <div class="sub-form-grid-name-amount">
+            <div class="sub-form-group">
+              <label class="sub-form-label" for="subFormName">
+                <span>Service / Subscription Name <span class="sub-form-req">*</span></span>
+              </label>
+              <input type="text" id="subFormName" class="form-control" placeholder="e.g. Spotify, Netflix, AWS, Gym" required>
+            </div>
+            <div class="sub-form-group">
+              <label class="sub-form-label" for="subFormAmount">
+                <span>Amount <span class="sub-form-req">*</span></span>
+              </label>
+              <div class="sub-input-prefix-wrapper">
+                <span class="sub-currency-symbol">₹</span>
+                <input type="number" id="subFormAmount" class="form-control sub-input-with-prefix" step="0.01" min="0.01" placeholder="649.00" required>
+              </div>
+            </div>
           </div>
-          <div class="form-group" style="flex: 1;">
-            <label class="form-label" for="subFormAmount">Amount (₹) *</label>
-            <input type="number" id="subFormAmount" class="form-control" step="0.01" min="0.01" placeholder="649.00" required>
+
+          <!-- Row 2: Billing Cadence & Next Renewal Date -->
+          <div class="sub-form-grid-2">
+            <div class="sub-form-group">
+              <label class="sub-form-label" for="subFormCycle">
+                <span>Billing Cadence <span class="sub-form-req">*</span></span>
+              </label>
+              <select id="subFormCycle" class="form-control" required>
+                <option value="monthly" selected>Monthly</option>
+                <option value="yearly">Yearly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="weekly">Weekly</option>
+                <option value="custom">Custom Days</option>
+              </select>
+              <div class="sub-custom-days-group" id="customCycleDaysGroup" style="display: none;">
+                <label class="sub-form-label" for="subFormCustomDays" style="margin-bottom: 4px;">
+                  <span>Cycle Length (Days) <span class="sub-form-req">*</span></span>
+                </label>
+                <input type="number" id="subFormCustomDays" class="form-control" min="1" max="365" placeholder="45">
+              </div>
+            </div>
+            <div class="sub-form-group">
+              <label class="sub-form-label" for="subFormNextDate">
+                <span>Next Renewal Date <span class="sub-form-req">*</span></span>
+              </label>
+              <input type="date" id="subFormNextDate" class="form-control" required>
+            </div>
+          </div>
+
+          <!-- Row 3: Category & Payment Method -->
+          <div class="sub-form-grid-2">
+            <div class="sub-form-group">
+              <label class="sub-form-label" for="subFormCategory">Category</label>
+              <select id="subFormCategory" class="form-control">
+                <option value="Subscriptions" selected>Subscriptions</option>
+                <option value="Bills & Utilities">Bills & Utilities</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Healthcare">Healthcare & Fitness</option>
+                <option value="Education">Education</option>
+                <option value="Shopping">Shopping & Prime</option>
+                <option value="Transport">Transport</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="sub-form-group">
+              <label class="sub-form-label" for="subFormPayment">Payment Method</label>
+              <select id="subFormPayment" class="form-control">
+                <option value="Credit Card" selected>Credit Card</option>
+                <option value="Debit Card">Debit Card</option>
+                <option value="UPI AutoPay">UPI AutoPay</option>
+                <option value="Net Banking">Net Banking</option>
+                <option value="Apple Pay">Apple Pay</option>
+                <option value="PayPal">PayPal</option>
+                <option value="Cash / Other">Cash / Other</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 4: Status & Reminder Days -->
+          <div class="sub-form-grid-2">
+            <div class="sub-form-group">
+              <label class="sub-form-label" for="subFormStatus">Status</label>
+              <select id="subFormStatus" class="form-control">
+                <option value="active" selected>Active</option>
+                <option value="paused">Paused</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div class="sub-form-group">
+              <label class="sub-form-label" for="subFormReminderDays">
+                <span>Alert Days Before</span>
+                <span class="sub-form-optional">Device Push</span>
+              </label>
+              <input type="number" id="subFormReminderDays" class="form-control" min="0" max="30" value="3" placeholder="3">
+            </div>
+          </div>
+
+          <!-- Brand Accent Color Picker -->
+          <div class="sub-color-picker-container">
+            <label class="sub-form-label">
+              <span>Brand Accent Color</span>
+              <span class="sub-form-optional">Card Theme</span>
+            </label>
+            <div class="sub-swatches-row" id="subColorSwatchesRow">
+              <button type="button" class="sub-color-swatch active" data-color="#10b981" style="--swatch-color: #10b981; background: #10b981;" title="Emerald / Spotify">
+                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button type="button" class="sub-color-swatch" data-color="#f43f5e" style="--swatch-color: #f43f5e; background: #f43f5e;" title="Rose / Netflix">
+                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button type="button" class="sub-color-swatch" data-color="#6366f1" style="--swatch-color: #6366f1; background: #6366f1;" title="Indigo / Prime">
+                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button type="button" class="sub-color-swatch" data-color="#8b5cf6" style="--swatch-color: #8b5cf6; background: #8b5cf6;" title="Purple / Discord">
+                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button type="button" class="sub-color-swatch" data-color="#06b6d4" style="--swatch-color: #06b6d4; background: #06b6d4;" title="Cyan / Tech">
+                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button type="button" class="sub-color-swatch" data-color="#f59e0b" style="--swatch-color: #f59e0b; background: #f59e0b;" title="Amber / Amazon">
+                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button type="button" class="sub-color-swatch" data-color="#3b82f6" style="--swatch-color: #3b82f6; background: #3b82f6;" title="Blue / Google">
+                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+              <button type="button" class="sub-color-swatch" data-color="#ec4899" style="--swatch-color: #ec4899; background: #ec4899;" title="Pink / Music">
+                <svg class="swatch-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+
+              <!-- Custom Color Native Picker Hidden Inside Swatch Trigger -->
+              <div class="sub-custom-color-btn" title="Pick custom color">
+                <input type="color" id="subFormBrandColor" value="#10b981" aria-label="Brand accent color picker">
+              </div>
+            </div>
+          </div>
+
+          <!-- Auto-Generate Ledger Expense Toggle Card -->
+          <div class="sub-toggle-card" onclick="document.getElementById('subFormAutoLog').click()">
+            <div class="sub-toggle-card-info">
+              <div class="sub-toggle-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+              </div>
+              <div>
+                <div class="sub-toggle-title">Auto-Generate Ledger Expense</div>
+                <div class="sub-toggle-desc">Automatically record in transactions when renewal date arrives</div>
+              </div>
+            </div>
+            <label class="sub-switch" for="subFormAutoLog" onclick="event.stopPropagation()">
+              <input type="checkbox" id="subFormAutoLog" checked>
+              <span class="sub-slider"></span>
+            </label>
+          </div>
+
+          <!-- Notes / Description -->
+          <div class="sub-form-group">
+            <label class="sub-form-label" for="subFormNotes">
+              <span>Notes / Description</span>
+              <span class="sub-form-optional">Optional</span>
+            </label>
+            <input type="text" id="subFormNotes" class="form-control" placeholder="e.g. Shared with family, Student plan, Cloud workspace">
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="subFormCycle">Billing Cadence *</label>
-            <select id="subFormCycle" class="form-control" required>
-              <option value="monthly" selected>Monthly</option>
-              <option value="yearly">Yearly</option>
-              <option value="quarterly">Quarterly</option>
-              <option value="weekly">Weekly</option>
-              <option value="custom">Custom Days</option>
-            </select>
-          </div>
-          <div class="form-group" id="customCycleDaysGroup" style="display: none;">
-            <label class="form-label" for="subFormCustomDays">Cycle Length (Days) *</label>
-            <input type="number" id="subFormCustomDays" class="form-control" min="1" max="365" placeholder="45">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="subFormNextDate">Next Renewal Date *</label>
-            <input type="date" id="subFormNextDate" class="form-control" required>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="subFormCategory">Category</label>
-            <select id="subFormCategory" class="form-control">
-              <option value="Subscriptions" selected>Subscriptions</option>
-              <option value="Bills & Utilities">Bills & Utilities</option>
-              <option value="Entertainment">Entertainment</option>
-              <option value="Healthcare">Healthcare & Fitness</option>
-              <option value="Education">Education</option>
-              <option value="Shopping">Shopping & Prime</option>
-              <option value="Transport">Transport</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="subFormPayment">Payment Method</label>
-            <select id="subFormPayment" class="form-control">
-              <option value="Credit Card" selected>Credit Card</option>
-              <option value="Debit Card">Debit Card</option>
-              <option value="UPI AutoPay">UPI AutoPay</option>
-              <option value="Net Banking">Net Banking</option>
-              <option value="Apple Pay">Apple Pay</option>
-              <option value="PayPal">PayPal</option>
-              <option value="Cash / Other">Cash / Other</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="subFormStatus">Status</label>
-            <select id="subFormStatus" class="form-control">
-              <option value="active" selected>Active</option>
-              <option value="paused">Paused</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="subFormReminderDays">Alert Days Before</label>
-            <input type="number" id="subFormReminderDays" class="form-control" min="0" max="30" value="3">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="subFormBrandColor">Brand Accent Color (Optional)</label>
-          <input type="color" id="subFormBrandColor" class="form-control" style="height: 42px; padding: 4px; cursor: pointer;" value="#6366f1">
-        </div>
-
-        <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem;">
-          <input type="checkbox" id="subFormAutoLog" checked style="width: 18px; height: 18px; accent-color: var(--brand-primary); cursor: pointer;">
-          <label for="subFormAutoLog" style="font-size: 0.85rem; color: var(--text-primary); cursor: pointer;">
-            Auto-generate expense in transactions ledger when renewal date arrives
-          </label>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="subFormNotes">Notes / Description (Optional)</label>
-          <input type="text" id="subFormNotes" class="form-control" placeholder="e.g. Shared with family, Student discount">
-        </div>
-
-        <div class="modal-actions" style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
-          <button type="button" class="btn btn-outline btn-sm" onclick="closeSubscriptionModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary btn-sm">Save Subscription</button>
+        <!-- Modal Footer Actions -->
+        <div class="sub-modal-footer">
+          <button type="button" class="btn-sub-cancel" onclick="closeSubscriptionModal()">Cancel</button>
+          <button type="submit" class="btn-sub-submit">Save Subscription</button>
         </div>
       </form>
     </div>

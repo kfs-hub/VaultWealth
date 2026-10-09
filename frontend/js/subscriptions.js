@@ -12,6 +12,8 @@ let activeSortOrder = 'date_asc'; // 'date_asc' | 'amount_desc' | 'name_asc'
 let activeViewMode = 'grid';      // 'grid' | 'table'
 let currentEditSubId = null;
 let subCategoryChart = null;
+let chartGroupMode = 'service';   // 'service' | 'category'
+let activeChartFilter = null;     // selected label to filter by
 
 function onReady(fn) {
   if (document.readyState === 'loading') {
@@ -528,6 +530,15 @@ function renderSubscriptionsList() {
     if (activeSubFilter !== 'all' && sub.status !== activeSubFilter) return false;
     // Cycle filter
     if (activeCycleFilter !== 'all' && sub.billing_cycle !== activeCycleFilter) return false;
+    // Interactive chart filter
+    if (activeChartFilter) {
+      if (chartGroupMode === 'service') {
+        if (sub.name !== activeChartFilter) return false;
+      } else {
+        const cat = sub.category || 'Subscriptions';
+        if (cat !== activeChartFilter) return false;
+      }
+    }
     // Search query
     if (activeSearchQuery) {
       const q = activeSearchQuery.toLowerCase();
@@ -555,6 +566,18 @@ function renderSubscriptionsList() {
 
   if (countBadge) {
     countBadge.textContent = `${filtered.length} found`;
+  }
+
+  // Active Chart Filter Tag in UI
+  const filterPill = document.getElementById('chartActiveFilterPill');
+  const filterText = document.getElementById('chartActiveFilterText');
+  if (filterPill && filterText) {
+    if (activeChartFilter) {
+      filterText.textContent = `Filtered by ${chartGroupMode === 'service' ? 'Service' : 'Category'}: ${activeChartFilter}`;
+      filterPill.style.display = 'block';
+    } else {
+      filterPill.style.display = 'none';
+    }
   }
 
   // Handle Empty State
@@ -738,37 +761,115 @@ function renderSubscriptionsList() {
 }
 
 /**
- * 4.4 Category Breakdown Donut Chart (Chart.js)
+ * 4.4 Interactive Spend Breakdown Donut Chart (Chart.js)
  */
 function renderCategoryDonut() {
   const canvas = document.getElementById('subCategoryDonutCanvas');
   if (!canvas || typeof Chart === 'undefined') return;
 
-  const categoryTotals = {};
-  subscriptionsList.forEach(sub => {
-    if (sub.status === 'active') {
+  const titleEl = document.getElementById('chartTitleText');
+  const btnService = document.getElementById('btnChartByService');
+  const btnCat = document.getElementById('btnChartByCategory');
+
+  if (titleEl) {
+    titleEl.textContent = chartGroupMode === 'service'
+      ? 'Spend by Service (Monthly Burn)'
+      : 'Spend by Category (Monthly Burn)';
+  }
+  if (btnService) btnService.classList.toggle('active', chartGroupMode === 'service');
+  if (btnCat) btnCat.classList.toggle('active', chartGroupMode === 'category');
+
+  const groupTotals = {};
+  const groupColors = {};
+
+  const defaultPalette = [
+    '#6366f1', '#06b6d4', '#10b981', '#f59e0b',
+    '#ec4899', '#8b5cf6', '#3b82f6', '#f43f5e',
+    '#14b8a6', '#f97316', '#a855f7', '#0ea5e9'
+  ];
+
+  const categoryColorMap = {
+    'Subscriptions': '#6366f1',
+    'Entertainment': '#ec4899',
+    'Bills & Utilities': '#f59e0b',
+    'Healthcare': '#10b981',
+    'Education': '#06b6d4',
+    'Shopping': '#8b5cf6',
+    'Transport': '#3b82f6',
+    'Other': '#64748b'
+  };
+
+  const activeSubs = subscriptionsList.filter(s => s.status === 'active');
+
+  if (chartGroupMode === 'service') {
+    activeSubs.forEach((sub, i) => {
+      const name = sub.name || 'Unnamed';
+      const monthlyVal = normalizeToMonthly(sub.amount, sub.billing_cycle, sub.custom_cycle_days);
+      groupTotals[name] = (groupTotals[name] || 0) + monthlyVal;
+
+      if (!groupColors[name]) {
+        const brand = typeof detectBrandInfo === 'function' ? detectBrandInfo(name) : { color: defaultPalette[i % defaultPalette.length] };
+        groupColors[name] = sub.brand_color && sub.brand_color !== '#6366f1' ? sub.brand_color : (brand.color || defaultPalette[i % defaultPalette.length]);
+      }
+    });
+  } else {
+    activeSubs.forEach((sub, i) => {
       const cat = sub.category || 'Subscriptions';
       const monthlyVal = normalizeToMonthly(sub.amount, sub.billing_cycle, sub.custom_cycle_days);
-      categoryTotals[cat] = (categoryTotals[cat] || 0) + monthlyVal;
-    }
-  });
+      groupTotals[cat] = (groupTotals[cat] || 0) + monthlyVal;
+      if (!groupColors[cat]) {
+        groupColors[cat] = categoryColorMap[cat] || defaultPalette[i % defaultPalette.length];
+      }
+    });
+  }
 
-  const labels = Object.keys(categoryTotals);
-  const data = Object.values(categoryTotals);
+  let labels = Object.keys(groupTotals);
+  let data = Object.values(groupTotals);
+  let sliceColors = labels.map(l => groupColors[l] || '#6366f1');
 
-  const colors = [
-    '#6366f1', '#06b6d4', '#10b981', '#f59e0b',
-    '#ec4899', '#8b5cf6', '#3b82f6', '#f43f5e'
-  ];
+  const totalBurn = data.reduce((acc, val) => acc + val, 0);
 
   if (subCategoryChart) {
     subCategoryChart.destroy();
+    subCategoryChart = null;
   }
 
-  if (labels.length === 0) {
-    labels.push('No Active Subscriptions');
-    data.push(1);
+  const isEmpty = labels.length === 0 || totalBurn === 0;
+  if (isEmpty) {
+    labels = ['No Active Subscriptions'];
+    data = [1];
+    sliceColors = ['rgba(255, 255, 255, 0.08)'];
   }
+
+  // Custom Center Label Plugin to draw live amount and subtitle inside cutout
+  const centerTextPlugin = {
+    id: 'centerDonutText',
+    beforeDraw: function(chart) {
+      const chartArea = chart.chartArea;
+      if (!chartArea) return;
+      const ctx = chart.ctx;
+      const centerX = (chartArea.left + chartArea.right) / 2;
+      const centerY = (chartArea.top + chartArea.bottom) / 2;
+
+      ctx.save();
+      const amountText = chart.config._hoverAmount || formatCurrency(totalBurn);
+      const subText = chart.config._hoverLabel || (activeChartFilter ? `Filtered: ${activeChartFilter}` : 'Monthly Burn');
+
+      // Amount text
+      ctx.font = '700 1.15rem "JetBrains Mono", monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(amountText, centerX, centerY - 8);
+
+      // Subtitle text
+      ctx.font = '500 0.72rem "Inter", sans-serif';
+      ctx.fillStyle = activeChartFilter || chart.config._hoverLabel ? '#34d399' : '#94a3b8';
+      ctx.fillText(subText, centerX, centerY + 14);
+
+      ctx.restore();
+    }
+  };
 
   const ctx = canvas.getContext('2d');
   subCategoryChart = new Chart(ctx, {
@@ -777,36 +878,112 @@ function renderCategoryDonut() {
       labels: labels,
       datasets: [{
         data: data,
-        backgroundColor: colors.slice(0, labels.length),
+        backgroundColor: sliceColors,
         borderColor: '#09080e',
         borderWidth: 2,
-        hoverOffset: 6
+        hoverOffset: isEmpty ? 0 : 8
       }]
     },
+    plugins: [centerTextPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      cutout: '72%',
+      onClick: (event, elements) => {
+        if (isEmpty) return;
+        if (elements && elements.length > 0) {
+          const idx = elements[0].index;
+          const clickedLabel = labels[idx];
+          toggleChartFilter(clickedLabel);
+        } else {
+          clearChartFilter();
+        }
+      },
+      onHover: (event, elements) => {
+        if (isEmpty) return;
+        if (elements && elements.length > 0) {
+          const idx = elements[0].index;
+          const val = data[idx];
+          const label = labels[idx];
+          const pct = totalBurn > 0 ? ((val / totalBurn) * 100).toFixed(0) : 0;
+          subCategoryChart.config._hoverAmount = formatCurrency(val);
+          subCategoryChart.config._hoverLabel = `${label} (${pct}%)`;
+        } else {
+          subCategoryChart.config._hoverAmount = null;
+          subCategoryChart.config._hoverLabel = null;
+        }
+        subCategoryChart.draw();
+      },
       plugins: {
         legend: {
           position: 'right',
+          onClick: (event, legendItem) => {
+            if (isEmpty) return;
+            const clickedLabel = labels[legendItem.index];
+            toggleChartFilter(clickedLabel);
+          },
           labels: {
             boxWidth: 12,
+            boxHeight: 12,
+            borderRadius: 3,
             color: '#f4f3f7',
-            font: { family: 'Inter', size: 12 }
+            font: { family: 'Inter', size: 12 },
+            padding: 12,
+            generateLabels: function(chart) {
+              const dataset = chart.data.datasets[0];
+              return chart.data.labels.map((lbl, i) => {
+                const val = dataset.data[i] || 0;
+                const pct = totalBurn > 0 && !isEmpty ? ` (${((val / totalBurn) * 100).toFixed(0)}%)` : '';
+                const isSelected = activeChartFilter === lbl;
+                return {
+                  text: `${lbl}${pct}`,
+                  fillStyle: dataset.backgroundColor[i],
+                  strokeStyle: isSelected ? '#ffffff' : '#09080e',
+                  lineWidth: isSelected ? 2 : 1,
+                  hidden: false,
+                  index: i
+                };
+              });
+            }
           }
         },
         tooltip: {
+          enabled: !isEmpty,
           callbacks: {
             label: function(ctx) {
               const val = ctx.raw || 0;
-              return ` ${ctx.label}: ${formatCurrency(val)}/mo`;
+              const pct = totalBurn > 0 ? ((val / totalBurn) * 100).toFixed(1) : 0;
+              return ` ${ctx.label}: ${formatCurrency(val)}/mo (${pct}% of burn)`;
             }
           }
         }
-      },
-      cutout: '70%'
+      }
     }
   });
+}
+
+function setChartGroupMode(mode) {
+  if (chartGroupMode === mode) return;
+  chartGroupMode = mode;
+  activeChartFilter = null;
+  renderCategoryDonut();
+  renderSubscriptionsList();
+}
+
+function toggleChartFilter(label) {
+  if (activeChartFilter === label) {
+    activeChartFilter = null;
+  } else {
+    activeChartFilter = label;
+  }
+  renderSubscriptionsList();
+  if (subCategoryChart) subCategoryChart.draw();
+}
+
+function clearChartFilter() {
+  activeChartFilter = null;
+  renderSubscriptionsList();
+  if (subCategoryChart) subCategoryChart.draw();
 }
 
 /**
@@ -986,12 +1163,12 @@ async function handleSubscriptionFormSubmit(e) {
   const status = statusSelect.value || 'active';
   const autoLog = autoLogCheckbox ? autoLogCheckbox.checked : true;
   const reminderDays = parseInt(reminderDaysInput.value, 10) || 3;
-  const notes = notesInput ? notesInput.value.trim() : '';
+  const descriptionText = notesInput ? notesInput.value.trim() : '';
   
   // Brand color logic
   let brandColor = brandColorInput ? brandColorInput.value : '';
   if (!brandColor || brandColor === '#6366f1') {
-    brandColor = detectBrandInfo(name).color;
+    brandColor = typeof detectBrandInfo === 'function' ? detectBrandInfo(name).color : '#6366f1';
   }
 
   if (!name || isNaN(amount) || amount <= 0 || !nextDate) {
@@ -1014,7 +1191,7 @@ async function handleSubscriptionFormSubmit(e) {
     status,
     auto_create_transaction: autoLog,
     reminder_days_before: reminderDays,
-    notes,
+    description: descriptionText,
     brand_color: brandColor,
     updated_at: new Date().toISOString()
   };
@@ -1022,23 +1199,43 @@ async function handleSubscriptionFormSubmit(e) {
   if (currentEditSubId) {
     // UPDATE
     if (client && user) {
-      const { error } = await client
+      const { data, error } = await client
         .from('subscriptions')
         .update(payload)
         .eq('id', currentEditSubId)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select();
 
       if (error) {
         console.error('[VaultWealth] Error updating subscription:', error);
         alert('Could not update subscription: ' + error.message);
         return;
       }
+
+      // If subscription is linked to a transaction, keep transaction in sync
+      const targetSub = subscriptionsList.find(s => String(s.id) === String(currentEditSubId));
+      if (targetSub && targetSub.transaction_id) {
+        try {
+          await client
+            .from('transactions')
+            .update({
+              amount: payload.amount,
+              category: payload.category,
+              description: payload.name,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', targetSub.transaction_id)
+            .eq('user_id', user.id);
+        } catch (txErr) {
+          console.warn('[VaultWealth] Could not update linked transaction:', txErr);
+        }
+      }
     }
 
     // Update local list
-    const idx = subscriptionsList.findIndex(s => s.id === currentEditSubId);
+    const idx = subscriptionsList.findIndex(s => String(s.id) === String(currentEditSubId));
     if (idx !== -1) {
-      subscriptionsList[idx] = { ...subscriptionsList[idx], ...payload };
+      subscriptionsList[idx] = { ...subscriptionsList[idx], ...payload, id: currentEditSubId };
     }
   } else {
     // CREATE
@@ -1068,6 +1265,7 @@ async function handleSubscriptionFormSubmit(e) {
   saveLocalSubscriptions();
   closeSubscriptionModal();
   renderAllViews();
+  window.dispatchEvent(new CustomEvent('vaultwealth:refresh'));
 }
 
 async function deleteSubscriptionConfirm(subId) {
@@ -1175,6 +1373,22 @@ async function logExpenseNow(subId) {
 // 6. Modal Interactions & Event Binding
 // =============================================================================
 
+function syncSubColorSwatches(activeColor) {
+  const brandColorInput = document.getElementById('subFormBrandColor');
+  if (brandColorInput && activeColor) {
+    brandColorInput.value = activeColor;
+  }
+  const swatches = document.querySelectorAll('.sub-color-swatch');
+  swatches.forEach(swatch => {
+    const swatchColor = swatch.getAttribute('data-color');
+    if (swatchColor && activeColor && swatchColor.toLowerCase() === activeColor.toLowerCase()) {
+      swatch.classList.add('active');
+    } else {
+      swatch.classList.remove('active');
+    }
+  });
+}
+
 function openAddSubscription() {
   if (typeof window.openTransactionModalWithSubscription === 'function') {
     window.openTransactionModalWithSubscription();
@@ -1197,6 +1411,8 @@ function openAddSubscription() {
   const customDaysGroup = document.getElementById('customCycleDaysGroup');
   if (customDaysGroup) customDaysGroup.style.display = 'none';
 
+  syncSubColorSwatches('#10b981');
+
   if (modal) {
     modal.classList.add('active');
     document.body.classList.add('modal-open');
@@ -1204,34 +1420,68 @@ function openAddSubscription() {
 }
 
 function openEditSubscription(subId) {
-  const sub = subscriptionsList.find(s => s.id === subId);
+  const sub = subscriptionsList.find(s => String(s.id) === String(subId));
   if (!sub) return;
 
-  currentEditSubId = subId;
+  currentEditSubId = sub.id;
   const modal = document.getElementById('subscriptionModal');
   const title = document.getElementById('subModalTitle');
 
   if (title) title.textContent = `Edit Subscription — ${sub.name}`;
 
-  document.getElementById('subFormName').value = sub.name;
-  document.getElementById('subFormAmount').value = sub.amount;
-  document.getElementById('subFormCycle').value = sub.billing_cycle;
-  document.getElementById('subFormCategory').value = sub.category || 'Subscriptions';
-  document.getElementById('subFormNextDate').value = sub.next_billing_date;
-  document.getElementById('subFormPayment').value = sub.payment_method || 'Credit Card';
-  document.getElementById('subFormStatus').value = sub.status || 'active';
+  const nameInput = document.getElementById('subFormName');
+  if (nameInput) nameInput.value = sub.name || '';
+
+  const amountInput = document.getElementById('subFormAmount');
+  if (amountInput) amountInput.value = sub.amount || '';
+
+  const cycleSelect = document.getElementById('subFormCycle');
+  if (cycleSelect) cycleSelect.value = sub.billing_cycle || 'monthly';
+
+  // Category handling with dynamic option fallback
+  const catSelect = document.getElementById('subFormCategory');
+  if (catSelect) {
+    const targetCat = sub.category || 'Subscriptions';
+    const exists = Array.from(catSelect.options).some(o => o.value === targetCat);
+    if (!exists) {
+      const opt = document.createElement('option');
+      opt.value = targetCat;
+      opt.textContent = targetCat;
+      catSelect.appendChild(opt);
+    }
+    catSelect.value = targetCat;
+  }
+
+  const nextDateInput = document.getElementById('subFormNextDate');
+  if (nextDateInput) nextDateInput.value = sub.next_billing_date || '';
+
+  const paySelect = document.getElementById('subFormPayment');
+  if (paySelect) {
+    const targetPay = sub.payment_method || 'Credit Card';
+    const exists = Array.from(paySelect.options).some(o => o.value === targetPay);
+    if (!exists) {
+      const opt = document.createElement('option');
+      opt.value = targetPay;
+      opt.textContent = targetPay;
+      paySelect.appendChild(opt);
+    }
+    paySelect.value = targetPay;
+  }
+
+  const statusSelect = document.getElementById('subFormStatus');
+  if (statusSelect) statusSelect.value = sub.status || 'active';
   
   const autoLog = document.getElementById('subFormAutoLog');
   if (autoLog) autoLog.checked = sub.auto_create_transaction !== false;
 
   const reminder = document.getElementById('subFormReminderDays');
-  if (reminder) reminder.value = sub.reminder_days_before || 3;
+  if (reminder) reminder.value = sub.reminder_days_before !== undefined ? sub.reminder_days_before : 3;
 
   const notes = document.getElementById('subFormNotes');
-  if (notes) notes.value = sub.notes || '';
+  if (notes) notes.value = sub.description || sub.notes || '';
 
-  const brandColor = document.getElementById('subFormBrandColor');
-  if (brandColor) brandColor.value = sub.brand_color || '#6366f1';
+  const targetColor = sub.brand_color || '#10b981';
+  syncSubColorSwatches(targetColor);
 
   const customDaysGroup = document.getElementById('customCycleDaysGroup');
   const customDaysInput = document.getElementById('subFormCustomDays');
@@ -1344,6 +1594,24 @@ function initSubEventListeners() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeSubscriptionModal();
   });
+
+  // Color swatch listeners
+  const swatches = document.querySelectorAll('.sub-color-swatch');
+  const brandColorInput = document.getElementById('subFormBrandColor');
+  swatches.forEach(swatch => {
+    swatch.addEventListener('click', () => {
+      const color = swatch.getAttribute('data-color');
+      if (color) {
+        syncSubColorSwatches(color);
+      }
+    });
+  });
+
+  if (brandColorInput) {
+    brandColorInput.addEventListener('input', (e) => {
+      syncSubColorSwatches(e.target.value);
+    });
+  }
 }
 
 // Expose modal handlers to global scope for HTML onclick attributes
@@ -1354,6 +1622,9 @@ window.deleteSubscriptionConfirm = deleteSubscriptionConfirm;
 window.toggleSubStatus = toggleSubStatus;
 window.logExpenseNow = logExpenseNow;
 window.loadSubscriptions = loadSubscriptions;
+window.setChartGroupMode = setChartGroupMode;
+window.toggleChartFilter = toggleChartFilter;
+window.clearChartFilter = clearChartFilter;
 
 window.addEventListener('vaultwealth:refresh', () => {
   if (typeof loadSubscriptions === 'function') {
